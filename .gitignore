@@ -1,2 +1,13 @@
 /bin/
 /target/
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*
+target
+bin
+.classpath
+.project
+.settings
+.DS_Store
