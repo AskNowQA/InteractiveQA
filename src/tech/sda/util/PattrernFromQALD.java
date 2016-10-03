@@ -37,9 +37,9 @@ public class PattrernFromQALD {
 				counter++;
 				JSONObject quesObj = questions.next();
 				Object ids = quesObj.get("id");
-				if(ids.toString().contains("150")||counter== 102||counter == 114)
-				{continue;
-				}
+				//if(counter <= 300)
+				//{continue;
+			//	}
 				
 				JSONObject query = (JSONObject) quesObj.get("query");
 				sparql = (String) query.get("sparql");

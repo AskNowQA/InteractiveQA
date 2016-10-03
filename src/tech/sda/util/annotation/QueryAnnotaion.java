@@ -19,6 +19,7 @@ public class QueryAnnotaion {
 		//rel.add(n.getRelation2());
 		n.resourceSpotlight = EntityAnnotation.getEntityAnnotation(n.nlQuery);
 		//n.resourceFOX = EntityAnnotation.getFOXAnnotation(n.nlQuery);
+		n.predicateCandidate = PredicateAnnotation.getPredicateAnnotation(n);
 		//System.out.println("Res: "+n.Resource);
 		//for (String r : n.Resource){
 	//		n.Predicate =RelationAnnotation.getRelAnnotation(rel, r);

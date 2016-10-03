@@ -18,7 +18,7 @@ public class Spotlight
 	 ** @return */
 	public static Set<String> getDBpLookup(String phrase)
 	{
-		Set<String> DBpEquivalent= new HashSet<String>(); ;
+		Set<String> DBpEquivalent= new HashSet<String>(); 
 		String argument = phrase.replaceAll(" ","%20");
 		try
 		{
