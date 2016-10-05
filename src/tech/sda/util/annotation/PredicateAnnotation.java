@@ -14,10 +14,9 @@ public class PredicateAnnotation {
 
 	public static Set<String> getPredicateAnnotation(Nqs n) {
 		// TODO Auto-generated method stub
-		Set<String> DBpEquivalent= new HashSet<String>();
+		Set<String> Predicate = new HashSet<String>();
 		
-		
-		return null;
+		return Predicate;
 	}
 	
 
