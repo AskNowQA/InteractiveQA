@@ -15,7 +15,7 @@ public class PredicateAnnotation {
 	public static Set<String> getPredicateAnnotation(Nqs n) {
 		// TODO Auto-generated method stub
 		Set<String> Predicate = new HashSet<String>();
-		
+		//extract predicate candidate from NQS
 		return Predicate;
 	}
 	
