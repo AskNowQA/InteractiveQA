@@ -17,9 +17,13 @@ public class QueryAnnotaion {
 		//HashSet<String> rel = new HashSet<String>();
 		//rel.add(n.getDesire());
 		//rel.add(n.getRelation2());
-		n.resourceSpotlight = EntityAnnotation.getEntityAnnotation(n.nlQuery);
+		//n.resourceSpotlight = EntityAnnotation.getEntityAnnotation(n.nlQuery);
 		//n.resourceFOX = EntityAnnotation.getFOXAnnotation(n.nlQuery);
+		//if (n.resourceSpotlight!=null)
 		n.predicateCandidate = PredicateAnnotation.getPredicateAnnotation(n);
+		//else
+		//	n.predicateCandidate=null;	
+			
 		//System.out.println("Res: "+n.Resource);
 		//for (String r : n.Resource){
 	//		n.Predicate =RelationAnnotation.getRelAnnotation(rel, r);

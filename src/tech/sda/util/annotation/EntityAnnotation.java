@@ -22,7 +22,7 @@ public class EntityAnnotation {
 			System.out.print("SPOTLIGHT: Spotlight Could not annotate the Entity **0");
 			return null;
 		}
-		System.out.print("SPOTLIGHT: "+dbpRes +" **"+dbpRes.size() );
+		//System.out.print("SPOTLIGHT: "+dbpRes +" **"+dbpRes.size() );
 		return dbpRes;
 	}
 	public static Set<String> getFOXAnnotation(String nlQuery) {

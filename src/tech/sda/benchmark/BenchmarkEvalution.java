@@ -11,7 +11,7 @@ public class BenchmarkEvalution {
 	public static void main(String[] args)
 	{
 		for(int i=0;i<349;i++)
-		{	System.out.print((i+1)+"**");
+		{	System.out.print((i+1)+"\t");
 		evaluate(i);
 
 		}
@@ -20,8 +20,10 @@ public class BenchmarkEvalution {
 	{
 		List<Nqs> templates = Parser.parse();
 		Nqs q1 = templates.get(n);
-		System.out.print(q1.nlQuery +"**");
+		System.out.print(q1.nlQuery +"\t");
 		QueryAnnotaion.annotate(q1);
+		System.out.print(q1.predicateCandidate);
 		System.out.println();
+		
 	}
 }
