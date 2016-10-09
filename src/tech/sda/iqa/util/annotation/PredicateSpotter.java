@@ -6,14 +6,14 @@ import java.util.Set;
 
 import tech.sda.iqa.interactiveqa.Nqs;
 
-public class PredicateAnnotation {
+public class PredicateSpotter {
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 
 	}
 
-	public static Set<String> getPredicateAnnotation(Nqs n) {
+	public static Set<String> getRelation(Nqs n) {
 		// TODO Auto-generated method stub
 	 Set<String> Predicate = new HashSet<String>();
 		//extract predicate candidate from NQS
