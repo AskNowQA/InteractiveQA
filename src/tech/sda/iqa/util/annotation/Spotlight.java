@@ -2,61 +2,61 @@ package tech.sda.iqa.util.annotation;
 
 import java.io.*;
 import java.net.*;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.regex.Matcher;
-//import lombok.extern.slf4j.Slf4j;
 import java.util.regex.Pattern;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /** API for DBpedia Spotlight. Use {@link #getDBpLookup} in a static fashion.*/
 public class Spotlight
 {
 	private Spotlight()	{}
 
-	/** Relies on a http connection to the service, which may be down.
+	/** Relies on a http connection to the service, which may be down. 
+	 * Returns a json file as a string
 	 *  @param phrase
 	 ** @return */
-	public static Set<String> getDBpLookup(String phrase)
+	public static String getDBpLookup(String phrase)
 	{
-		Set<String> DBpEquivalent= new HashSet<String>(); 
+		String DBpEquivalent= new String(); 
 		String argument = phrase.replaceAll(" ","%20");
 		try
 		{
 			URL oracle = new URL("http://spotlight.sztaki.hu:2222/rest/annotate?text=" + argument);
 			// URL oracle = new URL("http://spotlight.dbpedia.org/rest/annotate?text="+argument);
-		//	System.out.println(oracle);
-			try
-			{
-				URLConnection yc = oracle.openConnection();
-				try (BufferedReader in = new BufferedReader(new InputStreamReader(yc.getInputStream())))
-				{
-					//log.trace(in.readLine());
-					int startindex =0,index=0;
-					String inputLine;
-					while ((inputLine = in.readLine()) != null)
-					{   
-						Pattern p = Pattern.compile("href=\"([^\"]*)\"");
-						Matcher m = p.matcher(inputLine);
-						while (m.find()) {
-							DBpEquivalent.add("<"+m.group(1)+">");
-							
-						}
-					}
+			//	System.out.println(oracle);
+			Document doc = Jsoup.connect("http://spotlight.sztaki.hu:2222/rest/candidates?text=" + argument).get();
+			//				parsing file in a new way
+			JSONArray json_array = new JSONArray();
+			Elements content = doc.getElementsByTag("surfaceForm");
+
+			for (Element link : content) {
+
+				JSONObject jo = new JSONObject();
+				jo.put("offset",link.attr("offset"));
+				jo.put("name",link.attr("name"));
+				Elements children = link.children();
+				for (Element child_link : children){
+					jo.put("uri","<http://dbpedia.org/resource/"+child_link.attr("uri")+">");
+					jo.put("label",child_link.attr("label"));
+					jo.put("contextualScore",child_link.attr("contextualScore"));
+					jo.put("finalScore",child_link.attr("finalScore"));
 				}
-				catch(Exception e){
-					
-				}
+				json_array.put(jo);
 			}
-			catch(Exception e){
-				
-			}
+			DBpEquivalent = json_array.toString();
 		}
 		catch(Exception e){
-			
+
 		}
 		return DBpEquivalent;	
 	}
-	
+
 	public static String getEntity(String uri)
 	{
 		return uri.substring(
@@ -131,7 +131,7 @@ public class Spotlight
 		try
 		{
 			URL uri = new URL("http://dbpedia.org/ontology/" + entity);
-		
+
 			URLConnection yc = uri.openConnection();
 
 			try (BufferedReader in = new BufferedReader(new InputStreamReader(yc.getInputStream())))
@@ -168,49 +168,49 @@ public class Spotlight
 		{
 			URL oracle = new URL("http://spotlight.sztaki.hu:2222/rest/annotate?text=" + argument);
 			// URL oracle = new URL("http://spotlight.dbpedia.org/rest/annotate?text="+argument);
-		//	System.out.println(oracle);
+			//	System.out.println(oracle);
 			try
 			{
 				URLConnection yc = oracle.openConnection();
 				try (BufferedReader in = new BufferedReader(new InputStreamReader(yc.getInputStream())))
 				{
 					//log.trace(in.readLine());
-					
+
 					String inputLine;
 					while ((inputLine = in.readLine()) != null)
 					{   System.out.println(inputLine);
-						Pattern p = Pattern.compile("href=\"([^\"]*)\"");
-						Matcher m = p.matcher(inputLine);
-						while (m.find()) {
-							DBpEquivalent="<"+m.group(1)+">";
-							
-						}
+					Pattern p = Pattern.compile("href=\"([^\"]*)\"");
+					Matcher m = p.matcher(inputLine);
+					while (m.find()) {
+						DBpEquivalent="<"+m.group(1)+">";
+
+					}
 					}
 				}
 				catch(Exception e){
-					
+
 				}
 			}
 			catch(Exception e){
-				
+
 			}
 		}
 		catch(Exception e){
-			
+
 		}
 		if (DBpEquivalent.isEmpty()){
-		
+
 			DBpEquivalent=checkOntology(phrase);
 			if (DBpEquivalent=="pageNotFound"){
 				DBpEquivalent=checkOntology(phrase.substring(0, phrase.length()-1));
 			}
-				
-			}
-		
-		
+
+		}
+
+
 		return DBpEquivalent;	
-	
-		
+
+
 	}
 
 }

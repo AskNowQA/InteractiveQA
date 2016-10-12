@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 	public final String queryID;
 	public final String givenSparql;
 	public Set<String> resourceSpotlight;
+	public String resourceSpotlightInfo;
 	public Set<String> resourceFOX;
 	public Set<String> predicateCandidate;
 	

@@ -9,14 +9,14 @@ import java.util.Set;
 public class EntityAnnotation {
 
 	@SuppressWarnings("null")
-	public static Set<String> getEntityAnnotation(String nlQuery) {
+	public static String getEntityAnnotation(String nlQuery) {
 		//System.out.println("::"+nlQuery);
-		Set<String> dbpRes = new HashSet<String>();
+		String dbpRes = "";
 		//dbpRes = Fox.annotate(nlQuery);
 		//System.out.println(dbpRes.size());
-		if (dbpRes.isEmpty()){
+		if (dbpRes == ""){
 			
-			dbpRes.addAll(Spotlight.getDBpLookup(nlQuery));
+			dbpRes=Spotlight.getDBpLookup(nlQuery);
 		}
 		if (dbpRes.isEmpty()){
 			System.out.print("SPOTLIGHT: Spotlight Could not annotate the Entity **0");

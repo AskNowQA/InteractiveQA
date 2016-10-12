@@ -6,7 +6,7 @@ import static spark.Spark.*;
 import spark.Route;
 import tech.sda.iqa.interactiveqa.Nqs;
 import tech.sda.iqa.util.annotation.QueryAnnotaion;
-
+import java.util.concurrent.TimeUnit;
 public class NQS_server {
 
 	private static QueryBuilder qb = new QueryBuilder();
@@ -33,8 +33,8 @@ public class NQS_server {
         	String question = req.queryParams("question");
         	Nqs q1 = new Nqs(question,nqs,"","");
         	QueryAnnotaion.annotate(q1);
-        	System.out.println(q1.predicateCandidate);
-        	return q1.predicateCandidate;
+        	System.out.println(q1.resourceSpotlightInfo);
+        	return q1.resourceSpotlightInfo;
         });
     }
 	

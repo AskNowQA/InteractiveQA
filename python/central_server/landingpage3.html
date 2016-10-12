@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!--Doing meta shit-->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="pyramid web application">
+
+    <title>Rygbee</title>
+    
+    <!--Ze fontz-->
+<!--    <link href='https://fonts.googleapis.com/css?family=Playfair+Display:400,400italic,700italic' rel='stylesheet' type='text/css'>-->
+    <link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Inconsolata' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Lato:400,900,300' rel='stylesheet' type='text/css'>
+    
+    <link href="images/untitled-font-1/styles.css" rel="stylesheet">
+
+    <!--Jquery Google CDN-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+
+    <!--Icons8 Icon Pack-->
+    <script type="text/javascript" src="//cdn.rawgit.com/icons8/bower-webicon/v0.10.7/jquery-webicon.min.js"></script>
+    
+    <!--Semantic UI CDN-->
+    <script src="https://oss.maxcdn.com/semantic-ui/2.1.8/semantic.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://oss.maxcdn.com/semantic-ui/2.1.8/semantic.min.css">    
+    
+<!--
+    <link rel="stylesheet" type="text/css" href="semantic-ui/semantic.min.css">
+    <script src="semantic-ui/semantic.min.js"></script>
+-->
+   
+    <style>
+        
+        @font-face {
+            font-family: BigJohn;
+            src: url("fonts/BIG JOHN.otf") format("opentype");
+        }
+        
+        /*CSS for cursor blink*/
+        .typed-cursor{
+            opacity: 1;
+            -webkit-animation: blink 0.7s infinite;
+            -moz-animation: blink 0.7s infinite;
+            animation: blink 0.7s infinite;
+        }
+        @keyframes blink{
+            0% { opacity:1; }
+            50% { opacity:0; }
+            100% { opacity:1; }
+        }
+        @-webkit-keyframes blink{
+            0% { opacity:1; }
+            50% { opacity:0; }
+            100% { opacity:1; }
+        }
+        @-moz-keyframes blink{
+            0% { opacity:1; }
+            50% { opacity:0; }
+            100% { opacity:1; }
+        }
+
+        
+        body {
+            width: 100vw;
+            height: 100%;
+/*            background: #1F5673;*/
+            
+            
+        }
+        
+        [main] {
+            height: 100vh;
+            width: 80vw;
+            margin-left: 10% !important;
+            margin-right: 10% !important;
+        }
+        
+/*
+        [min]:before { 
+            content: "";
+            position: fixed;
+            top: -10px;
+            left: 0;
+            width: 100%;
+            height: 10px;
+            z-index: 100;
+            -webkit-box-shadow: 0px 0px 10px rgba(0,0,0,.8);
+            -moz-box-shadow: 0px 0px 10px rgba(0,0,0,.8);
+            box-shadow: 0px 0px 10px rgba(0,0,0,.8);
+        }
+*/
+        
+        [header] {
+            padding-top: 30px;
+            width: 100%; 
+        }
+        
+        [header] .menu .item b {
+            font-size: 1.7vw;
+/*            color: white;*/
+            color: #1F5673;
+        }
+
+        [content] {
+            margin-top: 10%;
+            font-size: 3vw;
+            line-height: 1em;
+            font-family: 'Lato';
+            font-weight: 900;
+/*            color: white;*/
+            color: #616161;
+            text-rendering: optimizeLegibility;
+/*            text-shadow: 2px 4px 3px rgba(0,0,0,0.3);*/
+        }
+        
+        [content] div {
+            width: 100%;
+            text-align: center;
+            position: absolute;
+            bottom: 30px;
+        }
+        
+        [buttons] {
+            display: flex;
+            align-content: center;
+            text-align: center;
+            justify-content: center;
+        }
+        
+        [buttons] span {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: row;
+        }
+        
+        [buttons] span a {
+            margin-right: 30px !important;
+            font-size: 1.2vw !important;
+        }
+        
+        [buttons] span a {
+            font-family: Lato;
+        }
+
+        [pointer] {
+            text-align: center;
+        }
+        
+        .row [works-title] {
+        }
+        
+        [pointer] {
+            color: #616161;
+        }
+        
+        [pointer] [works-title] {
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: auto;
+            font-size: 1.1vw;
+        }
+        
+        
+        [demo] {
+            min-height: 100vh;
+            width: 100vw;
+            padding: 40px;
+            padding-bottom: 80px;
+            background-image: url("http://static.tumblr.com/maopbtg/a5emgtoju/inflicted.png");
+        }
+        
+        [demo] [title], [people] [title], [works] [title], [contactus] [title] {
+            font-size: 3em;
+            font-weight: 900;
+            line-height: 1em;
+            text-align: center;
+            font-family: 'Lato', sans-serif;
+            font-weight: 900;
+            padding: 30px;
+/*            padding-bottom: 20vh;*/
+        }
+        
+        [demo] [title] {
+            color: white;
+        }
+        
+        [demo] .compact.segment {
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        [demo] [query] {
+            min-height: 60vh;
+        }
+        
+        [demo] [query] [question] {
+            font-size: 3em;
+            line-height: 1.3em;
+        }
+        
+        [demo] [query] [elaborate] {
+            display: flex;
+            flex-direction: row;
+            padding: 2em;
+        }
+        
+        [demo] [query] [elaborate] [input] {
+            line-height: 30px;
+            padding: 2em;
+            resize: none; 
+            overflow: hidden;
+            flex-grow: 1;
+        }    
+        
+        [demo] [query] [elaborate] [sidebar] {
+            width: 300px;
+            padding: 2em;
+/*            background-color: dimgray;*/
+        }
+        
+        .hiddendiv {
+            display: none;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            overflow: hidden;
+        }
+        
+        [demo] [query] [input] textarea {
+            background: transparent url(images/underline.jpg) repeat; 
+            overflow:hidden;
+            display: block;
+            line-height:30px !important;
+            padding: 0px !important;
+            padding-left: 1em !important;
+            padding-right: 1em;
+            width: 100%;
+/*            font-family: Input;*/
+            font-size: 1.2em;
+            font-family: 'Roboto', sans-serif;
+        }
+        
+        [demo] [query] [nav] {
+            position: absolute;
+            bottom: 0px;
+            width:100%;
+            margin-left:-3em;
+            margin-right:-3em;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            padding: 2em;
+        }
+        
+        [demo] [query][data-tab="first"] [nav] {
+            flex-direction: row-reverse;
+        }
+        
+        [demo] .tabular.menu .item {
+            background-color: white !important;
+        }   
+        
+        [demo] [query][data-tab="fourth"] .very.padded.container {
+            margin-bottom: 5em !important;
+        }
+        
+        [demo] [query][data-tab="fourth"] [answers] .vertical.segment {
+            min-height: 10vh !important;
+        }
+        
+        [demo] [query][data-tab="fourth"] [answers] .vertical.segment [formtext] {
+            font-size: 1.1em;
+            padding: 1em;
+        }
+        
+        [people] {
+            -webkit-box-shadow: inset 0px 0px 3em -1em rgba(0,0,0,0.75);
+            -moz-box-shadow: inset 0px 0px 3em -1em rgba(0,0,0,0.75);
+            box-shadow: inset 0px 0px 3em -1em rgba(0,0,0,0.75);
+            padding: 3em;
+            background-color: white;
+        }
+        
+        [team],[collaborators] {
+            background-color: white;
+            padding-top: 1em;
+            padding-bottom: 1em;            
+        }
+        
+        [team] .popup .header {
+            font-size: 1.6em !important;
+        }
+        [team] .popup .content {
+            padding-top: 0em !important;
+        }
+        
+        [collaborators] {
+            line-height: 1em;
+            text-align: center;
+        }
+        
+        [collaborators] .ui.header:first-child {
+            margin-top: 0 !important;
+        }
+        
+        [works] {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background-color: #00bfff;
+            background-image: url("http://www.transparenttextures.com/patterns/tiny-grid.png");
+
+        }
+        
+        [works] [title] {
+            padding-top: 2em;
+            color: #424242;
+        }
+        
+        [works] .container {
+            margin-top: 10vh;
+            margin-bottom: 20vh;
+        }
+        
+        [works] .container .segment {
+            display: flex;
+            flex-direction: row;
+        }
+        [works] .container .segment .content {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            padding: 30px;
+        }
+        
+        [works] .container .segment .huge.image  {
+            color: #424242;
+            width: auto !important;
+        }
+        
+        [works] .container .segment .huge.image i {
+            background-color: #fff;
+        }
+        
+        [works] .container .segment .content a {
+            font-size: 2em;
+            color: #424242;
+            font-weight: 700;
+            line-height: 1em;
+        }
+            
+        
+        [footer] {
+            min-height: 300px;
+            background-color: #363636;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            padding-top: 3em;
+            padding-bottom: 3em;
+        }
+        
+        [footer] .container #left .header{
+            color: white;    
+        }
+        
+        [footer] .container #left label {
+            color: white;
+        }
+        
+        [footer] .container #right {
+            color: #fff;
+        }
+        
+        [footer] .container #right .header {
+            font-size: 4em !important;
+/*            font-family: BigJohn, sans-serif;*/
+            color: #fff;
+            font-weight: 800;
+        }
+        
+        [footer] .container #right .horizontal.divider{
+            padding-top: 2em;
+            padding-bottom: 2em;
+            
+            font-size: 1.3em;
+            color: #fff;
+        }
+        
+        .icons8 {
+            background-color: white !important;
+            vertical-align: middle;
+            font-size: 4em;
+            border-radius: 500em !important;
+            line-height: 1 !important;
+            padding: .5em !important;
+            box-shadow: 0 0 0 .1em rgba(0,0,0,.1) inset;
+            width: 2em !important;
+            height: 2em !important;
+            display: inline-block;
+            opacity: 1;
+            color: #424242;
+            margin: 0 .25rem 0 0;
+        }
+        
+        [contactus] {
+            background-color: darkgreen;
+        }
+        
+        [demo] .ui.steps .step.active::after {
+            background-color: white;
+        }
+    </style>
+</head>
+<body>
+    
+    <div main class="ui grid" id="rygbee">
+        
+        <div class="row">
+            <div header >
+                <div class="ui large secondary menu">
+
+                    <div class="item">
+                        <b> RYGBEE </b>
+                    </div>
+
+                    <div class="right menu">
+
+                        <div class="item">
+<!--                            <a class="ui massive standard basic black button" login href = "/login">Log In</a>-->
+                        </div>  
+                    </div>
+
+                </div>    
+            </div>
+        </div>
+                
+        <div content class="row">
+            <div>
+                <span id = "headertext">
+                </span>
+            </div>
+        </div>
+        
+         <div  class = "ui grid row">
+            <div buttons class = "sixteen wide column">
+                <span>
+                    <a class="ui big inverted blue button" href="#demo">Try It Out</a>
+<!--                    <a class="ui big inverted blue button" href = "/signup">Sign Up</a>        -->
+                </span>
+            </div>
+        </div>
+        
+        <div pointer class = "row">
+            <div works-title>
+                <i class="big angle double down icon"></i>
+            </div>
+        </div>    
+        
+    </div>
+    
+    <div works id="works">
+        
+        <div title>
+            How it works
+        </div>
+        
+        <div class="ui container">
+
+            
+            <div class="ui basic very padded segment">
+
+                <div class="ui huge image">
+                    <i class="circular huge idea icon"></i>
+                </div>
+
+                <div class="content">
+                    <a class="large header"> Post your problem statement or hypothesis, and approach. </a>
+                </div>
+
+            </div>
+
+            <div class="ui divider"></div>
+            
+            <div class="ui basic very padded segment">
+
+                <div class="ui huge image">
+<!--                    <i class="circular huge idea icon"></i>-->
+                    <!-- Server icon by Icons8 -->
+                    <img class="circular huge icon icons8 icons8-Join" src="data:image/png;base64,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" width="80" height="80">
+                </div>
+
+                <div class="middle aligned content">
+                    <a class="large header"> Rygbee understands your posts and matches it with that of other users'.</a>
+                </div>
+
+            </div>
+
+            <div class="ui section divider"></div>
+            
+            <div class="ui basic very padded segment">
+
+                <div class="ui huge image">
+<!--                    <i class="circular huge icon icon-handshake" customicon></i>-->
+                    <img class="circular huge icon icons8 icons8-Handshake" src="data:image/png;base64,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" width="80" height="80">
+                </div>
+
+                <div class="middle aligned content">
+                    <a class="large header"> Find others who are working on related or similar projects. </a>
+                </div>
+
+            </div>
+
+            <div class="ui section divider"></div>
+            
+            <div class="ui basic very padded segment">
+
+                <div class="ui huge image">
+<!--                    <i class="circular huge icon" url="/images/Gorilla Filled-100.png"></i>-->
+                    <img class="circular huge icon icons8 icons8-Stork" src="data:image/png;base64,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" width="80" height="80">
+                </div>
+
+                <div class="middle aligned content">
+                    <a class="large header"> Collaborate with them and build your team. </a>
+                </div>
+
+            </div>
+
+            <div class="ui section divider"></div>
+            
+            <div class="ui basic very padded segment">
+
+                <div class="ui huge image">
+<!--                    <i class="circular huge icon" url="/images/Gorilla Filled-100.png"></i>-->
+                    <img class="circular huge icon icons8 icons8-Book" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABF0lEQVRoge3UMW7CQBQE0G3ocoCUlOlNkXI8322UNgfhFpyBM7jIEdJBR5MyRY6QAyQNliIs4f2Ld/1X/JFc7jIPzITg8XhGAfBAckfyi+RvzidX+c/cxbMBzt98kfK5AIfaAZoCPyS3ANazF0mNpjyAp6X7jqIAbIczplYr9qLhtTG3WtqLaG21EgC2VisBUKy8A1IAkx+o7OEAB9QGmPtxgAMc4AAHOOC+ACJyBPB8K3gxQNd1r3P8YiUBp4tDL7UB+v8H2rb9ALCpBiAib5qLzAGaplmJyL5aQAghAHgk+Z4CmFqtojm/Tj3J71iAmfKxoXK1zIXK1TKX2NUq+ifWJHa1zAJCiFst04Ah11arCoDHU2H+AEJ/LQWv1OTYAAAAAElFTkSuQmCC" width="80" height="80">
+                </div>
+
+                <div class="middle aligned content">
+                    <a class="large header">Get a head start by browsing through relevant literature. </a>
+                </div>
+
+            </div>
+
+        </div>
+            
+    </div>
+    
+    <div demo id="demo">
+
+        <div title> Try it out </div>
+   
+        <div class="ui fluid compact segment">
+            <div class="ui four top attached steps tabular menu">
+
+                <div class="step active item" data-tab="first">
+                    <i class="help icon"></i>
+                    <div class="content">
+                        <div class="title">Problem *</div>
+<!--                        <div class="description">Choose your shipping options</div>-->
+                    </div>
+                </div>
+
+                <div class="step item" data-tab="second">
+                    <i class="payment icon"></i>
+                    <div class="content">
+                        <div class="title">Background</div>
+<!--                        <div class="description">Choose your shipping options</div>-->
+                    </div>
+                </div>
+
+                <div class="step item" data-tab="third">
+                    <i class="idea icon"></i>
+                    <div class="content">
+                        <div class="title">Approach</div>
+<!--                        <div class="description">Enter billing information</div>-->
+                    </div>
+                </div>
+                
+                <div class="step item" data-tab="fourth">
+                    <i class="info icon"></i>
+                    <div class="content">
+                        <div class="title">Post</div>
+<!--                        <div class="description">Verify order details</div>-->
+                    </div>
+                </div>
+            </div>
+            
+            <form class="ui form" method="post" action="/search"> 
+                
+                <div class="ui attached very padded tab active segment" query data-tab="first">
+
+                    <!--CONTENT-->
+                    <div form class="ui container">
+
+                        <div question>
+                            1. Tell us what you want to solve or propose
+                        </div>
+
+                        <div elaborate>
+
+                            <div class="" input>
+                                <textarea rows="3" class="autoExpand" minrows ="3" name="first"></textarea>
+                            </div>
+
+                            <div sidebar>
+
+
+                                <div class="ui styled fluid accordion">
+                                    <div class="title">
+                                        <i class="dropdown icon"></i>
+                                        What do we mean by a problem?
+                                    </div>
+                                    <div class="content">
+
+                                        <ul class="ui list">
+                                            <li>Supportive Facts</li>
+                                            <li>Assumptions that you make</li>
+                                            <li>Point to be proven</li>
+                                        </ul>
+
+                                    </div>
+                                    <div class="active title">
+                                        <i class="dropdown icon"></i>
+                                        Sample Problem
+                                    </div>
+                                    <div class="active content">
+                                        <ul class="ui list">
+                                            <li>I want to figure how many people move from small towns of India to cities for livelihood.</li>
+                                            <li>I am trying to figure out the relationship between the three sides of a triangle in specific non-Euclidean spaces.</li>
+                                            <li>I am interested in figuring out whether two documents are contradictory or not.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                            </div>
+
+
+
+                        </div>   
+
+                    </div>
+
+                    <div nav>
+                        <div class="ui right labeled icon button" id="next"><i class="right arrow icon"></i>Next</div>
+                    </div>
+
+                </div>
+
+                <div class="ui attached very padded tab segment" query data-tab="second">
+
+                    <!--CONTENT-->
+                    <div form class="ui container">
+
+                        <div question>
+                           2. We would love to know a bit of the problem background
+                        </div>
+
+                        <div elaborate>
+
+                            <div class="field" input>
+                                <textarea rows="3" class="autoExpand" minrows ="3" name="second"></textarea>
+                            </div>
+
+                            <div sidebar>
+
+
+                                <div class="ui styled fluid accordion">
+                                    <div class="title">
+                                        <i class="dropdown icon"></i>
+                                        What do we mean by a background?
+                                    </div>
+                                    <div class="content">
+
+                                        <ul class="ui list">
+                                            <li>Previous Works</li>
+                                            <li>Why solving the problem is important?</li>
+                                            <li>Why the problem is not trivial?</li>
+                                        </ul>
+
+                                    </div>
+                                    <div class="active title">
+                                        <i class="dropdown icon"></i>
+                                        Sample Background
+                                    </div>
+                                    <div class="active content">
+                                        <ul class="ui list">
+                                            <li>Life in Indian villages is poverty-stricken and people look for better, more secure jobs.</li>
+                                            <li>It is well known that sum of the two sides of a triangle is greater than the third side, in a Euclidean space.</li>
+                                            <li>Lot of work has been done in text similarity computation.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                            </div>
+
+
+
+                        </div>   
+
+                    </div>
+
+                    <div nav>
+                        <div class="ui left labelled icon button" id="back"><i class="left arrow icon"></i>Back</div>
+                        <div class="ui right labeled icon button" id="next"><i class="right arrow icon"></i>Next</div>
+                    </div>
+
+                </div>
+
+                <div class="ui attached very padded tab segment" query data-tab="third">
+
+                    <!--CONTENT-->
+                    <div form class="ui container">
+
+                        <div question>
+                           3. Have you figured out some approach already?
+                        </div>
+
+                        <div elaborate>
+
+                            <div class="field" input>
+                                <textarea rows="3" class="autoExpand" minrows ="3" name="third"></textarea>
+                            </div>
+
+                            <div sidebar>
+
+
+                                <div class="ui styled fluid accordion">
+                                    <div class="title">
+                                        <i class="dropdown icon"></i>
+                                        What do we mean by an approach?
+                                    </div>
+                                    <div class="content">
+
+                                        <ul class="ui list">
+                                            <li>Methodology followed</li>
+                                            <li>Data used</li>
+                                            <li>Evaluation technique</li>
+                                        </ul>
+
+                                    </div>
+                                    <div class="active title">
+                                        <i class="dropdown icon"></i>
+                                        Sample Approach
+                                    </div>
+                                    <div class="active content">
+                                        <ul class="ui list">
+                                            <li>I have started working on the project by examining movements in villages of Gujarat. I think some kind of sample statistics based prediction modeling will be useful.</li>
+                                            <li>I feel that the solution might lie in studying affines. Not sure though.</li>
+                                            <LI>I think that models of similarity can inspire me to understand and define contraction more formally. I also feel that I should be looking into logic-based formalisms and how that relates with negation in linguistics.</LI>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                            </div>
+
+
+
+                        </div>   
+
+                    </div>
+
+                    <div nav>
+                        <div class="ui left labelled icon button" id="back"><i class="left arrow icon"></i>Back</div>
+                        <div class="ui right labeled icon button" id="next"><i class="right arrow icon"></i>Next</div>
+                    </div>
+
+                </div>
+
+                <div class="ui attached very padded tab segment" query data-tab="fourth">
+
+                    <!--CONTENT-->
+                    <div form class="ui very padded container">
+
+                        <div question>
+                            Review
+                        </div>
+                        
+                        <div answers class="ui raised comapact segment">
+                            <div class="ui vertical segment" first data-content="Click to edit"><a class="ui green ribbon label">Problem</a><div formtext></div></div>
+                            <div class="ui vertical segment" second data-content="Click to edit"><a class="ui blue ribbon label" >Background</a><div formtext></div></div>
+                            <div class="ui vertical segment" third data-content="Click to edit"><a class="ui grey ribbon label" >Approach</a><div formtext></div></div>
+                        </div>     
+
+                        <div class="field" tags>
+                            <div class="ui fluid multiple search selection dropdown">
+                                <input name="tags" type="hidden">
+                                <i class="dropdown icon"></i>
+                                <div class="default text">Skills</div>
+                                <div class="menu">
+                                    <div class="item" data-value="Mathematics">Mathematics</div>
+                                    <div class="item" data-value="Physics">Physics</div>
+                                    <div class="item" data-value="Statistics">Statistics</div>
+                                    <div class="item" data-value="ComputerScience">Computer Science</div>
+                                    <div class="item" data-value="QuantitativeBiology">Quantitative Biology</div>
+                                    <div class="item" data-value="QuantitativeFinance">Quantitative Finance</div>
+                                </div>  
+                            </div>
+                             <div class="ui pointing label">
+                                Select the domains which correspond best to your post.
+                            </div>
+                        </div>
+                        
+                    </div>
+
+                    <div nav>
+                        <div class="ui left labelled icon button" id="back"><i class="left arrow icon"></i>Back</div>
+                        <input type="submit" class="ui right labeled icon blue button" id="next"></div>
+                    </div>
+
+            
+            </form>
+        </div>
+
+    </div>
+
+    <div people id="people">
+        <div title> Meet the Team </div>
+        
+        <div team>
+            <div class="ui container">
+
+                <div class="ui five  doubling cards">
+                    <div id="sourish" class="card">
+                        <div class="image">
+                            <img src="images/sourish_small.jpg">
+                        </div>
+                    </div>
+
+                    <div class="card" id="gaurav">
+                        <div class="image">
+                            <img src="images/gaurav_small.jpg">
+                        </div>
+                    </div>
+
+
+                    <div class="card" id="priyansh">
+                        <div class="image">
+                            <img src="images/priyansh_small.jpg">
+                        </div>
+                    </div>
+
+                     <div class="card" id="akshay">
+                        <div class="image">
+                            <img src="images/akshay_small.jpg">
+                        </div>
+                    </div>                
+
+                    <div class="card" id="soumick">
+                        <div class="image">
+                            <img src="images/soumick_small.jpg">
+                        </div>
+                    </div>
+
+
+                </div>
+
+               <div class="ui popup top left transition hidden" id="psourish">
+                    <div class="header"> Sourish Dasgupta </div>
+
+                    <div class="content">
+                        Co-Founder
+                    </div>
+
+                    <a class="ui mini linkedin button" href="https://in.linkedin.com/in/sourish-dasgupta-2432248">
+                        <i class="linkedin icon"></i>
+                    </a>
+                </div>
+
+                <div class="ui popup top left transition hidden" id="pgaurav">
+                    <div class="header"> Gaurav Maheshwari </div>
+
+                    <div class="content">
+                        Co-Founder
+                    </div>
+
+                    <a class="ui mini linkedin button" href="https://in.linkedin.com/in/maheshwarigaurav1">
+                        <i class="linkedin icon"></i>
+                    </a>
+                </div>
+
+                <div class="ui popup top left transition hidden" id="ppriyansh">
+                    <div class="header"> Priyansh Trivedi </div>
+
+                    <div class="content">
+                        Co-Founder
+                    </div>
+
+                    <a class="ui mini linkedin button" href="https://in.linkedin.com/in/priyanshtrivedi" >
+                        <i class="linkedin icon"></i>
+                    </a>
+                </div>
+
+                <div class="ui popup top left transition hidden" id="pakshay">
+                    <div class="header"> Akshay Ratan </div>
+
+                    <div class="content">
+                        Founding Member
+                    </div>
+
+                    <a class="ui mini linkedin button" href="https://in.linkedin.com/in/akshay-ratan-396aa060">
+                        <i class="linkedin icon"></i>
+                    </a>
+                </div>
+
+                <div class="ui popup top left transition hidden" id="psoumick">
+                    <div class="header"> Soumick Dasgupta </div>
+
+                    <div class="content">
+                        Founding Member
+                    </div>
+
+                    <a class="ui mini linkedin button" href="https://www.linkedin.com/in/soumick86">
+                        <i class="linkedin icon"></i>
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="ui horizontal divider">
+            Our Collaborators
+        </div>
+        
+        <div collaborators>
+
+            <div class="ui container">
+
+<!--
+                <div class="ui huge  header">
+                    Our Collaborators
+                </div>
+-->
+
+                <div class="ui seven doubling cards">
+
+                    <div class="card" style="opacity:0;"></div>
+                    <div class="card" style="opacity:0;"></div>
+
+                    <div class="ui card"id="thomas">
+                            <div class="image">
+                                <img src="images/thomas_small.jpg">
+                            </div>
+
+                        </div>
+                    <div class="card" id="jens">
+                        <div class="image">
+                            <img src="images/jens_small.jpg">
+                        </div>
+                    </div>
+
+
+                    <div class="card" id="gourab">
+                        <div class="image">
+                            <img src="images/gourab_small.jpg">
+                        </div>
+                    </div>
+
+                    <div class="card" style="opacity:0;"></div>
+                    <div class="card" style="opacity:0;"></div>
+
+
+                </div>
+
+                <div class="ui popup bottom left transition hidden" id="pthomas">
+                    <div class="header"> Prof. Thomas Lukasiewicz </div>
+                </div>
+
+                <div class="ui popup bottom left transition hidden" id="pjens">
+                    <div class="header"> Prof. Jens Lehmann </div>
+                </div>
+
+                <div class="ui popup bottom left transition hidden" id="pgourab">
+                    <div class="header"> Gourab Kar </div>
+                </div>      
+
+            </div>
+
+        </div>
+    </div>
+    
+<!--
+    <div contactus>
+        
+        <div title> Contact Us </div>
+        <img class="icon icons8-Comments" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADQAAAA0CAYAAADFeBvrAAACEUlEQVRoge2ZvU4bQRSFp6AgEkJBSroUlFbgBSxtce6522xP4YKCMnRRFEGBu9RUeQQeAIkUFHkAXgBorAASJYULCks0SeEfeWfHZtaOdsZiPuk2a3nnfJqd2dUdYxIrBoAWyR8kf5F8Ivk3snokeU6yC6A1U6Tdbr9T1W8kexGE9q0/InJUFMVmRYjkWQQBFyoRuQSwNpEZzUzwYEvW8fSaebZ+fFTVDoAP/3+VLgeAT6q6z+Fams48ANAyHG4AJZkYRWwAvCd5b2XvGg53s8lFVe2EDuuLqnYsoXND8toS+hw6qC8ismMJ3Rh7cYUOWZdK/iQUGUkodpJQ7CSh2ElCsZOEYicJxU4Sip0kFDtvQqjUJBGRndAhfXE0Sa5dbay90EF9mdXGshuN9wA2Qod9DQAbrB4sdMet4IEtpap7MXZQR63gjkNmMDleIfnVXlwe1QOQOwbMHIM1Ud9LQUTkcoGb9AGsT8msk+w3LSMiv0vHKcYYk2XZFsljEbmrecMv43uQPGxY5oHkSVEUH+c9o7WOJFX1avxfVb1qQMLvSNIXALv2IAB2Z11fesAmcMzEz1E5Zy56SB5YQn1WN4OD0Dm9AbBN8nbOc34LYDt0zlqo6umcjeI0dL7a5Hmek3xxCL3keV554a4EJC8cQhehcy3MjBfpYehcC+P41Cl9Cq0kUx+jPQBZ6DyJRGI5/gHQKaQIHBkfQgAAAABJRU5ErkJggg==" width="52" height="">
+    
+    </div>
+-->
+    
+    <div footer>
+        <div class="ui two column very relaxed divided inverted stackable grid very padded container">
+            
+            <div class="column" id="left">
+                <div class="ui large header">
+                    Contact us
+                </div>
+                <form class="ui inverted form" method = "post" action="/feedback">
+                    <div class="two fields">
+                        <div class="field">
+                            <label>Name</label>
+                            <div class="ui left icon input">
+                                <input placeholder="Your Name" type="text",name="name">
+                                <i class="user icon"></i>
+                            </div>
+                        </div>
+                
+                        <div class="field">
+                            <label>Email Address</label>
+                            <div class="ui left icon input">
+                                <input type="email" placeholder="Email Address" name="email">
+                                <i class="mail icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="field">
+                        <label>Feedback</label>
+                        <textarea type="text" name="content" rows="3"></textarea>
+                    </div>
+                
+                    <input type="submit" class="ui blue right floated submit button" value="Send Message">
+                </form>
+            </div>
+            
+            <div class="center aligned column" id="right">
+                <div class="ui large header">
+                    COMING SOON
+                </div>
+                
+                <div class="ui horizontal divider">
+                    rygbee
+                </div>
+                
+                <div foot>
+                    A humble startup.
+                    <div copyright>
+                        © 2016
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+    
+    </div>
+    
+    <script src="js/typed/typed.js"></script>
+    <script>
+        var $review_tab = $('[demo] .tabular.menu .item[data-tab="fourth"]');
+        var $review_body = $('[demo] [query][data-tab="fourth"]');
+        var $form = $('[demo] form');
+        //api magic stuff
+        $.fn.api.settings.api = {
+            'submit form' :'/search',
+        };
+        
+        $(function(){
+            $("#headertext").typed({
+                strings: ["Find collaborators ^100 for your next research project."],
+                typeSpeed: 2,
+            });
+        });
+        
+        
+        $('[demo] [query] [elaborate] [sidebar] .ui.accordion').accordion();
+        $('[demo] .tabular.menu .item').tab();
+        $('[demo] [query][data-tab="fourth"] [answers] .vertical.segment').popup({
+            position: 'bottom left'
+        });           //Popups
+        $('[demo] [query][data-tab="fourth"] [tags] .dropdown').dropdown({ 
+                action: 'combo',
+                allowAdditions: true
+        });
+        
+        $('[data-tab="first"] [next]').click( function() {
+            $.tab('change tab', 'second'); 
+            $('[demo] [form] .menu [data-tab="first"]').removeClass('active');
+            $('[demo] [form] .menu [data-tab="second"]').addClass('active');
+        });
+        
+        $('[data-tab="second"] [next]').click( function() {
+            $.tab('change tab', 'third'); 
+            $('[demo] [form] .menu [data-tab="second"]').removeClass('active');
+            $('[demo] [form] .menu [data-tab="third"]').addClass('active');
+        });
+        //for form submission handling 
+//        $('[demo] [data-tab="fourth"] [nav] #next').api({
+//            action: 'submit form',
+//            method: 'post',
+//            beforeSend: function(settings) {
+//                // cancel request if no id   
+//                console.log("in before send");
+//                var $form = $('.form');
+//                if( !$form.form("get value","text") ) {
+//                    return false;
+//                }
+//                settings.data.tags = $form.form("get value","tags");
+//                settings.data.form_question = $form.form('get value','  first');
+//                settings.data.form_answer = $form.form('get value','second');
+//                settings.data.form_elaboration = $form.form('get value','third');
+//                return settings;
+//            }
+////
+////            onSuccess: function(response) {
+////                console.log("onSuccess");
+////                if (response.status == 'Correct') {
+////                    console.log("bye bye")
+////                    window.location.replace("/newsfeed")
+////                }
+////            },
+////
+////            onAbort: function(response) {
+////                console.log("onAbort");
+////                $('[error]').removeClass("hidden");
+////                return response;
+////            },
+////
+////            onFailure: function(response) {
+////                console.log("onFailure");
+////                $('[error]').removeClass("hidden");
+////                return response;
+////            }
+//
+//        });
+        //Review Div
+        function review() {
+            
+            
+            if ($review_tab.hasClass('disabled')) {
+                return;
+            };
+            
+            $review_body.addClass('loading');
+            $('[demo] [data-tab="fourth"] [nav] #next').addClass('disabled')
+            
+            var form_question = $form.form('get value','first');
+            var form_answer = $form.form('get value','second');
+            var form_elaboration = $form.form('get value','third');
+            has_first = false;
+            has_second = false;
+            has_value = false;
+            
+            $('[demo] [query][data-tab="fourth"] [answers] [first] [formtext]').text(form_question);
+            $('[demo] [query][data-tab="fourth"] [answers] [second] [formtext]').text(form_answer);
+            $('[demo] [query][data-tab="fourth"] [answers] [third] [formtext]').text(form_elaboration);
+            if (form_question.length > 2) {
+                has_first = true;
+            }
+            if (form_answer.length > 2) {
+                has_second = true;
+            }
+            if (form_question.length > 2 || form_answer.length > 2 || form_elaboration.length > 2)
+            {
+                has_value = true;
+            }
+            
+            if (has_value) {
+                console.log("YAY");
+                $('[demo] [data-tab="fourth"] [nav] #next').removeClass('disabled')
+            }
+            
+            $review_body.removeClass('loading');
+            
+        }
+        
+        //Add listener to Review Div
+        $('[demo] .tabular.menu .item[data-tab="fourth"]').click(review);
+        
+        //Click to edit REVIEW thingy
+        $('[demo] [query][data-tab="fourth"] [answers] [first]').click( function() {
+             $('[demo] .tabular.menu .item[data-tab="fourth"]').removeClass('active');
+             $('[demo] .tabular.menu .item[data-tab="first"]').addClass('active');
+             $('[demo] [query][data-tab="fourth"]').removeClass('active');
+             $('[demo] [query][data-tab="first"]').addClass('active');
+             $('[demo] [query][data-tab="first"] [input] textarea').focus();
+            
+        });
+        $('[demo] [query][data-tab="fourth"] [answers] [second]').click( function() {
+             $('[demo] .tabular.menu .item[data-tab="fourth"]').removeClass('active');
+             $('[demo] .tabular.menu .item[data-tab="second"]').addClass('active');
+             $('[demo] [query][data-tab="fourth"]').removeClass('active');
+             $('[demo] [query][data-tab="second"]').addClass('active'); 
+            $('[demo] [query][data-tab="second"] [input] textarea').focus();
+        });
+        $('[demo] [query][data-tab="fourth"] [answers] [third]').click( function() {
+             $('[demo] .tabular.menu .item[data-tab="fourth"]').removeClass('active');
+             $('[demo] .tabular.menu .item[data-tab="third"]').addClass('active');
+             $('[demo] [query][data-tab="fourth"]').removeClass('active');
+             $('[demo] [query][data-tab="third"]').addClass('active'); 
+            $('[demo] [query][data-tab="third"] [input] textarea').focus();
+        });
+        
+        
+        //DEMO NAV
+        $('[demo] [query][data-tab="first"]  .button#next').click( function() {
+            //From first to second
+             $('[demo] .tabular.menu .item[data-tab="first"]').removeClass('active');
+             $('[demo] .tabular.menu .item[data-tab="second"]').addClass('active');
+             $('[demo] [query][data-tab="first"]').removeClass('active');
+             $('[demo] [query][data-tab="second"]').addClass('active');
+        });
+        $('[demo] [query][data-tab="second"]  .button#next').click( function() {
+            //From second to third
+             $('[demo] .tabular.menu .item[data-tab="second"]').removeClass('active');
+             $('[demo] .tabular.menu .item[data-tab="third"]').addClass('active');
+             $('[demo] [query][data-tab="second"]').removeClass('active');
+             $('[demo] [query][data-tab="third"]').addClass('active');
+        });
+        $('[demo] [query][data-tab="third"]  .button#next').click( function() {
+            //From third to fourth
+            //If the div is disabled, don't let the user continue
+            if ($('[demo] .tabular.menu .item[data-tab="fourth"]').hasClass('disabled')) {
+                console.log("RIGHT");
+                return;
+            };
+             $('[demo] .tabular.menu .item[data-tab="third"]').removeClass('active');
+             $('[demo] .tabular.menu .item[data-tab="fourth"]').addClass('active');
+             $('[demo] [query][data-tab="third"]').removeClass('active');
+             $('[demo] [query][data-tab="fourth"]').addClass('active');
+            review();
+        });
+        $('[demo] [query][data-tab="fourth"]  .button#back').click( function() {
+            //From fourth to third
+             $('[demo] .tabular.menu .item[data-tab="fourth"]').removeClass('active');
+             $('[demo] .tabular.menu .item[data-tab="third"]').addClass('active');
+             $('[demo] [query][data-tab="fourth"]').removeClass('active');
+             $('[demo] [query][data-tab="third"]').addClass('active');
+        });
+        $('[demo] [query][data-tab="third"]  .button#back').click( function() {
+            //From fourth to third
+             $('[demo] .tabular.menu .item[data-tab="third"]').removeClass('active');
+             $('[demo] .tabular.menu .item[data-tab="second"]').addClass('active');
+             $('[demo] [query][data-tab="third"]').removeClass('active');
+             $('[demo] [query][data-tab="second"]').addClass('active');
+        });
+        $('[demo] [query][data-tab="second"]  .button#back').click( function() {
+            //From fourth to third
+             $('[demo] .tabular.menu .item[data-tab="second"]').removeClass('active');
+             $('[demo] .tabular.menu .item[data-tab="first"]').addClass('active');
+             $('[demo] [query][data-tab="second"]').removeClass('active');
+             $('[demo] [query][data-tab="first"]').addClass('active');
+        });
+        
+        
+         //TEAM POPUPS
+        $('[team] .container #sourish').popup({
+            popup: '.popup#psourish',
+            hoverable: true
+        });
+        $('[team] .container #gaurav').popup({
+            popup: '.popup#pgaurav',
+            hoverable: true
+        });
+        $('[team] .container #priyansh').popup({
+            popup: '.popup#ppriyansh',
+            hoverable: true
+        });
+        $('[team] .container #akshay').popup({
+            popup: '.popup#pakshay',
+            hoverable: true
+        });
+        $('[team] .container #soumick').popup({
+            popup: '.popup#psoumick',
+            hoverable: true
+        });
+        //COLLABORATOR POPUPS
+         $('[collaborators] .container #thomas').popup({
+            popup: '.popup#pthomas',
+            hoverable: true
+        });
+        $('[collaborators] .container #jens').popup({
+            popup: '.popup#pjens',
+            hoverable: true
+        });
+        $('[collaborators] .container #gourab').popup({
+            popup: '.popup#pgourab',
+             transition: 'vertical flip',
+            hoverable: true
+        });
+        $('[collaborators] .container #ylee').popup({
+            popup: '.popup#pylee',
+            hoverable: true
+        });
+        
+
+        //For autogrow textarea
+        $(document).one('focus.textarea', '[demo] [data-tab="first"] [input] textarea', function(){
+			var savedValue = this.value;
+			this.value = '';
+			this.baseScrollHeight = this.scrollHeight;
+			this.value = savedValue;
+		}).on('input.textarea', '[demo] [data-tab="first"] [input] textarea', function(){
+			var minRows = this.getAttribute('minrows')|0, 
+                rows;
+			this.rows = minRows;
+//            console.log(this.scrollHeight , this.baseScrollHeight);
+			rows = Math.ceil((this.scrollHeight - this.baseScrollHeight) / 30);
+			this.rows = minRows + rows;
+		});
+        
+        $(document).one('focus.textarea', '[demo] [data-tab="second"] [input] textarea', function(){
+			var savedValue = this.value;
+			this.value = '';
+			this.baseScrollHeight = this.scrollHeight;
+			this.value = savedValue;
+		}).on('input.textarea', '[demo] [data-tab="second"] [input] textarea', function(){
+			var minRows = this.getAttribute('minrows')|0, 
+                rows;
+			this.rows = minRows;
+//            console.log(this.scrollHeight , this.baseScrollHeight);
+			rows = Math.ceil((this.scrollHeight - this.baseScrollHeight) / 30);
+			this.rows = minRows + rows;
+		});
+        
+        $(document).one('focus.textarea', '[demo] [data-tab="third"] [input] textarea', function(){
+			var savedValue = this.value;
+			this.value = '';
+			this.baseScrollHeight = this.scrollHeight;
+			this.value = savedValue;
+		}).on('input.textarea', '[demo] [data-tab="third"] [input] textarea', function(){
+			var minRows = this.getAttribute('minrows')|0, 
+                rows;
+			this.rows = minRows;
+            console.log(this.scrollHeight , this.baseScrollHeight);
+			rows = Math.ceil((this.scrollHeight - this.baseScrollHeight) / 30);
+			this.rows = minRows + rows;
+		});
+        
+        //Lazy load how-it-work imgs
+        $('[works] .container .segment ').visibility({
+            onTopVisible: function(calculations) {
+                $(this).transition({
+                    animation: "scale",
+                    duration: 600
+                }).transition({
+                    animation: "scale",
+                    duration: 600
+                });
+            },
+            
+            once: false,
+            transition : 'fade in',
+            duration   : 2000
+        });
+    </script>
+</body>
+</html>
