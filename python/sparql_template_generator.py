@@ -150,7 +150,7 @@ class SPARQL_Template_Generator:
 			response = sparql.query().convert()
 		except:
 			print "Whoops!"
-			traceback.print_exc()
+			print traceback.print_exc()
 
 		#Now to parse the response
 		variables = [x for x in response[u'head'][u'vars']]

@@ -2,16 +2,20 @@ from bottle import route, run, get, post, request, response
 from pprint import pprint
 import json
 import requests
+import gensim
+import traceback
 from bs4 import BeautifulSoup
 
 import sparql_template_generator
 verbalizing_url = "http://km.aifb.kit.edu/projects/spartiqulator/v5/verbalize.pl?"
-
+model = gensim.models.Word2Vec.load_word2vec_format('GoogleNews-vectors-negative300.bin', binary=True)  
 
 #generating sparql templates
 @post('/templates') 
 def templates():
 	data = request.json
+	print data
+	raw_input()
 	entities = [x['ent'] for x in data['entities']]
 	predicates = [x['pred'] for x in data['predicates']]
 	sparqlgen = sparql_template_generator.SPARQL_Template_Generator(entities,predicates)
@@ -35,8 +39,9 @@ def hello():
 	print word1 + " "+word2
 	try:
 		similarity_value = model.similarity(word1, word2)
-	except Exception as e:
+	except Exception:
 		# print traceback.print_exc
+		print Exception
 		similarity_value = str(-2)
 	print "hello world"
 	print similarity_value

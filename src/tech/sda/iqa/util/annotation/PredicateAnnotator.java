@@ -1,6 +1,7 @@
 package tech.sda.iqa.util.annotation;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -18,12 +19,13 @@ public class PredicateAnnotator {
 		Iterator iter2 = resourceSpotlight.iterator();
 		String res = (String) iter2.next();
 		 
+		Set<String> predicateURI = new HashSet<String>();
+		predicateURI.add(getAnnotaion(pc,res));
 		
-		getAnnotaion(pc,res);
-		return null;
+		return predicateURI;
 	}
 
-	private static void getAnnotaion(String pc, String res) {
+	private static String getAnnotaion(String pc, String res) {
 		// TODO Auto-generated method stub
 		ArrayList<String[]> Triple = new ArrayList<String[]>(); //To store 1.uriOfPredicate 2.LabelOfPredicate 3.ScoreFromWord2vec
 		ArrayList<String[]> listOfPair = new ArrayList<String[]>(); 
@@ -38,7 +40,7 @@ public class PredicateAnnotator {
 				temp=request_server.sendToVec(p[1],pc);
 				if(temp>highest){
 					highest=temp;
-					higestmatchedRel = p[0]+p[1];
+					higestmatchedRel = p[0];
 					}
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
@@ -49,7 +51,7 @@ public class PredicateAnnotator {
 		}
 		System.out.println("highest:: "+higestmatchedRel);
 		
-		
-	}
+		return higestmatchedRel;
+ 	}
 
 }
