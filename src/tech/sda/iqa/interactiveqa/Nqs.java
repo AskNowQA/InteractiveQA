@@ -1,5 +1,6 @@
 package tech.sda.iqa.interactiveqa;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import lombok.RequiredArgsConstructor;
@@ -101,6 +102,60 @@ import lombok.extern.slf4j.Slf4j;
 		i = s1.lastIndexOf("(")+1;
 		j = s1.indexOf(')', i);
 		return s1.substring(i, j);
+	}
+	
+	//----------------NQS Object "Modi"-fication------------------------------------------------//
+	
+	public String EntityUpdate(String old_entity ,String new_entity){
+		//return : "success" if update is successful
+		//return : "denied" if update is unsuccessful
+		Set<String> local =new HashSet<String>() ;
+		try {
+			for (String s : resourceSpotlight){
+				if (s.contains(old_entity)){
+				s=	new_entity;
+				}
+				local.add(s);
+			}
+			resourceSpotlight =local;//TODO check at dbpediaSpotlight 
+		}
+		catch(Exception e){
+			return "denied";
+		}
+		return "success";
+		//
+	}
+	
+	public String EntityAdd(String new_entity){
+		//return : "success" if update is successful
+		//return : "denied" if update is unsuccessful
+		try {
+			resourceSpotlight.add(new_entity);
+		}
+		catch(Exception e){
+			return "denied";
+		}
+		return "success";
+	}
+	
+	public String EntityDelete(String entity ){
+		//return : "success" if update is successful
+		//return : "denied" if update is unsuccessful
+		Set<String> local =new HashSet<String>() ;
+		try {
+			for (String s : resourceSpotlight){
+				if (!s.contains(entity)){ //negation of contains
+					local.add(s); 		 //add when match not found
+				}
+				
+			}
+			resourceSpotlight =local;
+		}
+		catch(Exception e){
+			return "denied";
+		}
+		return "success";
+		//
 	}
 
 }

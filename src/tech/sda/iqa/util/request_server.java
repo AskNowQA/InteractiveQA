@@ -53,7 +53,7 @@ public class request_server {
     public static float sendToVec(String word1, String word2) throws Exception
     {
     	String urlParameters = "word1=" + word1 + "&word2=" + word2;
-    	String url = "http://192.168.2.1:8080/similarity";
+    	String url = "http://localhost:8080/similarity";
     	request_server http = new request_server();
     	String response_post_id = http.sendPost(url, urlParameters);
     	return Float.parseFloat(response_post_id);

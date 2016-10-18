@@ -15,11 +15,11 @@ model = gensim.models.Word2Vec.load_word2vec_format('GoogleNews-vectors-negative
 def templates():
 	data = request.json
 	print data
-	raw_input()
+	# raw_input()
 	entities = [x['ent'] for x in data['entities']]
 	predicates = [x['pred'] for x in data['predicates']]
 	sparqlgen = sparql_template_generator.SPARQL_Template_Generator(entities,predicates)
-
+	print sparqlgen
 	#making a dictionary of the questions and answers
 	info = []
 

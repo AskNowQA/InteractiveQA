@@ -143,7 +143,8 @@ class SPARQL_Template_Generator:
 			NOTE: Only give it queries with one variable
 		'''
 		print _sparql_query
-		sparql = SPARQLWrapper('http://dbpedia.org/sparql/')
+		#sparql = SPARQLWrapper('http://dbpedia.org/sparql/')
+		sparql = SPARQLWrapper('http://131.220.153.66:8900/sparql/')
 		sparql.setQuery(_sparql_query)
 		sparql.setReturnFormat(JSON)
 		try:
@@ -162,7 +163,7 @@ class SPARQL_Template_Generator:
 
 if __name__ == '__main__':
 
-	e = ['<http://dbpedia.org/resource/Barack_Obama>']
+	e = ['<http://dbpedia.org/resource/Barack_Obama>', '<http://dbpedia.org/resource/India>']
 	p = ['<http://dbpedia.org/ontology/region>','<http://dbpedia.org/ontology/largestCity>']
 	sparqlgen = SPARQL_Template_Generator(e,p)
 

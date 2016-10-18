@@ -3,8 +3,9 @@ package tech.sda.iqa.util.annotation;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import org.json.simple.JSONArray;
+//import org.json.JSONArray;
+import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.jsoup.nodes.Element;
 
@@ -23,6 +24,7 @@ public class QueryAnnotaion {
 		//rel.add(n.getDesire());
 		//rel.add(n.getRelation2());
 		n.resourceSpotlightInfo = EntityAnnotation.getEntityAnnotation(n.nlQuery);
+		System.out.println(n.resourceSpotlightInfo);
 		Set<String> uri = new HashSet() ; 
 		JSONParser parser = new JSONParser();
 		try{
@@ -31,7 +33,7 @@ public class QueryAnnotaion {
 //			for (Object link : array) {
 //				System.out.println(link.get("uri")); 
 //			}
-			for (int i = 0; i < array.length(); i++)
+			for (int i = 0; i < array.size(); i++)
 			{
 				JSONObject obj2 = (JSONObject)array.get(i);
 				uri.add((String) obj2.get("uri"));
