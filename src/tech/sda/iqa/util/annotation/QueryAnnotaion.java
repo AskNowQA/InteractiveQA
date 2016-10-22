@@ -25,20 +25,30 @@ public class QueryAnnotaion {
 		//rel.add(n.getRelation2());
 		n.resourceSpotlightInfo = EntityAnnotation.getEntityAnnotation(n.nlQuery);
 		System.out.println(n.resourceSpotlightInfo);
-		Set<String> uri = new HashSet() ; 
+		Set<String> uri = new HashSet() ;
+		Set<String> uri2 = new HashSet() ;
 		JSONParser parser = new JSONParser();
 		try{
 			Object obj = parser.parse(n.resourceSpotlightInfo);
 			JSONArray array = (JSONArray)obj;
-//			for (Object link : array) {
-//				System.out.println(link.get("uri")); 
-//			}
-			for (int i = 0; i < array.size(); i++)
-			{
+			//JSONEntity.create(n.resourceSpotlightInfo);
+
+			for (int i = 0; i < array.size(); i++){
 				JSONObject obj2 = (JSONObject)array.get(i);
+				//uri.add((String) obj2.get("uri"));
 				uri.add((String) obj2.get("uri"));
+				//n.uriEntity.add((String) obj2.get("uri"));
+				System.out.println("11111"+(String) obj2.get("uri"));
 			}
 			n.resourceSpotlight = uri;
+			//n.uriEntity = n.resourceSpotlight;
+			
+			for (int i = 0; i < array.size(); i++){
+				JSONObject obj2 = (JSONObject)array.get(i);
+				uri2.add((String) obj2.get("name"));
+			}
+			n.resDBSpotted = uri2;
+		
 		}
 		catch (Exception e){
 			System.out.println("Some exception at QueryAnnotation");
@@ -46,7 +56,8 @@ public class QueryAnnotaion {
 		}
 		if (n.resourceSpotlight!=null)
 			{n.predicateCandidate = PredicateSpotter.getRelation(n);
-			n.predicateCandidate = PredicateAnnotator.annotate(n.predicateCandidate,n.resourceSpotlight);
+			
+			//n.predicateCandidate = PredicateAnnotator.annotate(n.predicateCandidate,n.resourceSpotlight);
 			}
 		else
 			{n.predicateCandidate=null;	//TODO

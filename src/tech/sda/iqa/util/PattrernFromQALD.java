@@ -47,6 +47,8 @@ public class PattrernFromQALD {
 				
 				try{
 					pattern = getPattern(sparql);
+					System.out.println(pattern);
+					
 				}
 				catch (NullPointerException ex)
 				{
@@ -56,7 +58,7 @@ public class PattrernFromQALD {
 				//System.out.println("res count" + res.size());
 				
 				//if(hmap.get(pattern)==null){
-					hs.add(pattern + ";;"+res.size());
+					hs.add(pattern);// + ";;"+res.size());
 				//}
 				//else{
 				//	int i = hmap.get(pattern);
@@ -78,8 +80,9 @@ public class PattrernFromQALD {
 			e.printStackTrace();
 		} 
 		System.out.println(hs.size());
-		for (String s : hs) {
-		    System.out.println(s);
+	for (String s : hs) {
+		 
+		// System.out.println(s);
 		}
 		//System.out.println(hmap.toString());
 

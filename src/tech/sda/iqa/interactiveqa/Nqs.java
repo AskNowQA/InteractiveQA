@@ -1,7 +1,11 @@
 package tech.sda.iqa.interactiveqa;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+
+
+import org.json.JSONArray;
 
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
@@ -15,11 +19,20 @@ import lombok.extern.slf4j.Slf4j;
 	public final String nqs;
 	public final String queryID;
 	public final String givenSparql;
-	public Set<String> resourceSpotlight;
-	public String resourceSpotlightInfo;
-	public Set<String> resourceFOX;
-	public Set<String> predicateCandidate;
 	
+	public Set<String> resourceSpotlight;
+	public String resourceSpotlightInfo; //json with scores label uri 
+	public Set<String> resourceFOX;
+	public Set<String> resDBSpotted;
+	
+	public JSONArray jsonEntity = new JSONArray();
+	public JSONArray jsonPredicate  = new JSONArray();
+	
+	public Set<String> uriEntity;
+	
+	public ArrayList<String> predicateCandidate; //
+	public String predicateW2VecInfo; //json word,top 2 (score , uri)
+	public Set<String> uriPredicate;
 
 	
 	//-----------------------------------------------------------------------//
@@ -76,7 +89,13 @@ import lombok.extern.slf4j.Slf4j;
 		temp = temp.substring(0, (temp+",").indexOf(","));
 		return temp.trim();
 	}
-
+	public String getWh(){
+		String temp;
+		temp = nqs.substring(nqs.indexOf("[WH] =")+6);
+		temp = temp.substring(0, (temp+",").indexOf(","));
+		return temp.trim();
+	}
+	
 	public String getAll(){
 		return nlQuery + "\n" + nqs;
 	}

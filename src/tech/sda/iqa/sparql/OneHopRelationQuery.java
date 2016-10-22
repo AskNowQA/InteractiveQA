@@ -8,10 +8,19 @@ import com.hp.hpl.jena.query.ResultSetFormatter;
 import tech.sda.iqa.sparql.jena.QueryExecutor;
 
 public class OneHopRelationQuery {
+	
+//	select distinct ?rel ?label where {
+//		{<http://dbpedia.org/resource/Germany> ?rel ?x.}
+//		UNION
+//		{?x ?rel <http://dbpedia.org/resource/Germany>.}
+//		?rel <http://www.w3.org/2000/01/rdf-schema#label> 
+//		?label.filter(langMatches(lang(?label),"EN")) }
 
 	public static ArrayList<String[]> getPredicateList(String dbr){
 		String sparql = "select distinct ?rel ?label where {"
-				+ dbr+" ?rel ?x."
+				+ "{"+dbr+" ?rel ?x.}"
+				+ "UNION"
+				+ "{ ?x ?rel" +dbr+" .}"
 				+ "?rel <http://www.w3.org/2000/01/rdf-schema#label> ?label."
 				+ "filter(langMatches(lang(?label),\"EN\")) }";
 		System.out.println(sparql);
@@ -36,10 +45,10 @@ public class OneHopRelationQuery {
 				break;
 			}
 		}
-		for (int i = 0; i < listOfPair.size(); i++){
-			String p[] = listOfPair.get(i);
-			System.out.println(p[0]+"::"+p[1]);
-		}
+//		for (int i = 0; i < listOfPair.size(); i++){
+//			String p[] = listOfPair.get(i);
+//			//System.out.println(p[0]+"::"+p[1]);
+//		}
 		
 		return listOfPair;
 	}

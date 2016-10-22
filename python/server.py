@@ -24,7 +24,8 @@ def templates():
 	info = []
 
 	for tup in sparqlgen.sparqls_answers:
-		info += [{'sparql':tup[0],'answer':tup[1]}]
+		if tup[1]:
+			info += [{'sparql':tup[0],'answer':tup[1]}]
 	response.content_type = 'application/json'
 	return json.dumps(info)
 

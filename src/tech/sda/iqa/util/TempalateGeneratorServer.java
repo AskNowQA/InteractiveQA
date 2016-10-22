@@ -14,7 +14,6 @@ public class TempalateGeneratorServer {
  * }
  * 
  * 
- * 
  * {
  * "predicates":[{"pred":"http://dbpedia.org/ontology/capital"}],
  * "entities":[{"ent":"<http://dbpedia.org/resource/Germany>"}]
@@ -22,23 +21,29 @@ public class TempalateGeneratorServer {
  */
 
 	public static String generator(Set<String> predicate, Set<String> resource) throws Exception{
-		JSONObject jo_ent = new JSONObject();
-		for (String s : resource)
-			jo_ent.put("ent", s);
+		JSONArray jo_ent = new JSONArray();
+		for (String s : resource){
+			JSONObject jo_obj = new JSONObject();
+			jo_obj.put("ent", s);
+			jo_ent.put(jo_obj);
+		}
+		JSONArray jo_pred = new JSONArray();
+		for (String p : predicate){
+			JSONObject jo_obj = new JSONObject();
+			jo_obj.put("pred", p);
+			jo_pred.put(jo_obj);
+		}
+			//jo_pred.put("pred", predicate);
 		
-		JSONObject jo_pred = new JSONObject();
-		for (String p : predicate)
-			jo_pred.put("pred", "<"+p+">");
-		
-		JSONArray ja_ent = new JSONArray();
-		ja_ent.put(jo_ent);
-		
-		JSONArray ja_pred = new JSONArray();
-		ja_pred.put(jo_pred);
+//		JSONArray ja_ent = new JSONArray();
+//		ja_ent.put(jo_ent);
+//		
+//		JSONArray ja_pred = new JSONArray();
+//		ja_pred.put(jo_pred);
 		
 		JSONObject mainObj = new JSONObject();
-		mainObj.put("predicates", ja_pred);
-		mainObj.put("entities", ja_ent);
+		mainObj.put("predicates", jo_pred);
+		mainObj.put("entities", jo_ent);
 		
 		//mainObj to python server 
     	request_server http = new request_server();
