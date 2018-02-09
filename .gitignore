@@ -1,12 +1,5 @@
-/bin/
-/target/
-*.class
-*.jar
-*.war
-*.ear
-hs_err_pid*
-target
-bin
+/data/
+.idea/
 .classpath
 .project
 .settings
