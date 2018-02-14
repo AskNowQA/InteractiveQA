@@ -13,7 +13,6 @@ import json
 from common.utility.utils import Utils
 from common.component.chunker.SENNAChunker import SENNAChunker
 from common.component.chunker.classifierChunkParser import ClassifierChunkParser
-import os
 
 app = flask.Flask(__name__)
 chunker = None
