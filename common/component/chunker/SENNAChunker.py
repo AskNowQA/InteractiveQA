@@ -1,10 +1,10 @@
 # Taken from here: https://github.com/AskNowQA/EARL/blob/master/scripts/ShallowParser.py
-
 from practnlptools.tools import Annotator
+from chunker import Chunker
 import nltk
 
 
-class SENNAChunker(nltk.ChunkParserI):
+class SENNAChunker(Chunker):
     def __init__(self):
         print "Shallow Parser Initializing"
         self.annotator = Annotator()
@@ -69,44 +69,69 @@ class SENNAChunker(nltk.ChunkParserI):
         print "Shallow Parser Initialized"
 
     def parse(self, tagged_sent):
-        chunks = self.shallowParse(" ".join([item[0] for item in tagged_sent]))
+        str = " ".join([item[0] for item in tagged_sent]).encode("ascii", "ignore")
+        chunks = self.shallowParse(str)
+        print chunks
         for i in range(len(chunks)):
             item = chunks[i]
             chunks[i] = (item[0], tagged_sent[i][1] if i < len(tagged_sent) else ".", item[1])
 
         return nltk.chunk.conlltags2tree(chunks)
 
-    def shallowParse(self, text):
-        filterednpchunks = []
+    # def shallowParse(self, text):
+    #     filterednpchunks = []
+    #     result = self.annotator.getAnnotations(text)['chunk']
+    #     print result
+    #     phrases = []
+    #     _phrase = []
+    #     for chunk in result:
+    #         if chunk[1] == 'S-NP':
+    #             phrases.append([chunk[0]])
+    #             continue
+    #         if chunk[1] == 'B-NP' or chunk[1] == 'I-NP':
+    #             _phrase.append(chunk[0])
+    #             continue
+    #         if chunk[1] == 'E-NP':
+    #             _phrase.append(chunk[0])
+    #             phrases.append(_phrase)
+    #             _phrase = []
+    #
+    #     for phrase in phrases:
+    #         filteredchunk = []
+    #         filteredchunkstring = ''
+    #         for word in phrase:
+    #             if word.lower() not in self.stop_words:
+    #                 filteredchunk.append(word)
+    #         if len(filteredchunk) > 0:
+    #             filteredchunkstring = ' '.join(filteredchunk)
+    #             filterednpchunks.append(filteredchunkstring)
+    #
+    #     return filterednpchunks
+
+    def shallow_parse(self, text):
         result = self.annotator.getAnnotations(text)
         result = result['chunk']
-        # print result
-        phrases1 = []
         phrases = []
-        _phrase = []
         for chunk in result:
             if chunk[1] == 'S-NP':
-                phrases.append([chunk[0]])
-                phrases1.append((chunk[0], "B-NP"))
+                if chunk[0].lower() in self.stop_words:
+                    phrases.append((chunk[0], "O"))
+                else:
+                    phrases.append((chunk[0], "B-NP"))
             elif chunk[1] == 'B-NP' or chunk[1] == 'I-NP':
-                _phrase.append(chunk[0])
-                phrases1.append((chunk[0], chunk[1]))
+                phrases.append((chunk[0], chunk[1]))
             elif chunk[1] == 'E-NP':
-                _phrase.append(chunk[0])
-                phrases.append(_phrase)
-                _phrase = []
-                phrases1.append((chunk[0], "I-NP"))
+                phrases.append((chunk[0], "I-NP"))
+            elif chunk[1] == 'S-VP':
+                if chunk[0].lower() in self.stop_words:
+                    phrases.append((chunk[0], "O"))
+                else:
+                    phrases.append((chunk[0], "B-VP"))
+            elif chunk[1] == 'B-VP' or chunk[1] == 'I-VP':
+                phrases.append((chunk[0], chunk[1]))
+            elif chunk[1] == 'E-VP':
+                phrases.append((chunk[0], "I-VP"))
             else:
-                phrases1.append((chunk[0], "O"))
+                phrases.append((chunk[0], "O"))
 
-        # print phrases1
-        for phrase in phrases:
-            filteredchunk = []
-            filteredchunkstring = ''
-            for word in phrase:
-                if word.lower() not in self.stop_words:
-                    filteredchunk.append(word)
-            if len(filteredchunk) > 0:
-                filteredchunkstring = ' '.join(filteredchunk)
-                filterednpchunks.append(filteredchunkstring)
-        return phrases1
+        return phrases
