@@ -13,6 +13,8 @@ import json
 from common.utility.utils import Utils
 from common.component.chunker.SENNAChunker import SENNAChunker
 from common.component.chunker.classifierChunkParser import ClassifierChunkParser
+from common.component.chunker.goldChunker import GoldChunker
+import pickle as pk
 
 app = flask.Flask(__name__)
 chunker = None
@@ -48,7 +50,8 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Chunk input question into phrases')
     parser.add_argument("--port", help="port", default=5001, type=int, dest="port")
-    parser.add_argument("--chunker", help="SENNAChunker, ClassifierChunkParser", default="SENNAChunker", dest="chunker")
+    parser.add_argument("--chunker", help="SENNAChunker, ClassifierChunkParser, GoldChunker", default="SENNAChunker",
+                        dest="chunker")
     args = parser.parse_args()
 
     logger.info(args)
@@ -57,6 +60,12 @@ if __name__ == '__main__':
     elif args.chunker == "ClassifierChunkParser":
         tagger_filename = os.path.join(model_dir, "ClassifierChunkParser.tagger.model")
         chunker = ClassifierChunkParser([], tagger_filename)
+    elif args.chunker == "GoldChunker":
+        # Only for LC-QuAD
+        with open('../../data/LC-QUAD/linked2843_IOB.pk') as data_file:
+            dataset = pk.load(data_file)
+
+        chunker = GoldChunker({item[0]: item[1:] for item in dataset})
 
     if chunker is not None:
         app.run(debug=False, port=args.port)
