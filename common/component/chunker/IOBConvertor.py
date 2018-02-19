@@ -2,6 +2,7 @@ import json
 import pickle as pk
 import nltk
 import argparse
+from tqdm import tqdm
 
 
 class IOBConvertor:
@@ -12,7 +13,7 @@ class IOBConvertor:
         with open(self.file_path) as data_file:
             data_set = json.load(data_file)
         output = []
-        for item in data_set:
+        for item in tqdm(data_set):
             question = item["question"]
 
             # nltk.word_tokenize, pos_tag
@@ -45,18 +46,19 @@ class IOBConvertor:
                     token = "O"
                 idx += 1
 
-            output.append(annotations)
+            output.append([question]+annotations)
 
         return output
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='IOB Convertor')
-    parser.add_argument("--input", help="Path of input file", default="../../../data/LC-QUAD/linked2843.json",
+    parser.add_argument("--input", help="Path of input file", default="../../../data/LC-QUAD/linked_full.json",
                         dest="input_path")
-    parser.add_argument("--output", help="Path of output file", default="../../../data/LC-QUAD/linked2843_IOB.pk",
+    parser.add_argument("--output", help="Path of output file", default="../../../data/LC-QUAD/linked_IOB.pk",
                         dest="output_path")
     args = parser.parse_args()
+    print args
 
     iob = IOBConvertor(args.input_path)
     output = iob.convert()
