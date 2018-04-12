@@ -7,11 +7,11 @@ class EARL:
     def __init__(self, endpoint='http://localhost:5000/processQuery', cache_path="", use_cache=True):
         self.endpoint = endpoint
         self.cache_path = cache_path
-        Utils.makedirs(cache_path)
-        self.cache_path = os.path.join(cache_path, "earl.cache")
         self.use_cache = use_cache
         self.cache = {}
         if self.use_cache:
+            Utils.makedirs(cache_path)
+            self.cache_path = os.path.join(cache_path, "earl.cache")
             self.__load_cache()
 
     def __load_cache(self):
@@ -50,7 +50,8 @@ class EARL:
     def link_relations(self, question, chunks=None):
         return self.__hit_endpoint(question, chunks)["relations"]
 
-    def link_entities_relations(self, question):
-        chunks = self.chunk(question)
+    def link_entities_relations(self, question, chunks=None):
+        if chunks is None:
+            chunks = self.chunk(question)
         return {"relations": self.link_relations(question, chunks),
                 "entities": self.link_entities(question, chunks)}
