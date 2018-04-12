@@ -11,6 +11,8 @@ class LC_Qaud_Linked:
         self.qapairs = []
         self.path = path
         self.parser = LC_Qaud_LinkedParser()
+        self.load()
+        self.parse()
 
     def load(self):
         with open(self.path) as data_file:
