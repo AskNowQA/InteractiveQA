@@ -29,4 +29,4 @@ class Chunker(nltk.ChunkParserI):
                     phrase = []
             phrases = [item for item in phrases if len(item["chunk"]) > 1]
             return phrases
-        return None
+        return []
