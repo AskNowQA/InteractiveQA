@@ -71,7 +71,6 @@ class SENNAChunker(Chunker):
     def parse(self, tagged_sent):
         str = " ".join([item[0] for item in tagged_sent]).encode("ascii", "ignore")
         chunks = self.shallow_parse(str)
-        print chunks
         for i in range(len(chunks)):
             item = chunks[i]
             chunks[i] = (item[0], tagged_sent[i][1] if i < len(tagged_sent) else ".", item[1])

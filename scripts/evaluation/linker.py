@@ -28,16 +28,14 @@ if __name__ == "__main__":
     Utils.setup_logging()
 
     parser = argparse.ArgumentParser(description='Evaluate linker')
-    parser.add_argument("--path", help="input dataset", default="../../data/LC-QuAD/linked.json", dest="ds_path")
-    parser.add_argument("--linker", help="linker output path", default="../../data/LC-QuAD/EARL/output_nltk.json",
+    parser.add_argument("--path", help="input dataset", default="../../data/LC-QuAD/linked2843.json", dest="ds_path")
+    parser.add_argument("--linker", help="linker output path", default="../../data/LC-QuAD/EARL/output_gold.json",
                         dest="linker_path")
     args = parser.parse_args()
 
     stats = Stats()
 
     ds = LC_Qaud_Linked(args.ds_path)
-    ds.load()
-    ds.parse()
 
     goldLinker = GoldLinker()
     earl = EARL(args.linker_path)
@@ -45,6 +43,7 @@ if __name__ == "__main__":
     for qapair in tqdm(ds.qapairs):
         e1, r1 = goldLinker.do(qapair)
         e2, r2 = earl.do(qapair, force_gold=False, top=100)
+        double_relation = len(r1) > len(set([p.raw_uri for u in r1 for p in u.uris]))
         if len(e2) == 0:
             stats.inc("earl_no_entity")
         if len(r2) == 0:
@@ -55,9 +54,13 @@ if __name__ == "__main__":
 
         if len(e1) == len(e2):
             stats.inc("len_entity")
+        # else:
+        #     print "not len_entity"
 
         if len(r1) == len(r2):
             stats.inc("len_relation")
+        # else:
+        #     print "not len_relation"
 
         if len(e1) == len(e2) and len(r1) == len(r2):
             stats.inc("len_both")
@@ -73,6 +76,8 @@ if __name__ == "__main__":
 
         if len(e1) == len(e2) and len(r1) == len(r2) and not e and not r:
             stats.inc("matched_both_and_len")
+        # else:
+        #     print qapair.question
 
         stats.inc("total")
 

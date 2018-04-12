@@ -17,7 +17,7 @@ from common.component.chunker.goldChunker import GoldChunker
 import pickle as pk
 
 app = flask.Flask(__name__)
-chunker = None
+chunkers = None
 
 
 @app.errorhandler(404)
@@ -31,13 +31,15 @@ def chunk():
         flask.abort(400)
 
     question = flask.request.json['nlquery']
-    phrases = chunker.get_phrases(question)
+    result = []
+    for chunker in chunkers:
+        result.append({"name": type(chunker).__name__, "result": chunker.get_phrases(question)})
 
     print question
-    print phrases
+    print result
     print
 
-    return json.dumps(phrases)
+    return json.dumps(result)
 
 
 if __name__ == '__main__':
@@ -50,24 +52,15 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Chunk input question into phrases')
     parser.add_argument("--port", help="port", default=5001, type=int, dest="port")
-    parser.add_argument("--chunker", help="SENNAChunker, ClassifierChunkParser, GoldChunker", default="SENNAChunker",
-                        dest="chunker")
     args = parser.parse_args()
-
     logger.info(args)
-    if args.chunker == "SENNAChunker":
-        chunker = SENNAChunker()
-    elif args.chunker == "ClassifierChunkParser":
-        tagger_filename = os.path.join(model_dir, "ClassifierChunkParser.tagger.model")
-        chunker = ClassifierChunkParser([], tagger_filename)
-    elif args.chunker == "GoldChunker":
-        # Only for LC-QuAD
-        with open('../../data/LC-QUAD/linked2843_IOB.pk') as data_file:
-            dataset = pk.load(data_file)
 
-        chunker = GoldChunker({item[0]: item[1:] for item in dataset})
+    tagger_filename = os.path.join(model_dir, "ClassifierChunkParser.tagger.model")
+    # Only for LC-QuAD
+    with open('../../data/LC-QUAD/linked2843_IOB.pk') as data_file:
+        dataset = pk.load(data_file)
 
-    if chunker is not None:
-        app.run(debug=False, port=args.port)
-    else:
-        logger.error("Invalid parameter(s)")
+    chunkers = [SENNAChunker(), ClassifierChunkParser([], tagger_filename),
+                GoldChunker({item[0]: item[1:] for item in dataset})]
+
+    app.run(debug=False, port=args.port)
