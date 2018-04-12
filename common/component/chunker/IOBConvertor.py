@@ -28,8 +28,21 @@ class IOBConvertor:
             annotations = []
             idx_ann = 0
             idx = 0
+            if question[0:1] == " ":
+                tokenized_question = " "
             for word in tokenized:
-                tokenized_question += word + " "
+                tokenized_question += word
+                l = len(tokenized_question)
+                if tokenized_question == question[:l]:
+                    if question[l:l + 2] == "  ":
+                        tokenized_question += "  "
+                    elif question[l:l + 1] == " ":
+                        tokenized_question += " "
+
+                l = len(tokenized_question)
+                if tokenized_question != question[:l]:
+                    tokenized_question = question[:len(tokenized_question)]
+
                 if idx_ann < len(raw_annotations):
                     start_index, end_index = raw_annotations[idx_ann]["seq"]
                     if start_index < len(tokenized_question) - 2 <= end_index:
@@ -46,7 +59,7 @@ class IOBConvertor:
                     token = "O"
                 idx += 1
 
-            output.append([question]+annotations)
+            output.append([question] + annotations)
 
         return output
 
