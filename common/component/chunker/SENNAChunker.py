@@ -78,7 +78,7 @@ class SENNAChunker(Chunker):
         return nltk.chunk.conlltags2tree(chunks)
 
     def shallow_parse(self, text):
-        result = self.annotator.getAnnotations(text)
+        result = self.annotator.getAnnotations(text.encode("ascii", "ignore"))
         result = result['chunk']
         phrases = []
         for chunk in result:
