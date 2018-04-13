@@ -33,13 +33,13 @@ class Utils:
     def call_web_api(endpoint, input):
         req = urllib2.Request(endpoint)
         req.add_header('Content-Type', 'application/json')
-        # try:
-        response = urllib2.urlopen(req, json.dumps(input))
-        response = response.read()
-        response = json.loads(response)
-        return response
-        # except:
-        #     return None
+        try:
+            response = urllib2.urlopen(req, json.dumps(input))
+            response = response.read()
+            response = json.loads(response)
+            return response
+        except:
+            return None
 
     @staticmethod
     def find_mentions(text, uris):

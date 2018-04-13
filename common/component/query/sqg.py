@@ -31,9 +31,10 @@ class SQG:
 
     def build_query(self, question, entities=[], relations=[]):
         id = question
-        input = {'question': question, "entities": entities, "relations": relations}
+        input = {'question': question, "entities": entities, "relations": relations, 'timeout': 120}
 
         if id not in self.cache or not self.use_cache:
-            self.cache[id] = Utils.call_web_api(self.endpoint, input)
+            result = Utils.call_web_api(self.endpoint, input)
+            self.cache[id] = {'queries': []} if result is None else result
             self.__save_cache()
         return self.cache[id]
