@@ -1,11 +1,14 @@
 from common.utility.utils import Utils
+import config
 import json
 import os
 
 
 class SQG:
-    def __init__(self, endpoint='http://localhost:5001/qg/api/v1.0/query', cache_path="", use_cache=True):
+    def __init__(self, endpoint=config.config["SQG"]['endpoint'], timeout=config.config["SQG"]['timeout'],
+                 cache_path="", use_cache=True):
         self.endpoint = endpoint
+        self.timeout = timeout
         self.cache_path = cache_path
         self.use_cache = use_cache
         self.cache = {}
@@ -31,7 +34,7 @@ class SQG:
 
     def build_query(self, question, entities=[], relations=[]):
         id = question
-        input = {'question': question, "entities": entities, "relations": relations, 'timeout': 120}
+        input = {'question': question, "entities": entities, "relations": relations, 'timeout': self.timeout}
 
         if id not in self.cache or not self.use_cache:
             result = Utils.call_web_api(self.endpoint, input)

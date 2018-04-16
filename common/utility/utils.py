@@ -4,6 +4,7 @@ import os
 import logging.config
 import json
 import urllib2
+import config
 
 
 class Struct(object): pass
@@ -34,11 +35,12 @@ class Utils:
         req = urllib2.Request(endpoint)
         req.add_header('Content-Type', 'application/json')
         try:
-            response = urllib2.urlopen(req, json.dumps(input))
+            response = urllib2.urlopen(req, json.dumps(input), timeout=config.config["general"]["http"]["timeout"])
             response = response.read()
             response = json.loads(response)
             return response
-        except:
+        except Exception as expt:
+            print(expt)
             return None
 
     @staticmethod

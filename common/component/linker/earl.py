@@ -1,10 +1,11 @@
 from common.utility.utils import Utils
+import config
 import json
 import os
 
 
 class EARL:
-    def __init__(self, endpoint='http://localhost:5000/processQuery', cache_path="", use_cache=True):
+    def __init__(self, endpoint=config.config["EARL"]["endpoint"], cache_path="", use_cache=True):
         self.endpoint = endpoint
         self.cache_path = cache_path
         self.use_cache = use_cache
