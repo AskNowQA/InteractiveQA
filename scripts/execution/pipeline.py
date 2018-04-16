@@ -64,69 +64,65 @@ class IQAPipeline:
                             break
         return surface_link_set
 
-
-def __build_query(self, prev_output):
-    outputs = [qb.build_query(prev_output["question"], prev_output["entities"], prev_output["relations"]) for qb in
-               self.__query_builders]
-    for output in outputs:
-        output["entities"] = prev_output["entities"]
-        output["relations"] = prev_output["relations"]
-        output["question"] = prev_output["question"]
-        output["chunks"] = prev_output["chunks"]
-        for query in output["queries"]:
-            _, _, uris = dataset.parser.parse_sparql(query["query"])
-            confidence = 1
-            for uri in uris:
-                if uri.is_generic():
-                    continue
-                raw_uri = uri.raw_uri.strip("<>")
-                found = False
-                for item in prev_output["entities"][0]["uris"]:
-                    if item["uri"] == raw_uri:
-                        confidence *= item["confidence"]
-                        found = True
-                        break
-                if not found:
-                    for item in prev_output["relations"][0]["uris"]:
+    def __build_query(self, prev_output):
+        outputs = [qb.build_query(prev_output["question"], prev_output["entities"], prev_output["relations"]) for qb in
+                   self.__query_builders]
+        for output in outputs:
+            output["entities"] = prev_output["entities"]
+            output["relations"] = prev_output["relations"]
+            output["question"] = prev_output["question"]
+            output["chunks"] = prev_output["chunks"]
+            for query in output["queries"]:
+                _, _, uris = dataset.parser.parse_sparql(query["query"])
+                confidence = 1
+                for uri in uris:
+                    if uri.is_generic():
+                        continue
+                    raw_uri = uri.raw_uri.strip("<>")
+                    found = False
+                    for item in prev_output["entities"][0]["uris"]:
                         if item["uri"] == raw_uri:
                             confidence *= item["confidence"]
+                            found = True
                             break
-            confidence *= query["confidence"]
-            query["complete_confidence"] = confidence
+                    if not found:
+                        for item in prev_output["relations"][0]["uris"]:
+                            if item["uri"] == raw_uri:
+                                confidence *= item["confidence"]
+                                break
+                confidence *= query["confidence"]
+                query["complete_confidence"] = confidence
 
-    return outputs
+        return outputs
 
+    def __link(self, prev_output):
+        chunks = [item["chunk"] for item in prev_output["chunks"]]
+        outputs = [item.link_entities_relations(prev_output["question"], chunks) for item in self.__linkers]
+        for item in outputs:
+            item["question"] = prev_output["question"]
+            item["chunks"] = prev_output["chunks"]
+        return outputs
 
-def __link(self, prev_output):
-    chunks = [item["chunk"] for item in prev_output["chunks"]]
-    outputs = [item.link_entities_relations(prev_output["question"], chunks) for item in self.__linkers]
-    for item in outputs:
-        item["question"] = prev_output["question"]
-        item["chunks"] = prev_output["chunks"]
-    return outputs
+    def __chunk(self, question):
+        chunkers_output = [chunker.get_phrases(question) for chunker in self.__chunkers]
+        return [{"question": question, "chunks": item} for item in chunkers_output]
 
+    def run(self, dataset):
+        for qapair in tqdm(dataset.qapairs):
+            # if not 'municipality' in qapair.question.text:
+            #     continue
+            outputs = {-1: [qapair.question.text]}
+            for cmpnt_idx, component in enumerate(self.components):
+                outputs[cmpnt_idx] = []
+                for prev_output in outputs[cmpnt_idx - 1]:
+                    outputs[cmpnt_idx].extend(component(prev_output))
+            print self.find_interaction_options(outputs)
 
-def __chunk(self, question):
-    chunkers_output = [chunker.get_phrases(question) for chunker in self.__chunkers]
-    return [{"question": question, "chunks": item} for item in chunkers_output]
+            # if any([len(item['queries']) > 0 for item in outputs[cmpnt_idx]]):
+            #     for item in outputs:
+            #         print outputs[item]
 
-
-def run(self, dataset):
-    for qapair in tqdm(dataset.qapairs):
-        # if not 'municipality' in qapair.question.text:
-        #     continue
-        outputs = {-1: [qapair.question.text]}
-        for cmpnt_idx, component in enumerate(self.components):
-            outputs[cmpnt_idx] = []
-            for prev_output in outputs[cmpnt_idx - 1]:
-                outputs[cmpnt_idx].extend(component(prev_output))
-        print self.find_interaction_options(outputs)
-
-        # if any([len(item['queries']) > 0 for item in outputs[cmpnt_idx]]):
-        #     for item in outputs:
-        #         print outputs[item]
-
-        # print "*" * 20
+            # print "*" * 20
 
 
 if __name__ == "__main__":
