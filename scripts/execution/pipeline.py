@@ -25,6 +25,44 @@ class IQAPipeline:
 
         self.components = [self.__chunk, self.__link, self.__build_query]
 
+    def find_interaction_options(self, tree):
+        outputs = tree[2]
+        surface_link_set = dict()
+        for output in outputs:
+            for query in output["queries"]:
+                _, _, uris = dataset.parser.parse_sparql(query["query"])
+                for uri in uris:
+                    if uri.is_generic():
+                        continue
+                    raw_uri = uri.raw_uri.strip("<>")
+                    found = False
+                    for entities in output["entities"]:
+                        for item in entities["uris"]:
+                            if item["uri"] == raw_uri:
+                                surface_id = str(entities['surface'])
+                                if surface_id in surface_link_set:
+                                    surface_link_set[surface_id].addIfNotExists(item)
+                                else:
+                                    surface_link_set[surface_id] = UniqueList([item])
+                                found = True
+                                break
+                        if found:
+                            break
+                    if not found:
+                        for relations in output["relations"]:
+                            for item in relations["uris"]:
+                                if item["uri"] == raw_uri:
+                                    surface_id = str(relations['surface'])
+                                    if surface_id in surface_link_set:
+                                        surface_link_set[surface_id].addIfNotExists(item)
+                                    else:
+                                        surface_link_set[surface_id] = UniqueList([item])
+                                    found = True
+                                        break
+                            if found:
+                                break
+        return surface_link_set
+
     def __build_query(self, prev_output):
         outputs = [qb.build_query(prev_output["question"], prev_output["entities"], prev_output["relations"]) for qb in
                    self.__query_builders]
@@ -33,7 +71,6 @@ class IQAPipeline:
             output["relations"] = prev_output["relations"]
             output["question"] = prev_output["question"]
             output["chunks"] = prev_output["chunks"]
-            surface_link_set = dict()
             for query in output["queries"]:
                 _, _, uris = dataset.parser.parse_sparql(query["query"])
                 confidence = 1
@@ -44,11 +81,6 @@ class IQAPipeline:
                     found = False
                     for item in prev_output["entities"][0]["uris"]:
                         if item["uri"] == raw_uri:
-                            surface_id = str(prev_output["entities"][0]['surface'])
-                            if surface_id in surface_link_set:
-                                surface_link_set[surface_id].addIfNotExists(item)
-                            else:
-                                surface_link_set[surface_id] = UniqueList([item])
                             confidence *= item["confidence"]
                             found = True
                             break
@@ -56,11 +88,6 @@ class IQAPipeline:
                         for item in prev_output["relations"][0]["uris"]:
                             if item["uri"] == raw_uri:
                                 confidence *= item["confidence"]
-                                surface_id = str(prev_output["relations"][0]['surface'])
-                                if surface_id in surface_link_set:
-                                    surface_link_set[surface_id].addIfNotExists(item)
-                                else:
-                                    surface_link_set[surface_id] = UniqueList([item])
                                 break
                 confidence *= query["confidence"]
                 query["complete_confidence"] = confidence
@@ -80,7 +107,7 @@ class IQAPipeline:
         return [{"question": question, "chunks": item} for item in chunkers_output]
 
     def run(self, dataset):
-        for qapair in tqdm(dataset.qapairs[610:]):
+        for qapair in tqdm(dataset.qapairs):
             # if not 'municipality' in qapair.question.text:
             #     continue
             outputs = {-1: [qapair.question.text]}
@@ -88,6 +115,7 @@ class IQAPipeline:
                 outputs[cmpnt_idx] = []
                 for prev_output in outputs[cmpnt_idx - 1]:
                     outputs[cmpnt_idx].extend(component(prev_output))
+            print self.find_interaction_options(outputs)
 
             # if any([len(item['queries']) > 0 for item in outputs[cmpnt_idx]]):
             #     for item in outputs:
