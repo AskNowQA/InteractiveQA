@@ -8,17 +8,18 @@ from common.utility.uniqueList import UniqueList
 from tqdm import tqdm
 import argparse
 import pickle as pk
+import os
 
 
 class IQAPipeline:
     def __init__(self, args):
-        classifier_chunker = ClassifierChunkParser([], args.model)
+        classifier_chunker = ClassifierChunkParser([], os.path.join(args.base_path, args.model))
         SENNA_chunker = SENNAChunker()
-        with open('../../data/LC-QUAD/linked2843_IOB.pk') as data_file:
+        with open(os.path.join(args.base_path, args.gold_chunk)) as data_file:
             gold_chunk_dataset = pk.load(data_file)
         gold_Chunker = GoldChunker({item[0]: item[1:] for item in gold_chunk_dataset})
         self.__chunkers = [classifier_chunker, SENNA_chunker, gold_Chunker]
-        earl = EARL(cache_path="../../caches/", use_cache=True)
+        earl = EARL(cache_path=os.path.join(args.base_path, "caches/"), use_cache=True)
         self.__linkers = [earl]
         sqg = SQG(use_cache=False)
         self.__query_builders = [sqg]
@@ -98,12 +99,14 @@ class IQAPipeline:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run pipeline')
-    parser.add_argument("--input", help="input dataset", default="../../data/LC-QUAD/linked2843_IOB.pk", dest="input")
-    parser.add_argument("--model", help="path to model", default="../../models/ClassifierChunkParser.tagger.model",
+    parser.add_argument("--base_path", help="base path", default="../../", dest="base_path")
+    parser.add_argument("--dataset", help="input Q/A dataset", default="data/LC-QuAD/linked.json", dest="dataset")
+    parser.add_argument("--model", help="path to model", default="models/ClassifierChunkParser.tagger.model",
                         dest="model")
+    parser.add_argument("--gold_chunk", help="path to gold chunked dataset", default="data/LC-QuAD/linked2843_IOB.pk", dest="gold_chunk")
     args = parser.parse_args()
 
     dataset = [{"question": "Name the municipality of Roberto Clemente Bridge ?"}]
-    dataset = LC_Qaud_Linked("../../data/LC-QuAD/linked.json")
+    dataset = LC_Qaud_Linked(os.path.join(args.base_path, args.dataset))
     pipeline = IQAPipeline(args)
     pipeline.run(dataset)
