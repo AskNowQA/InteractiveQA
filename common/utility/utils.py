@@ -32,10 +32,12 @@ class Utils:
 
     @staticmethod
     def call_web_api(endpoint, input):
+        proxy_handler = urllib2.ProxyHandler({})
+        opener = urllib2.build_opener(proxy_handler)
         req = urllib2.Request(endpoint)
         req.add_header('Content-Type', 'application/json')
         try:
-            response = urllib2.urlopen(req, json.dumps(input), timeout=config.config["general"]["http"]["timeout"])
+            response = opener.open(req, json.dumps(input), timeout=config.config["general"]["http"]["timeout"])
             response = response.read()
             response = json.loads(response)
             return response
