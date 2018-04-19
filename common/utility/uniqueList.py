@@ -5,6 +5,6 @@ class UniqueList(list):
     def addIfNotExists(self, x):
         for item in self:
             if item == x:
-                return False
+                return item
         self.append(x)
-        return True
+        return x
