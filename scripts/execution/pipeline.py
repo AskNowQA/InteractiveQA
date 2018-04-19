@@ -3,8 +3,8 @@ from common.component.chunker.SENNAChunker import SENNAChunker
 from common.component.chunker.goldChunker import GoldChunker
 from common.component.linker.earl import EARL
 from common.component.query.sqg import SQG
+from common.container.interactionOptions import InteractionOptions
 from common.parser.lc_quad_linked import LC_Qaud_Linked
-from common.utility.uniqueList import UniqueList
 from tqdm import tqdm
 import argparse
 import pickle as pk
@@ -21,48 +21,10 @@ class IQAPipeline:
         self.__chunkers = [classifier_chunker, SENNA_chunker, gold_Chunker]
         earl = EARL(cache_path=os.path.join(args.base_path, "caches/"), use_cache=True)
         self.__linkers = [earl]
-        sqg = SQG(use_cache=False)
+        sqg = SQG(cache_path=os.path.join(args.base_path, "caches/"), use_cache=False)
         self.__query_builders = [sqg]
 
         self.components = [self.__chunk, self.__link, self.__build_query]
-
-    def find_interaction_options(self, tree):
-        outputs = tree[2]
-        surface_link_set = dict()
-        for output in outputs:
-            for query in output["queries"]:
-                _, _, uris = dataset.parser.parse_sparql(query["query"])
-                for uri in uris:
-                    if uri.is_generic():
-                        continue
-                    raw_uri = uri.raw_uri.strip("<>")
-                    found = False
-                    for entities in output["entities"]:
-                        for item in entities["uris"]:
-                            if item["uri"] == raw_uri:
-                                surface_id = str(entities['surface'])
-                                if surface_id in surface_link_set:
-                                    surface_link_set[surface_id].addIfNotExists(item)
-                                else:
-                                    surface_link_set[surface_id] = UniqueList([item])
-                                found = True
-                                break
-                        if found:
-                            break
-                    if not found:
-                        for relations in output["relations"]:
-                            for item in relations["uris"]:
-                                if item["uri"] == raw_uri:
-                                    surface_id = str(relations['surface'])
-                                    if surface_id in surface_link_set:
-                                        surface_link_set[surface_id].addIfNotExists(item)
-                                    else:
-                                        surface_link_set[surface_id] = UniqueList([item])
-                                    found = True
-                                    break
-                        if found:
-                            break
-        return surface_link_set
 
     def __build_query(self, prev_output):
         outputs = [qb.build_query(prev_output["question"], prev_output["entities"], prev_output["relations"]) for qb in
@@ -92,7 +54,6 @@ class IQAPipeline:
                                 break
                 confidence *= query["confidence"]
                 query["complete_confidence"] = confidence
-
         return outputs
 
     def __link(self, prev_output):
@@ -109,14 +70,17 @@ class IQAPipeline:
 
     def run(self, dataset):
         for qapair in tqdm(dataset.qapairs):
-            # if not 'municipality' in qapair.question.text:
-            #     continue
+            if 'municipality' not in qapair.question.text:
+                continue
             outputs = {-1: [qapair.question.text]}
             for cmpnt_idx, component in enumerate(self.components):
                 outputs[cmpnt_idx] = []
                 for prev_output in outputs[cmpnt_idx - 1]:
                     outputs[cmpnt_idx].extend(component(prev_output))
-            print self.find_interaction_options(outputs)
+
+            interaction_options = InteractionOptions(outputs[2], dataset.parser.parse_sparql)
+            print interaction_options.itemWithMaxInformationGain()
+            print "test"
 
             # if any([len(item['queries']) > 0 for item in outputs[cmpnt_idx]]):
             #     for item in outputs:
