@@ -9,6 +9,7 @@ config = {
     },
     'SQG': {
         'endpoint': 'http://sda-srv02.iai.uni-bonn.de:5000/qg/api/v1.0/query',
-        'timeout': 120
+        'timeout': 120,
+        'use_sqg_cache': True
     }
 }
