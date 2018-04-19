@@ -34,7 +34,8 @@ class SQG:
 
     def build_query(self, question, entities=[], relations=[]):
         id = question
-        input = {'question': question, "entities": entities, "relations": relations, 'timeout': self.timeout}
+        input = {'question': question, "entities": entities, "relations": relations, 'timeout': self.timeout,
+                 'use_cache': config.config["SQG"]['use_sqg_cache']}
 
         if id not in self.cache or not self.use_cache:
             result = Utils.call_web_api(self.endpoint, input)
