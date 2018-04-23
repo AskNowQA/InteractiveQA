@@ -5,6 +5,7 @@ from common.component.linker.earl import EARL
 from common.component.query.sqg import SQG
 from common.container.interactionOptions import InteractionOptions
 from common.parser.lc_quad_linked import LC_Qaud_Linked
+from common.evaluation.oracle import Oracle
 from tqdm import tqdm
 import argparse
 import pickle as pk
@@ -69,6 +70,7 @@ class IQAPipeline:
         return [{"question": question, "chunks": item} for item in chunkers_output]
 
     def run(self, dataset):
+        oracle = Oracle()
         for qapair in tqdm(dataset.qapairs):
             if 'municipality' not in qapair.question.text:
                 continue
@@ -79,9 +81,9 @@ class IQAPipeline:
                     outputs[cmpnt_idx].extend(component(prev_output))
 
             interaction_options = InteractionOptions(outputs[2], dataset.parser.parse_sparql)
-            print interaction_options.itemWithMaxInformationGain()
-            print "test"
-
+            while interaction_options.has_interaction():
+                io = interaction_options.interactionWithMaxInformationGain()
+                interaction_options.update(io, oracle.answer(io))
             # if any([len(item['queries']) > 0 for item in outputs[cmpnt_idx]]):
             #     for item in outputs:
             #         print outputs[item]
