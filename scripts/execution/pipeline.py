@@ -82,8 +82,8 @@ class IQAPipeline:
 
             interaction_options = InteractionOptions(outputs[2], dataset.parser.parse_sparql)
             while interaction_options.has_interaction():
-                io = interaction_options.interactionWithMaxInformationGain()
-                interaction_options.update(io, oracle.answer(io))
+                io_idx = interaction_options.interactionWithMaxInformationGain()
+                interaction_options.update(io_idx, oracle.answer(io_idx))
             # if any([len(item['queries']) > 0 for item in outputs[cmpnt_idx]]):
             #     for item in outputs:
             #         print outputs[item]

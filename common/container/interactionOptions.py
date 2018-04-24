@@ -9,8 +9,10 @@ class InteractionOptions:
         self.dic = dict()
         self.complete_interpretation_space = complete_interpretation_space
         self.all_queries = UniqueList()
+        self.all_ios = UniqueList()
         for output in complete_interpretation_space:
             for query in output["queries"]:
+                query["removed"] = False
                 self.all_queries.addIfNotExists(query)
                 self.add(InteractionOption("type", output["type"], query))
                 _, _, uris = parser(query["query"])
@@ -28,8 +30,12 @@ class InteractionOptions:
                         if found:
                             break
 
-        self.__remove_single_options()
         self.__remove_items_contained_in_others()
+        self.__remove_single_options()
+
+        for item in self.dic:
+            for io in self.dic[item]:
+                self.all_ios.addIfNotExists(io)
 
     def __remove_single_options(self):
         # Remove items that have no alternatives
@@ -41,23 +47,35 @@ class InteractionOptions:
         ranges = [[item[0], item[0] + item[1]] for item in idxs]
         contained = []
         for x in ranges:
-            contained += [[y[0], y[1] - y[0]] for y in ranges if
+            contained += [[y[0], y[1] - y[0], x[0], x[1] - x[0]] for y in ranges if
                           (x[0] >= y[0] and x[1] <= y[1]) and (x[0] != y[0] or x[1] != y[1])]
         for item in contained:
-            del self.dic[str(item)]
+            tmp = self.dic[str(item[:2])]
+            del self.dic[str(item[:2])]
+            for io in tmp:
+                io.id = str(item[2:])
+                self.add(io)
 
     def add(self, interactionOption):
         if interactionOption.id in self.dic:
             result = self.dic[interactionOption.id].addIfNotExists(interactionOption)
             if result != interactionOption:
+                if isinstance(result.value, dict) and isinstance(interactionOption.value, dict):
+                    result.value["confidence"] = max(result.value["confidence"], interactionOption.value["confidence"])
                 if isinstance(interactionOption, InteractionOption):
                     result.addQuery(interactionOption.related_queries)
         else:
             self.dic[interactionOption.id] = UniqueList([interactionOption])
 
+    def all_active_queries(self):
+        return [query for query in self.all_queries if not query["removed"]]
+
+    def all_active_ios(self):
+        return [io for io in self.all_ios if not io.removed()]
+
     def filter_interpretation_space(self, interaction_option):
-        positive = interaction_option.related_queries
-        negetive = [query for query in self.all_queries if query not in positive]
+        positive = [query for query in interaction_option.related_queries if not query["removed"]]
+        negetive = [query for query in self.all_active_queries() if query not in positive]
 
         return positive, negetive
 
@@ -71,7 +89,7 @@ class InteractionOptions:
         return -sum(plogs)
 
     def averageEntropy(self, interaction_option):
-        S_sum = sum([q['complete_confidence'] for q in self.all_queries])
+        S_sum = sum([q['complete_confidence'] for q in self.all_active_queries()])
         queries_contain_io, queries_not_contain_io = self.filter_interpretation_space(interaction_option)
         entropy_positive = self.entropy(queries_contain_io, S_sum)
         entropy_negetive = self.entropy(queries_not_contain_io, S_sum)
@@ -81,23 +99,35 @@ class InteractionOptions:
         return p_entropy_positive * entropy_positive + p_entropy_negetive * entropy_negetive
 
     def interactionWithMaxInformationGain(self):
-        entropy = self.entropy(self.all_queries)
+        entropy = self.entropy(self.all_active_queries())
         information_gains = []
-        for item in self.dic:
-            for io in self.dic[item]:
-                information_gains.append(entropy - self.averageEntropy(io))
+
+        for io in self.all_active_ios():
+            information_gains.append(entropy - self.averageEntropy(io))
 
         io, idx = max([(v, i) for i, v in enumerate(information_gains)])
-        return io
+        print self.all_active_ios()[idx].value
+        return idx
 
     def has_interaction(self):
-        i = 0
-        for item in self.dic:
-            for io in self.dic[item]:
-                i += 1
-                if i > 1:
-                    return True
-        return False
+        return len(self.all_active_ios()) > 1
+
+    def update(self, io_idx, value):
+        io = self.all_active_ios()[io_idx]
+        queries_contain_io, queries_not_contain_io = self.filter_interpretation_space(io)
+        if value:
+            for query in queries_not_contain_io:
+                query["removed"] = True
+        else:
+            io.set_remove(True)
+            for query in queries_contain_io:
+                query["removed"] = True
+
+        io.set_removed(True)
+        # remove IOs which have no active query
+        for io in self.all_active_ios():
+            if not io.removed():
+                io.set_removed(all([query["removed"] for query in io.related_queries]))
 
     def __iter__(self):
         for item in self.dic:
