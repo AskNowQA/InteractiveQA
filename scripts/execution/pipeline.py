@@ -6,6 +6,7 @@ from common.component.query.sqg import SQG
 from common.container.interactionOptions import InteractionOptions
 from common.parser.lc_quad_linked import LC_Qaud_Linked
 from common.evaluation.oracle import Oracle
+from common.kb.dbpedia import DBpedia
 from tqdm import tqdm
 import argparse
 import pickle as pk
@@ -70,17 +71,22 @@ class IQAPipeline:
         return [{"question": question, "chunks": item} for item in chunkers_output]
 
     def run(self, dataset):
+        kb = DBpedia()
         oracle = Oracle()
         for qapair in tqdm(dataset.qapairs):
             if 'municipality' not in qapair.question.text:
                 continue
+            for uri in qapair.sparql.uris:
+                if uri.is_entity():
+                    uri.types = kb.get_types(uri.uri)
+
             outputs = {-1: [qapair.question.text]}
             for cmpnt_idx, component in enumerate(self.components):
                 outputs[cmpnt_idx] = []
                 for prev_output in outputs[cmpnt_idx - 1]:
                     outputs[cmpnt_idx].extend(component(prev_output))
 
-            interaction_options = InteractionOptions(outputs[2], dataset.parser.parse_sparql)
+            interaction_options = InteractionOptions(outputs[2], dataset.parser.parse_sparql, kb=kb)
             while interaction_options.has_interaction():
                 io = interaction_options.interactionWithMaxInformationGain()
                 interaction_options.update(io, oracle.answer(qapair, io))

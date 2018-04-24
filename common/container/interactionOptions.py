@@ -1,34 +1,47 @@
 from common.container.interactionOption import InteractionOption
 from common.utility.uniqueList import UniqueList
+from common.kb.dbpedia import DBpedia
 import itertools
 import math
 
 
 class InteractionOptions:
-    def __init__(self, complete_interpretation_space, parser):
+    def __init__(self, complete_interpretation_space, parser, kb=DBpedia()):
         self.dic = dict()
+        self.kb = kb
         self.complete_interpretation_space = complete_interpretation_space
         self.all_queries = UniqueList()
         self.all_ios = UniqueList()
         for output in complete_interpretation_space:
-            for query in output["queries"]:
-                query["removed"] = False
+            for query in output['queries']:
+                query['removed'] = False
                 self.all_queries.addIfNotExists(query)
-                self.add(InteractionOption("type", output["type"], query))
-                _, _, uris = parser(query["query"])
+                self.add(InteractionOption('type', output['type'], query))
+                _, _, uris = parser(query['query'])
                 for uri in uris:
                     if uri.is_generic():
                         continue
                     raw_uri = uri.uri
                     found = False
-                    for entity_relation in itertools.chain(output["entities"], output["relations"]):
-                        for item in entity_relation["uris"]:
-                            if item["uri"] == raw_uri:
-                                self.add(InteractionOption(str(entity_relation['surface']), item, query))
+                    for entity_relation in itertools.chain(output['entities'], output['relations']):
+                        for item in entity_relation['uris']:
+                            if item['uri'] == raw_uri:
+                                io = InteractionOption(str(entity_relation['surface']), item, query)
+                                io.value['type'] = 'linked'
+                                self.add(io)
                                 found = True
                                 break
                         if found:
                             break
+
+        for item in self.dic:
+            for io in self.dic[item]:
+                if isinstance(io.value, dict) and io.value['type'] == 'linked' and '/resource/' in io.value['uri']:
+                    for type in kb.get_types(io.value['uri']):
+                        self.add(InteractionOption(io.id, {'uri': type,
+                                                           'confidence': io.value['confidence'],
+                                                           'type': 'type'},
+                                                   io.related_queries))
 
         self.__remove_items_contained_in_others()
         self.__remove_single_options()
@@ -43,7 +56,7 @@ class InteractionOptions:
 
     def __remove_items_contained_in_others(self):
         # Remove items with surface contained in other items
-        idxs = [map(int, item.strip("[]").split(", ")) for item in self.dic if item != "type"]
+        idxs = [map(int, item.strip('[]').split(', ')) for item in self.dic if item != 'type']
         ranges = [[item[0], item[0] + item[1]] for item in idxs]
         contained = []
         for x in ranges:
@@ -61,20 +74,20 @@ class InteractionOptions:
             result = self.dic[interactionOption.id].addIfNotExists(interactionOption)
             if result != interactionOption:
                 if isinstance(result.value, dict) and isinstance(interactionOption.value, dict):
-                    result.value["confidence"] = max(result.value["confidence"], interactionOption.value["confidence"])
+                    result.value['confidence'] = max(result.value['confidence'], interactionOption.value['confidence'])
                 if isinstance(interactionOption, InteractionOption):
                     result.addQuery(interactionOption.related_queries)
         else:
             self.dic[interactionOption.id] = UniqueList([interactionOption])
 
     def all_active_queries(self):
-        return [query for query in self.all_queries if not query["removed"]]
+        return [query for query in self.all_queries if not query['removed']]
 
     def all_active_ios(self):
         return [io for io in self.all_ios if not io.removed()]
 
     def filter_interpretation_space(self, interaction_option):
-        positive = [query for query in interaction_option.related_queries if not query["removed"]]
+        positive = [query for query in interaction_option.related_queries if not query['removed']]
         negetive = [query for query in self.all_active_queries() if query not in positive]
 
         return positive, negetive
@@ -109,23 +122,25 @@ class InteractionOptions:
         return self.all_active_ios()[idx]
 
     def has_interaction(self):
-        return len(self.all_active_ios()) > 1
+        if len(self.all_active_queries()) > 1:
+            return len(self.all_active_ios()) > 1
+        return False
 
     def update(self, io, value):
         queries_contain_io, queries_not_contain_io = self.filter_interpretation_space(io)
         if value:
             for query in queries_not_contain_io:
-                query["removed"] = True
+                query['removed'] = True
         else:
             for query in queries_contain_io:
-                query["removed"] = True
+                query['removed'] = True
 
         # Remove current IO
         io.set_removed(True)
         # remove IOs which have no active query
         for io in self.all_active_ios():
             if not io.removed():
-                io.set_removed(all([query["removed"] for query in io.related_queries]))
+                io.set_removed(all([query['removed'] for query in io.related_queries]))
 
     def __iter__(self):
         for item in self.dic:

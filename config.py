@@ -2,6 +2,9 @@ config = {
     'general': {
         'http': {
             'timeout': 120
+        },
+        'dbpedia': {
+            'endpoint': 'http://sda-srv01.iai.uni-bonn.de:8164/sparql'
         }
     },
     'EARL': {
@@ -9,6 +12,7 @@ config = {
     },
     'SQG': {
         'endpoint': 'http://sda-srv02.iai.uni-bonn.de:5000/qg/api/v1.0/query',
+        # 'endpoint': 'http://localhost:5001/qg/api/v1.0/query',
         'timeout': 120,
         'use_sqg_cache': True
     }

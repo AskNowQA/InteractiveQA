@@ -1,4 +1,19 @@
+from common.utility.utils import Utils
+import config
+import urllib
+
+
 class DBpedia:
+    def __init__(self, endpoint=config.config["general"]["dbpedia"]["endpoint"]):
+        self.endpoint = endpoint
+
+    def get_types(self, uri):
+        query = "SELECT ?t WHERE {{<{}> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?t}}".format(uri)
+        payload = {'query': query, 'format': 'application/json'}
+
+        results = Utils.call_web_api(self.endpoint + "?" + urllib.urlencode(payload), None)
+        return [item["t"]["value"] for item in results["results"]["bindings"] if "yago" not in item["t"]["value"]]
+
     @staticmethod
     def parse_uri(input_uri):
         if isinstance(input_uri, bool):

@@ -1,10 +1,11 @@
 class Uri:
-    def __init__(self, raw_uri, parser, confidence=1.0):
+    def __init__(self, raw_uri, parser, confidence=1.0, types=None):
         self.raw_uri = raw_uri
         self.uri_type, self.uri = parser(raw_uri)
         self.__str = u"{}:{}".format(self.uri_type, self.uri[self.uri.rfind("/") + 1:].encode("ascii", "ignore"))
         self.__hash = hash(self.__str)
         self.confidence = confidence
+        self.types = types
 
     def is_generic(self):
         return self.uri_type == "g"

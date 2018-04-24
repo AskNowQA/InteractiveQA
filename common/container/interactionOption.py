@@ -2,7 +2,10 @@ class InteractionOption:
     def __init__(self, id, value, query):
         self.id = id
         self.value = value
-        self.related_queries = [query]
+        if isinstance(query, list):
+            self.related_queries = query
+        else:
+            self.related_queries = [query]
         self.__removed = False
 
     def addQuery(self, query):
