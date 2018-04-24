@@ -106,23 +106,21 @@ class InteractionOptions:
             information_gains.append(entropy - self.averageEntropy(io))
 
         io, idx = max([(v, i) for i, v in enumerate(information_gains)])
-        print self.all_active_ios()[idx].value
-        return idx
+        return self.all_active_ios()[idx]
 
     def has_interaction(self):
         return len(self.all_active_ios()) > 1
 
-    def update(self, io_idx, value):
-        io = self.all_active_ios()[io_idx]
+    def update(self, io, value):
         queries_contain_io, queries_not_contain_io = self.filter_interpretation_space(io)
         if value:
             for query in queries_not_contain_io:
                 query["removed"] = True
         else:
-            io.set_remove(True)
             for query in queries_contain_io:
                 query["removed"] = True
 
+        # Remove current IO
         io.set_removed(True)
         # remove IOs which have no active query
         for io in self.all_active_ios():
