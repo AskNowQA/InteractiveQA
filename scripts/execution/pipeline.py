@@ -15,6 +15,8 @@ import os
 
 class IQAPipeline:
     def __init__(self, args):
+        self.kb = DBpedia(cache_path=os.path.join(args.base_path, "caches/"), use_cache=True)
+
         classifier_chunker = ClassifierChunkParser([], os.path.join(args.base_path, args.model))
         SENNA_chunker = SENNAChunker()
         with open(os.path.join(args.base_path, args.gold_chunk)) as data_file:
@@ -71,14 +73,14 @@ class IQAPipeline:
         return [{"question": question, "chunks": item} for item in chunkers_output]
 
     def run(self, dataset):
-        kb = DBpedia()
+
         oracle = Oracle()
         for qapair in tqdm(dataset.qapairs):
             if 'municipality' not in qapair.question.text:
                 continue
             for uri in qapair.sparql.uris:
                 if uri.is_entity():
-                    uri.types = kb.get_types(uri.uri)
+                    uri.types = self.kb.get_types(uri.uri)
 
             outputs = {-1: [qapair.question.text]}
             for cmpnt_idx, component in enumerate(self.components):
@@ -86,7 +88,7 @@ class IQAPipeline:
                 for prev_output in outputs[cmpnt_idx - 1]:
                     outputs[cmpnt_idx].extend(component(prev_output))
 
-            interaction_options = InteractionOptions(outputs[2], dataset.parser.parse_sparql, kb=kb)
+            interaction_options = InteractionOptions(outputs[2], dataset.parser.parse_sparql, kb=self.kb)
             while interaction_options.has_interaction():
                 io = interaction_options.interactionWithMaxInformationGain()
                 interaction_options.update(io, oracle.answer(qapair, io))

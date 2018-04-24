@@ -1,18 +1,46 @@
 from common.utility.utils import Utils
 import config
 import urllib
+import os
+import json
 
 
 class DBpedia:
-    def __init__(self, endpoint=config.config["general"]["dbpedia"]["endpoint"]):
+    def __init__(self, endpoint=config.config["general"]["dbpedia"]["endpoint"], use_cache=False, cache_path=None):
         self.endpoint = endpoint
+        self.cache_path = cache_path
+        self.use_cache = use_cache
+        self.cache = {}
+        if self.use_cache:
+            Utils.makedirs(cache_path)
+            self.cache_path = os.path.join(cache_path, "types.cache")
+            self.__load_cache()
+
+    def __load_cache(self):
+        try:
+            with open(self.cache_path) as cache_file:
+                self.cache = json.load(cache_file)
+        except:
+            self.cache = {}
+
+    def __save_cache(self):
+        try:
+            with open(self.cache_path, "w") as cache_file:
+                json.dump(self.cache, cache_file)
+            return True
+        except:
+            return False
 
     def get_types(self, uri):
-        query = "SELECT ?t WHERE {{<{}> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?t}}".format(uri)
-        payload = {'query': query, 'format': 'application/json'}
+        if uri not in self.cache or not self.use_cache:
+            query = "SELECT ?t WHERE {{<{}> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?t}}".format(uri)
+            payload = {'query': query, 'format': 'application/json'}
+            results = Utils.call_web_api(self.endpoint + "?" + urllib.urlencode(payload), None)
 
-        results = Utils.call_web_api(self.endpoint + "?" + urllib.urlencode(payload), None)
-        return [item["t"]["value"] for item in results["results"]["bindings"] if "yago" not in item["t"]["value"]]
+            self.cache[uri] = [item["t"]["value"] for item in results["results"]["bindings"] if
+                               "yago" not in item["t"]["value"]]
+            self.__save_cache()
+        return self.cache[uri]
 
     @staticmethod
     def parse_uri(input_uri):
