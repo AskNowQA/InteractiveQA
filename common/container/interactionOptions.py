@@ -16,7 +16,7 @@ class InteractionOptions:
             for query in output['queries']:
                 query['removed'] = False
                 self.all_queries.addIfNotExists(query)
-                self.add(InteractionOption('type', output['type'], query))
+                self.add(InteractionOption('type', query['type'], query))
                 _, _, uris = parser(query['query'])
                 for uri in uris:
                     if uri.is_generic():
@@ -73,10 +73,11 @@ class InteractionOptions:
         if interactionOption.id in self.dic:
             result = self.dic[interactionOption.id].addIfNotExists(interactionOption)
             if result != interactionOption:
-                if isinstance(result.value, dict) and isinstance(interactionOption.value, dict):
-                    result.value['confidence'] = max(result.value['confidence'], interactionOption.value['confidence'])
                 if isinstance(interactionOption, InteractionOption):
                     result.addQuery(interactionOption.related_queries)
+                    if isinstance(result.value, dict) and isinstance(interactionOption.value, dict):
+                        result.value['confidence'] = max(result.value['confidence'],
+                                                         interactionOption.value['confidence'])
         else:
             self.dic[interactionOption.id] = UniqueList([interactionOption])
 
@@ -97,7 +98,7 @@ class InteractionOptions:
             s = sum([q['complete_confidence'] for q in interpretation_space])
         plogs = []
         for query in interpretation_space:
-            p = float(query['complete_confidence']) / s
+            p = query['complete_confidence'] / s
             plogs.append(p * math.log(p, 2))
         return -sum(plogs)
 
@@ -105,11 +106,11 @@ class InteractionOptions:
         S_sum = sum([q['complete_confidence'] for q in self.all_active_queries()])
         queries_contain_io, queries_not_contain_io = self.filter_interpretation_space(interaction_option)
         entropy_positive = self.entropy(queries_contain_io, S_sum)
-        entropy_negetive = self.entropy(queries_not_contain_io, S_sum)
+        entropy_negative = self.entropy(queries_not_contain_io, S_sum)
         p_entropy_positive = sum([q['complete_confidence'] for q in queries_contain_io]) / S_sum
-        p_entropy_negetive = sum([q['complete_confidence'] for q in queries_not_contain_io]) / S_sum
+        p_entropy_negative = sum([q['complete_confidence'] for q in queries_not_contain_io]) / S_sum
 
-        return p_entropy_positive * entropy_positive + p_entropy_negetive * entropy_negetive
+        return p_entropy_positive * entropy_positive + p_entropy_negative * entropy_negative
 
     def interactionWithMaxInformationGain(self):
         entropy = self.entropy(self.all_active_queries())
@@ -145,3 +146,22 @@ class InteractionOptions:
     def __iter__(self):
         for item in self.dic:
             yield item
+
+
+if __name__ == "__main__":
+    ios = InteractionOptions([], None, None)
+
+    q1 = {'name': 'cq1', 'complete_confidence': 0.2, 'removed': False}
+    q2 = {'name': 'cq2', 'complete_confidence': 0.5, 'removed': False}
+    q3 = {'name': 'cq3', 'complete_confidence': 0.7, 'removed': False}
+    io1 = InteractionOption("o1", None, [q1, q2])
+    io2 = InteractionOption("o2", None, [q1, q3])
+    io3 = InteractionOption("o3", None, [q2, q3])
+    ios.all_queries.extend([q1, q2, q3])
+    ios.all_ios.extend([io1, io2, io3])
+
+    while ios.has_interaction():
+        io = ios.interactionWithMaxInformationGain()
+        ios.update(io, True)
+
+    print "done"
