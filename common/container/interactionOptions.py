@@ -55,19 +55,22 @@ class InteractionOptions:
         self.dic = {item: self.dic[item] for item in self.dic if len(self.dic[item]) > 1}
 
     def __remove_items_contained_in_others(self):
-        # Remove items with surface contained in other items
-        idxs = [map(int, item.strip('[]').split(', ')) for item in self.dic if item != 'type']
-        ranges = [[item[0], item[0] + item[1]] for item in idxs]
-        contained = []
-        for x in ranges:
-            contained += [[y[0], y[1] - y[0], x[0], x[1] - x[0]] for y in ranges if
-                          (x[0] >= y[0] and x[1] <= y[1]) and (x[0] != y[0] or x[1] != y[1])]
-        for item in contained:
-            tmp = self.dic[str(item[:2])]
-            del self.dic[str(item[:2])]
-            for io in tmp:
-                io.id = str(item[2:])
-                self.add(io)
+        try:
+            # Remove items with surface contained in other items
+            idxs = [map(int, item.strip('[]').split(', ')) for item in self.dic if item != 'type']
+            ranges = [[item[0], item[0] + item[1]] for item in idxs]
+            contained = []
+            for x in ranges:
+                contained += [[y[0], y[1] - y[0], x[0], x[1] - x[0]] for y in ranges if
+                              (x[0] >= y[0] and x[1] <= y[1]) and (x[0] != y[0] or x[1] != y[1])]
+            for item in contained:
+                tmp = self.dic[str(item[:2])]
+                del self.dic[str(item[:2])]
+                for io in tmp:
+                    io.id = str(item[2:])
+                    self.add(io)
+        except:
+            pass
 
     def add(self, interactionOption):
         if interactionOption.id in self.dic:
