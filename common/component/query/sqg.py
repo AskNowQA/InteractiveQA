@@ -1,44 +1,35 @@
 from common.utility.utils import Utils
 import config
-import json
-import os
+import itertools
 
 
 class SQG:
-    def __init__(self, endpoint=config.config["SQG"]['endpoint'], timeout=config.config["SQG"]['timeout'],
-                 cache_path="", use_cache=True):
+    def __init__(self, endpoint=config.config['SQG']['endpoint'], timeout=config.config['SQG']['timeout']):
         self.endpoint = endpoint
         self.timeout = timeout
-        self.cache_path = cache_path
-        self.use_cache = use_cache
-        self.cache = {}
-        if self.use_cache:
-            Utils.makedirs(cache_path)
-            self.cache_path = os.path.join(cache_path, "sqg.cache")
-            self.__load_cache()
-
-    def __load_cache(self):
-        try:
-            with open(self.cache_path) as cache_file:
-                self.cache = json.load(cache_file)
-        except:
-            self.cache = {}
-
-    def __save_cache(self):
-        try:
-            with open(self.cache_path, "w") as cache_file:
-                json.dump(self.cache, cache_file)
-            return True
-        except:
-            return False
 
     def build_query(self, question, entities=[], relations=[]):
-        id = question
-        input = {'question': question, "entities": entities, "relations": relations, 'timeout': self.timeout,
-                 'use_cache': config.config["SQG"]['use_sqg_cache']}
+        input = {'question': question,
+                 'entities': entities,
+                 'relations': relations,
+                 'timeout': self.timeout,
+                 'use_cache': config.config['SQG']['use_sqg_cache'],
+                 'force_list': True}
 
-        if id not in self.cache or not self.use_cache:
-            result = Utils.call_web_api(self.endpoint, input)
-            self.cache[id] = {'queries': []} if result is None else result
-            self.__save_cache()
-        return self.cache[id]
+        result_list = Utils.call_web_api(self.endpoint, input)
+        input['force_list'] = False
+        input['force_bool'] = True
+        result_bool = Utils.call_web_api(self.endpoint, input)
+
+        input['force_list'] = False
+        input['force_bool'] = False
+        input['force_count'] = True
+        result_count = Utils.call_web_api(self.endpoint, input)
+        result = {'queries': []}
+        for queries in itertools.chain([result_list, result_bool, result_count]):
+            for query in queries['queries']:
+                query['type'] = queries['type']
+                query['type_confidence'] = queries['type_confidence']
+            result['queries'].extend(queries['queries'])
+
+        return result
