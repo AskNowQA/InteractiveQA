@@ -25,7 +25,7 @@ class IQAPipeline:
         self.__chunkers = [classifier_chunker, SENNA_chunker, gold_Chunker]
         earl = EARL(cache_path=os.path.join(args.base_path, "caches/"), use_cache=True)
         self.__linkers = [earl]
-        sqg = SQG(cache_path=os.path.join(args.base_path, "caches/"), use_cache=False)
+        sqg = SQG()
         self.__query_builders = [sqg]
 
         self.components = [self.__chunk, self.__link, self.__build_query]
@@ -40,7 +40,7 @@ class IQAPipeline:
             output["chunks"] = prev_output["chunks"]
             for query in output["queries"]:
                 _, _, uris = dataset.parser.parse_sparql(query["query"])
-                confidence = 1
+                linked_items_confidence = 1
                 for uri in uris:
                     if uri.is_generic():
                         continue
@@ -48,16 +48,15 @@ class IQAPipeline:
                     found = False
                     for item in prev_output["entities"][0]["uris"]:
                         if item["uri"] == raw_uri:
-                            confidence *= item["confidence"]
+                            linked_items_confidence *= item["confidence"]
                             found = True
                             break
                     if not found:
                         for item in prev_output["relations"][0]["uris"]:
                             if item["uri"] == raw_uri:
-                                confidence *= item["confidence"]
+                                linked_items_confidence *= item["confidence"]
                                 break
-                confidence *= query["confidence"]
-                query["complete_confidence"] = confidence
+                query["complete_confidence"] = linked_items_confidence * query["confidence"] * query['type_confidence']
         return outputs
 
     def __link(self, prev_output):
@@ -73,7 +72,6 @@ class IQAPipeline:
         return [{"question": question, "chunks": item} for item in chunkers_output]
 
     def run(self, dataset):
-
         oracle = Oracle()
         for qapair in tqdm(dataset.qapairs):
             if 'municipality' not in qapair.question.text:
