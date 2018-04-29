@@ -1,3 +1,7 @@
+from common.utility.utils import Utils
+import json
+
+
 class Stats(dict):
     def __init__(self, *args):
         dict.__init__(self, args)
@@ -11,6 +15,11 @@ class Stats(dict):
         if key not in self:
             self[key] = 0
         self[key] += value
+
+    def save(self, output_file):
+        Utils.makedirs(output_file)
+        with open(output_file, "w") as data_file:
+            json.dump(self, data_file, sort_keys=True, indent=4, separators=(',', ': '))
 
     def __str__(self):
         keys = self.keys()
