@@ -3,12 +3,15 @@ from common.utility.uniqueList import UniqueList
 from common.kb.dbpedia import DBpedia
 from common.container.linkeditem import LinkedItem
 from common.container.uri import Uri
+from common.container.sparql import SPARQL
 import math
 
 
 class InteractionOptions:
-    def __init__(self, complete_interpretation_space, uri_parser, kb=DBpedia(), c2=True, c3=True):
+    def __init__(self, complete_interpretation_space, uri_parser=None, sparql_parser=None, kb=DBpedia(), c2=True,
+                 c3=True):
         self.dic = dict()
+        self.sparql_parser = sparql_parser
         self.kb = kb
         self.complete_interpretation_space = complete_interpretation_space
         self.all_queries = UniqueList()
@@ -150,7 +153,8 @@ class InteractionOptions:
             return None
 
         _, idx = max([(v, i) for i, v in enumerate(confidences)])
-        return self.__all_active_queries()[idx]
+        query = SPARQL(self.__all_active_queries()[idx]["query"], self.sparql_parser)
+        return query
 
     def has_interaction(self):
         if len(self.__all_active_queries()) > 1:
