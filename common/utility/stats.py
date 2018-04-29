@@ -1,5 +1,5 @@
 from common.utility.utils import Utils
-import json
+import json, os
 
 
 class Stats(dict):
@@ -17,7 +17,7 @@ class Stats(dict):
         self[key] += value
 
     def save(self, output_file):
-        Utils.makedirs(output_file)
+        Utils.makedirs(os.path.dirname(output_file))
         with open(output_file, "w") as data_file:
             json.dump(self, data_file, sort_keys=True, indent=4, separators=(',', ': '))
 

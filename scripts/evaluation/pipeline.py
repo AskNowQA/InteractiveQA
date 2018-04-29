@@ -62,6 +62,8 @@ if __name__ == "__main__":
                 else:
                     stats[interaction_type_str + '-' + strategy].inc(str(qid) + "-incorrect")
         qid += 1
+        break
 
     print stats
-    stats.save('output/stats.json')
+    for k, v in stats.iteritems():
+        v.save(os.path.join(args.base_path, 'output', 'stats-{0}.json'.format(k)))
