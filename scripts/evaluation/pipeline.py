@@ -43,7 +43,7 @@ if __name__ == "__main__":
             interaction_type_str = 'IQA-AO' if all(interaction_type) else 'IQA-SO'
             for strategy in strategies:
                 stats[interaction_type_str + '-' + strategy].inc(str(qid), 0)
-                interaction_options = InteractionOptions(outputs[2], kb.parse_uri, kb, *interaction_type)
+                interaction_options = InteractionOptions(outputs[2], kb.parse_uri, parse_sparql, kb, *interaction_type)
                 while interaction_options.has_interaction() and \
                         not oracle.validate_query(qapair, interaction_options.queryWithMaxProbability()):
 
