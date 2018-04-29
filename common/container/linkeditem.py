@@ -1,7 +1,8 @@
 class LinkedItem:
-    def __init__(self, surface_form, uris):
+    def __init__(self, surface_form, uris, related_queries=None):
         self.surface_form = surface_form
         self.uris = uris
+        self.related_queries = related_queries
 
     def contains_uri(self, uri):
         """
@@ -27,3 +28,8 @@ class LinkedItem:
                     output.append(item)
                     break
         return output
+
+    def __eq__(self, other):
+        if isinstance(other, LinkedItem):
+            return self.surface_form == other.surface_form and self.uris == other.uris
+        return False
