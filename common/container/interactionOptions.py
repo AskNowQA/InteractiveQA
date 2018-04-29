@@ -2,11 +2,12 @@ from common.container.interactionOption import InteractionOption
 from common.utility.uniqueList import UniqueList
 from common.kb.dbpedia import DBpedia
 from common.container.linkeditem import LinkedItem
+from common.container.uri import Uri
 import math
 
 
 class InteractionOptions:
-    def __init__(self, complete_interpretation_space, parser, kb=DBpedia(), c2=True, c3=True):
+    def __init__(self, complete_interpretation_space, uri_parser, kb=DBpedia(), c2=True, c3=True):
         self.dic = dict()
         self.kb = kb
         self.complete_interpretation_space = complete_interpretation_space
@@ -31,7 +32,9 @@ class InteractionOptions:
                 for io in self.dic[item]:
                     if io.type == 'linked' and isinstance(io.value, LinkedItem) and io.value.uris[0].is_entity():
                         for type in kb.get_types(io.value.uris[0].uri):
-                            self.add(InteractionOption(io.id, LinkedItem(io.id, [type]), io.related_queries, 'type'))
+                            self.add(
+                                InteractionOption(io.id, LinkedItem(io.id, [Uri(type, uri_parser)]), io.related_queries,
+                                                  'type'))
                             # {'uri': type,
                             #  'confidence': io.value['confidence'],
                             #  'type': 'type'}
@@ -143,6 +146,8 @@ class InteractionOptions:
 
     def queryWithMaxProbability(self):
         confidences = [q['complete_confidence'] for q in self.__all_active_queries()]
+        if len(confidences) == 0:
+            return None
 
         _, idx = max([(v, i) for i, v in enumerate(confidences)])
         return self.__all_active_queries()[idx]

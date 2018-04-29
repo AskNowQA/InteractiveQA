@@ -30,19 +30,20 @@ if __name__ == "__main__":
     strategies = ['InformationGain', 'OptionGain', 'Probability']
     w = 1
 
-    stats = {('IQA-AO' if all(type) else 'IQA-SO') + strategy: Stats() for strategy in strategies for type
+    stats = {('IQA-AO' if all(type) else 'IQA-SO') + '-' + strategy: Stats() for strategy in strategies for type
              in interaction_types}
     stats['general'] = Stats()
     qid = 0
     for qapair in tqdm(dataset.qapairs):
-        if 'municipality' not in qapair.question.text:
-            continue
+        # if 'municipality' not in qapair.question.text:
+        #     continue
         stats['general'].inc("total")
         outputs = pipeline.run(qapair)
         for interaction_type in interaction_types:
             interaction_type_str = 'IQA-AO' if all(interaction_type) else 'IQA-SO'
             for strategy in strategies:
-                interaction_options = InteractionOptions(outputs[2], parse_sparql, kb, *interaction_type)
+                stats[interaction_type_str + '-' + strategy].inc(str(qid), 0)
+                interaction_options = InteractionOptions(outputs[2], kb.parse_uri, kb, *interaction_type)
                 while interaction_options.has_interaction() and \
                         not oracle.validate_query(qapair, interaction_options.queryWithMaxProbability()):
 
@@ -54,12 +55,12 @@ if __name__ == "__main__":
                         io = interaction_options.interactionWithMaxProbability()
 
                     interaction_options.update(io, oracle.answer(qapair, io))
-                    stats[interaction_type_str + strategy].inc(str(qid))
+                    stats[interaction_type_str + '-' + strategy].inc(str(qid))
 
                 if oracle.validate_query(qapair, interaction_options.queryWithMaxProbability()):
-                    stats[interaction_type_str + strategy].inc(str(qid) + "+correct")
+                    stats[interaction_type_str + '-' + strategy].inc(str(qid) + "+correct")
                 else:
-                    stats[interaction_type_str + strategy].inc(str(qid) + "-incorrect")
+                    stats[interaction_type_str + '-' + strategy].inc(str(qid) + "-incorrect")
         qid += 1
 
     print stats
