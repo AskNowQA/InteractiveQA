@@ -27,6 +27,8 @@ class SQG:
         result_count = Utils.call_web_api(self.endpoint, input)
         result = {'queries': []}
         for queries in itertools.chain([result_list, result_bool, result_count]):
+            if queries is None:
+                break
             for query in queries['queries']:
                 query['type'] = queries['type']
                 query['type_confidence'] = queries['type_confidence']
