@@ -35,15 +35,13 @@ class InteractionOptions:
                 for io in self.dic[item]:
                     if io.type == 'linked' and isinstance(io.value, LinkedItem) and io.value.uris[0].is_entity():
                         for type in kb.get_types(io.value.uris[0].uri):
-                            self.add(
-                                InteractionOption(io.id, LinkedItem(io.id, [Uri(type, uri_parser)]), io.related_queries,
-                                                  'type'))
-                            # {'uri': type,
-                            #  'confidence': io.value['confidence'],
-                            #  'type': 'type'}
+                            self.add(InteractionOption(io.id, LinkedItem(io.id, [Uri(type, uri_parser)]),
+                                                       io.related_queries,
+                                                       'type'))
 
         self.__remove_items_contained_in_others()
-        self.__remove_single_options()
+        # there are cases where an entity is used in one query and not in others, thus can't simply remove it.
+        # self.__remove_single_options()
 
         for item in self.dic:
             for io in self.dic[item]:
@@ -90,7 +88,9 @@ class InteractionOptions:
         return [io for io in self.all_ios if not io.removed()]
 
     def __filter_interpretation_space(self, interaction_option):
-        positive = [query for query in interaction_option.related_queries if not query['removed']]
+        # positive = [query for query in interaction_option.related_queries if not query['removed']]
+        positive = [query for query in self.__all_active_queries() if
+                    not query['removed'] and query in interaction_option.related_queries]
         negetive = [query for query in self.__all_active_queries() if query not in positive]
 
         return positive, negetive
