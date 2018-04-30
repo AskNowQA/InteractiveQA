@@ -17,14 +17,17 @@ class SQG:
                  'force_list': True}
 
         result_list = Utils.call_web_api(self.endpoint, input)
-        input['force_list'] = False
-        input['force_bool'] = True
-        result_bool = Utils.call_web_api(self.endpoint, input)
+        result_bool = None
+        result_count = None
+        if result_list is not None:
+            input['force_list'] = False
+            input['force_bool'] = True
+            result_bool = Utils.call_web_api(self.endpoint, input)
 
-        input['force_list'] = False
-        input['force_bool'] = False
-        input['force_count'] = True
-        result_count = Utils.call_web_api(self.endpoint, input)
+            input['force_list'] = False
+            input['force_bool'] = False
+            input['force_count'] = True
+            result_count = Utils.call_web_api(self.endpoint, input)
         result = {'queries': []}
         for queries in itertools.chain([result_list, result_bool, result_count]):
             if queries is None:
