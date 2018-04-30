@@ -33,11 +33,14 @@ if __name__ == "__main__":
     stats = {('IQA-AO' if all(type) else 'IQA-SO') + '-' + strategy: Stats() for strategy in strategies for type
              in interaction_types}
     stats['general'] = Stats()
-    qid = 0
+    qid = -1
     for qapair in tqdm(dataset.qapairs):
+        qid += 1
+        stats['general'].inc("total")
         # if 'municipality' not in qapair.question.text:
         #     continue
-        stats['general'].inc("total")
+        # if stats['general']['total'] < 4 + 1:
+        #     continue
         outputs = pipeline.run(qapair)
         for interaction_type in interaction_types:
             interaction_type_str = 'IQA-AO' if all(interaction_type) else 'IQA-SO'
@@ -61,9 +64,8 @@ if __name__ == "__main__":
                     stats[interaction_type_str + '-' + strategy].inc(str(qid) + "+correct")
                 else:
                     stats[interaction_type_str + '-' + strategy].inc(str(qid) + "-incorrect")
-        qid += 1
-        break
+
+        for k, v in stats.iteritems():
+            v.save(os.path.join(args.base_path, 'output', 'stats-{0}.json'.format(k)))
 
     print stats
-    for k, v in stats.iteritems():
-        v.save(os.path.join(args.base_path, 'output', 'stats-{0}.json'.format(k)))
