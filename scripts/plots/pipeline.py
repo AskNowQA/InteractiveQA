@@ -14,7 +14,9 @@ if __name__ == '__main__':
             with open(file_name, "r") as data_file:
                 json_data[item[10:-5]] = json.load(data_file)
 
-    total = 741.0
+    with open(os.path.join(output_path, 'stats-general.json'), "r") as data_file:
+        total = float(json.load(data_file)['total'])
+
     files = ['AO-InformationGain', 'SO-InformationGain',
              'AO-OptionGain', 'SO-OptionGain',
              'AO-Probability', 'SO-Probability']
@@ -36,6 +38,7 @@ if __name__ == '__main__':
     ax2.bar(x, y_values)
     plt.xticks(x, files, rotation='vertical')
 
+    print "diff"
     for item in set([key for __name in files for key in json_data[__name].keys()]):
         try:
             if len(set([json_data[file_name][item] for file_name in files])) > 1:
