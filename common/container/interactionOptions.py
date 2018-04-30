@@ -158,7 +158,7 @@ class InteractionOptions:
 
     def has_interaction(self):
         if len(self.__all_active_queries()) > 1:
-            return len(self.__all_active_ios()) > 1
+            return len(self.__all_active_ios()) > 0
         return False
 
     def update(self, io, value):

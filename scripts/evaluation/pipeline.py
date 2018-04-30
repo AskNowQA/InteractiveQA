@@ -39,7 +39,7 @@ if __name__ == "__main__":
         stats['general'].inc("total")
         # if 'municipality' not in qapair.question.text:
         #     continue
-        # if stats['general']['total'] < 4 + 1:
+        # if stats['general']['total'] < 84 + 1:
         #     continue
         outputs = pipeline.run(qapair)
         for interaction_type in interaction_types:
@@ -47,8 +47,9 @@ if __name__ == "__main__":
             for strategy in strategies:
                 stats[interaction_type_str + '-' + strategy].inc(str(qid), 0)
                 interaction_options = InteractionOptions(outputs[2], kb.parse_uri, parse_sparql, kb, *interaction_type)
-                while interaction_options.has_interaction() and \
-                        not oracle.validate_query(qapair, interaction_options.queryWithMaxProbability()):
+                while interaction_options.has_interaction():
+                    if oracle.validate_query(qapair, interaction_options.queryWithMaxProbability()):
+                        break
 
                     if strategy == 'InformationGain':
                         io = interaction_options.interactionWithMaxInformationGain()
