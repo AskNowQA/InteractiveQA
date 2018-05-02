@@ -21,7 +21,11 @@ class LC_Qaud_Linked:
     def parse(self):
         for raw_row in self.raw_data:
             self.qapairs.append(
-                QApair(raw_row["question"], raw_row["sparql_query"], raw_row, raw_row["id"],
+                QApair(raw_row["question"],
+                       raw_row["sparql_query"].replace('https://www.w3.org/1999/02/22-rdf-syntax-ns#type',
+                                                       'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+                       raw_row,
+                       raw_row["id"],
                        self.parser))
 
     def print_pairs(self, n=-1):
