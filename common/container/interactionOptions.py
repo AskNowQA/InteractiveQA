@@ -91,9 +91,9 @@ class InteractionOptions:
         # positive = [query for query in interaction_option.related_queries if not query['removed']]
         positive = [query for query in self.__all_active_queries() if
                     not query['removed'] and query in interaction_option.related_queries]
-        negetive = [query for query in self.__all_active_queries() if query not in positive]
+        negative = [query for query in self.__all_active_queries() if query not in positive]
 
-        return positive, negetive
+        return positive, negative
 
     def __entropy(self, interpretation_space, s=None):
         if s is None:
@@ -148,13 +148,13 @@ class InteractionOptions:
         return self.__all_active_ios()[idx]
 
     def ranked_queries(self):
-        return sorted(self.all_queries, key=lambda x: x['complete_confidence'], reverse=True)
+        return sorted(self.__all_active_queries(), key=lambda x: x['complete_confidence'], reverse=True)
 
     def query_with_max_probability(self):
         queries = self.ranked_queries()
         if queries is None or len(queries) == 0:
             return None
-        return queries[0]
+        return SPARQL(queries[0]['query'], self.sparql_parser)
 
     def has_interaction(self):
         if len(self.__all_active_queries()) > 1:

@@ -31,7 +31,8 @@ if __name__ == '__main__':
 
     files = ['AO-IG', 'SO-IG',
              'AO-OG', 'SO-OG',
-             'AO-P', 'SO-P']
+             'AO-P', 'SO-P',
+             'SO-RQ']
     x = range(len(json_data))
     y_values = [len([v for v in value if '+correct' in v]) for key, value in json_data.iteritems()]
     print y_values
@@ -46,7 +47,7 @@ if __name__ == '__main__':
     y_values = [[items[1] for items in line] for line in y_values]
     y_values = np.array(y_values, dtype=float)
     for idx in range(2, 7):
-        current_y_values = y_values[:, np.where(question_complexities[:total] == idx)].reshape(6, -1)
+        current_y_values = y_values[:, np.where(question_complexities[:total] == idx)].reshape(len(files), -1)
         correct_dist.append(np.sum(current_y_values, 1)[0])
 
     print correct_dist, sum(correct_dist)
@@ -67,7 +68,7 @@ if __name__ == '__main__':
     y_values = np.array(y_values, dtype=float)
     corrects_in_complexity = []
     for idx in range(2, 7):
-        current_y_values = y_values[:, np.where(question_complexities[:total] == idx)].reshape(6, -1)
+        current_y_values = y_values[:, np.where(question_complexities[:total] == idx)].reshape(len(files), -1)
 
         current_y_values[current_y_values == 0] = np.nan
 

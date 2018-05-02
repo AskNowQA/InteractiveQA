@@ -4,6 +4,7 @@ from common.container.interactionOptions import InteractionOptions
 from common.evaluation.oracle import Oracle
 from common.kb.dbpedia import DBpedia
 from common.utility.stats import Stats
+from common.container.sparql import SPARQL
 from tqdm import tqdm
 import argparse
 import os
@@ -33,23 +34,47 @@ if __name__ == "__main__":
     stats = {('IQA-AO' if all(type) else 'IQA-SO') + '-' + strategy: Stats() for strategy in strategies for type
              in interaction_types}
     stats['general'] = Stats()
+
+    # baseline
+    stats['IQA-SO-RQ'] = Stats()
+
     qid = -1
     for qapair in tqdm(dataset.qapairs):
         qid += 1
         stats['general'].inc("total")
         # if 'municipality' not in qapair.question.text:
         #     continue
-        # if stats['general']['total'] < 84 + 1:
+        # if stats['general']['total'] != 195 + 1:
         #     continue
         outputs = pipeline.run(qapair)
+        analyze_failure = False
         for interaction_type in interaction_types:
             interaction_type_str = 'IQA-AO' if all(interaction_type) else 'IQA-SO'
+
+            # baseline: ranked queries
+            if interaction_type_str == 'IQA-SO':
+                interaction_options = InteractionOptions(outputs[2], kb.parse_uri, parse_sparql, kb, *interaction_type)
+                ranked_queries = interaction_options.ranked_queries()
+                stats[interaction_type_str + '-RQ'].inc(str(qid), 0)
+                found = False
+                for query in ranked_queries:
+                    if oracle.validate_query(qapair, SPARQL(query['query'], parse_sparql)):
+                        found = True
+                        break
+                    stats['IQA-SO-RQ'].inc(str(qid))
+                if found:
+                    stats['IQA-SO-RQ'].inc(str(qid) + "+correct")
+                else:
+                    stats['IQA-SO-RQ'].inc(str(qid) + "-incorrect")
+                    analyze_failure = True
+
             for strategy in strategies:
+                found = False
                 stats[interaction_type_str + '-' + strategy].inc(str(qid), 0)
                 interaction_options = InteractionOptions(outputs[2], kb.parse_uri, parse_sparql, kb, *interaction_type)
                 while interaction_options.has_interaction():
                     if oracle.validate_query(qapair, interaction_options.query_with_max_probability()):
-                        break
+                        found = True
 
                     if strategy == 'InformationGain':
                         io = interaction_options.interaction_with_max_information_gain()
@@ -61,10 +86,14 @@ if __name__ == "__main__":
                     interaction_options.update(io, oracle.answer(qapair, io))
                     stats[interaction_type_str + '-' + strategy].inc(str(qid))
 
-                if oracle.validate_query(qapair, interaction_options.query_with_max_probability()):
+                if found or oracle.validate_query(qapair, interaction_options.query_with_max_probability()):
                     stats[interaction_type_str + '-' + strategy].inc(str(qid) + "+correct")
                 else:
                     stats[interaction_type_str + '-' + strategy].inc(str(qid) + "-incorrect")
+                    analyze_failure = True
+
+        if analyze_failure:
+            print "analyze_failure=True"
 
         for k, v in stats.iteritems():
             v.save(os.path.join(args.base_path, 'output', 'stats-{0}.json'.format(k)))
