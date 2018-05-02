@@ -14,11 +14,11 @@ if __name__ == "__main__":
     ios.all_ios.extend([io1, io2, io3])
 
     while ios.has_interaction():
-        io = ios.interactionWithMaxInformationGain()
+        io = ios.interaction_with_max_information_gain()
         print "max information gain:" + str(io)
-        io = ios.interactionWithMaxProbability()
+        io = ios.interaction_with_max_probability()
         print "max probability:" + str(io)
-        io = ios.interactionWithMaxOptionGain(.1)
+        io = ios.interaction_with_max_option_gain(.1)
         print "max option gain:" + str(io)
         print io
         ios.update(io, True)

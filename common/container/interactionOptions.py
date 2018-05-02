@@ -123,18 +123,18 @@ class InteractionOptions:
 
         return information_gains
 
-    def interactionWithMaxInformationGain(self):
+    def interaction_with_max_information_gain(self):
         information_gains = [item[1] for item in self.__informationGain()]
         io, idx = max([(v, i) for i, v in enumerate(information_gains)])
         return self.__all_active_ios()[idx]
 
-    def interactionWithMaxOptionGain(self, w):
+    def interaction_with_max_option_gain(self, w):
         information_gains = self.__informationGain()
         option_gains = [math.pow(item[0].usability(), w) * item[1] for item in information_gains]
         io, idx = max([(v, i) for i, v in enumerate(option_gains)])
         return self.__all_active_ios()[idx]
 
-    def interactionWithMaxProbability(self):
+    def interaction_with_max_probability(self):
         S_sum = sum([q['complete_confidence'] for q in self.__all_active_queries()])
         probabilities = []
 
@@ -147,14 +147,14 @@ class InteractionOptions:
         io, idx = max([(v, i) for i, v in enumerate(probabilities)])
         return self.__all_active_ios()[idx]
 
-    def queryWithMaxProbability(self):
-        confidences = [q['complete_confidence'] for q in self.__all_active_queries()]
-        if len(confidences) == 0:
-            return None
+    def ranked_queries(self):
+        return sorted(self.all_queries, key=lambda x: x['complete_confidence'], reverse=True)
 
-        _, idx = max([(v, i) for i, v in enumerate(confidences)])
-        query = SPARQL(self.__all_active_queries()[idx]["query"], self.sparql_parser)
-        return query
+    def query_with_max_probability(self):
+        queries = self.ranked_queries()
+        if queries is None or len(queries) == 0:
+            return None
+        return queries[0]
 
     def has_interaction(self):
         if len(self.__all_active_queries()) > 1:

@@ -48,20 +48,20 @@ if __name__ == "__main__":
                 stats[interaction_type_str + '-' + strategy].inc(str(qid), 0)
                 interaction_options = InteractionOptions(outputs[2], kb.parse_uri, parse_sparql, kb, *interaction_type)
                 while interaction_options.has_interaction():
-                    if oracle.validate_query(qapair, interaction_options.queryWithMaxProbability()):
+                    if oracle.validate_query(qapair, interaction_options.query_with_max_probability()):
                         break
 
                     if strategy == 'InformationGain':
-                        io = interaction_options.interactionWithMaxInformationGain()
+                        io = interaction_options.interaction_with_max_information_gain()
                     elif strategy == 'OptionGain':
-                        io = interaction_options.interactionWithMaxOptionGain(w)
+                        io = interaction_options.interaction_with_max_option_gain(w)
                     elif strategy == 'Probability':
-                        io = interaction_options.interactionWithMaxProbability()
+                        io = interaction_options.interaction_with_max_probability()
 
                     interaction_options.update(io, oracle.answer(qapair, io))
                     stats[interaction_type_str + '-' + strategy].inc(str(qid))
 
-                if oracle.validate_query(qapair, interaction_options.queryWithMaxProbability()):
+                if oracle.validate_query(qapair, interaction_options.query_with_max_probability()):
                     stats[interaction_type_str + '-' + strategy].inc(str(qid) + "+correct")
                 else:
                     stats[interaction_type_str + '-' + strategy].inc(str(qid) + "-incorrect")
