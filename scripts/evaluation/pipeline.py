@@ -5,6 +5,9 @@ from common.evaluation.oracle import Oracle
 from common.kb.dbpedia import DBpedia
 from common.utility.stats import Stats
 from common.container.sparql import SPARQL
+from common.component.linker.goldLinker import GoldLinker
+from common.container.linkeditem import LinkedItem
+from scripts.evaluation.linker import LinkerEvaluator
 from tqdm import tqdm
 import argparse
 import os
@@ -26,6 +29,7 @@ if __name__ == "__main__":
     parse_sparql = dataset.parser.parse_sparql
     pipeline = IQAPipeline(args, kb, parse_sparql)
     oracle = Oracle()
+    linker_evaluator = LinkerEvaluator(GoldLinker())
 
     interaction_types = [[False, True], [True, True]]
     strategies = ['InformationGain', 'OptionGain', 'Probability']
@@ -44,8 +48,8 @@ if __name__ == "__main__":
         stats['general'].inc("total")
         # if 'municipality' not in qapair.question.text:
         #     continue
-        # if stats['general']['total'] != 195 + 1:
-        #     continue
+        if stats['general']['total'] > 100:
+            break
         outputs = pipeline.run(qapair)
         analyze_failure = False
         for interaction_type in interaction_types:
@@ -93,8 +97,14 @@ if __name__ == "__main__":
                     analyze_failure = True
 
         if analyze_failure:
-            print "analyze_failure=True"
-
+            item = outputs[1][2]
+            stats['general'].inc('-incorrect')
+            eval_result = linker_evaluator.compare(qapair,
+                                                   LinkedItem.convert_to_linked_item(item['entities'], kb.parse_uri),
+                                                   LinkedItem.convert_to_linked_item(item['relations'], kb.parse_uri))
+            stats['general'].inc(eval_result)
+        else:
+            stats['general'].inc('+correct')
         for k, v in stats.iteritems():
             v.save(os.path.join(args.base_path, 'output', 'stats-{0}.json'.format(k)))
 
