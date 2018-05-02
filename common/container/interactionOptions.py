@@ -101,7 +101,10 @@ class InteractionOptions:
         plogs = []
         for query in interpretation_space:
             p = query['complete_confidence'] / s
-            plogs.append(p * math.log(p, 2))
+            if p == 0:
+                plogs.append(0)
+            else:
+                plogs.append(p * math.log(p, 2))
         return -sum(plogs)
 
     def __averageEntropy(self, interaction_option):
