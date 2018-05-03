@@ -2,9 +2,12 @@ from common.component.chunker.classifierChunkParser import ClassifierChunkParser
 from common.component.chunker.SENNAChunker import SENNAChunker
 from common.component.chunker.goldChunker import GoldChunker
 from common.component.linker.earl import EARL
+from common.component.linker.compositeLinker import CompositeLinker
+from common.component.linker.rnliwod import RNLIWOD
 from common.component.query.sqg import SQG
 from common.utility.uniqueList import UniqueList
 from common.container.linkeditem import LinkedItem
+
 import pickle as pk
 import os
 import itertools
@@ -25,7 +28,10 @@ class IQAPipeline:
 
         # Init linkers
         earl = EARL(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True)
-        self.__linkers = [earl]
+        rnliword = RNLIWOD(os.path.join(args.base_path, 'data/LC-QuAD/relnliodLogs'),
+                           dataset_path=os.path.join(args.base_path, 'data/LC-QuAD/linked_3200.json'))
+        compositeLinker = CompositeLinker(entity_linker=earl, relation_liner=rnliword)
+        self.__linkers = [earl, compositeLinker]
 
         # Init query builders
         sqg = SQG()
