@@ -20,7 +20,7 @@ class InteractionOptions:
             for linked_item_type in ['entities', 'relations']:
                 if linked_item_type in output:
                     for item in output[linked_item_type]:
-                        io = InteractionOption(item.surface_form, item, item.related_queries, 'linked')
+                        io = InteractionOption(item.surface_form, item, [], 'linked')
                         self.add(io)
 
             if 'queries' in output:
@@ -29,6 +29,11 @@ class InteractionOptions:
                     self.all_queries.addIfNotExists(query)
                     if c3:
                         self.add(InteractionOption('type', query['type'], query, 'type'))
+
+        for item in self.dic:
+            for io in self.dic[item]:
+                if io.type == 'linked':
+                    io.addQuery(self.__related_queries(io.value.uris[0]))
 
         if c2:
             for item in self.dic:
@@ -46,6 +51,11 @@ class InteractionOptions:
         for item in self.dic:
             for io in self.dic[item]:
                 self.all_ios.addIfNotExists(io)
+
+    def __related_queries(self, uri):
+        for query in self.all_queries:
+            if uri.uri in query['query']:
+                yield query
 
     def __remove_single_options(self):
         # Remove items that have no alternatives
