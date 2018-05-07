@@ -4,6 +4,7 @@ from common.component.chunker.goldChunker import GoldChunker
 from common.component.linker.earl import EARL
 from common.component.linker.compositeLinker import CompositeLinker
 from common.component.linker.rnliwod import RNLIWOD
+from common.component.linker.tagme import TagMe
 from common.component.query.sqg import SQG
 from common.utility.uniqueList import UniqueList
 from common.container.linkeditem import LinkedItem
@@ -24,14 +25,21 @@ class IQAPipeline:
         with open(os.path.join(args.base_path, args.gold_chunk)) as data_file:
             gold_chunk_dataset = pk.load(data_file)
         gold_Chunker = GoldChunker({item[0]: item[1:] for item in gold_chunk_dataset})
-        self.__chunkers = [classifier_chunker, SENNA_chunker, gold_Chunker]
+        self.__chunkers = [classifier_chunker, SENNA_chunker]  # , gold_Chunker]
 
         # Init linkers
         earl = EARL(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True)
-        rnliword = RNLIWOD(os.path.join(args.base_path, 'data/LC-QuAD/relnliodLogs'),
+        self.__linkers = [earl]
+
+        if args.dataset == 'lcquad':
+            rnliword = RNLIWOD(os.path.join(args.base_path, 'data/LC-QuAD/relnliodLogs'),
+                               dataset_path=os.path.join(args.base_path, 'data/LC-QuAD/linked_3200.json'))
+            tag_me = TagMe(os.path.join(args.base_path, 'data/LC-QuAD/tagmeNEDLogs'),
                            dataset_path=os.path.join(args.base_path, 'data/LC-QuAD/linked_3200.json'))
-        compositeLinker = CompositeLinker(entity_linker=earl, relation_liner=rnliword)
-        self.__linkers = [earl, compositeLinker]
+            compositeLinker1 = CompositeLinker(entity_linker=tag_me, relation_liner=earl)  # only on LC-QuAD
+            compositeLinker2 = CompositeLinker(entity_linker=tag_me, relation_liner=rnliword)  # only on LC-QuAD
+            compositeLinker3 = CompositeLinker(entity_linker=earl, relation_liner=rnliword)  # only on LC-QuAD
+            self.__linkers.extend([compositeLinker1, compositeLinker2, compositeLinker3])
 
         # Init query builders
         sqg = SQG()
