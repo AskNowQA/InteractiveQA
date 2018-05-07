@@ -1,5 +1,6 @@
 from common.pipeline import IQAPipeline
 from common.parser.lc_quad_linked import LC_Qaud_Linked
+from common.parser.qald import Qald
 from common.container.interactionOptions import InteractionOptions
 from common.evaluation.oracle import Oracle
 from common.kb.dbpedia import DBpedia
@@ -15,7 +16,8 @@ import os
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run pipeline')
     parser.add_argument("--base_path", help="base path", default="../../", dest="base_path")
-    parser.add_argument("--dataset", help="input Q/A dataset", default="data/LC-QuAD/linked.json", dest="dataset")
+    parser.add_argument("--dataset", help="input Q/A dataset: lcquad, qald", default="lcquad", dest="dataset")
+    parser.add_argument("--input", help="input file of Q/A dataset", default="data/LC-QuAD/linked.json", dest="input")
     parser.add_argument("--model", help="path to model", default="models/ClassifierChunkParser.tagger.model",
                         dest="model")
     parser.add_argument("--gold_chunk", help="path to gold chunked dataset", default="data/LC-QuAD/linked2843_IOB.pk",
@@ -23,7 +25,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     dataset = [{"question": "Name the municipality of Roberto Clemente Bridge ?"}]
-    dataset = LC_Qaud_Linked(os.path.join(args.base_path, args.dataset))
+    if args.dataset == 'lcquad':
+        dataset = LC_Qaud_Linked(os.path.join(args.base_path, args.input))
+    elif args.dataset == 'qald':
+        dataset = Qald(os.path.join(args.base_path, args.input))
 
     kb = DBpedia(cache_path=os.path.join(args.base_path, "caches/"), use_cache=True)
     parse_sparql = dataset.parser.parse_sparql
@@ -38,6 +43,8 @@ if __name__ == "__main__":
     stats = {('IQA-AO' if all(type) else 'IQA-SO') + '-' + strategy: Stats() for strategy in strategies for type
              in interaction_types}
     stats['general'] = Stats()
+    stats['general']['matched'] = []
+    stats['general']['corrects'] = []
 
     # baseline
     stats['IQA-SO-RQ'] = Stats()
@@ -50,6 +57,8 @@ if __name__ == "__main__":
         #     continue
         if stats['general']['total'] > 100:
             break
+        # if stats['general']['total'] != 35 + 1:
+        #     continue
         outputs = pipeline.run(qapair)
         analyze_failure = False
         for interaction_type in interaction_types:
@@ -97,14 +106,19 @@ if __name__ == "__main__":
                     analyze_failure = True
 
         if analyze_failure:
-            item = outputs[1][2]
+            item = outputs[1][-1]
             stats['general'].inc('-incorrect')
             eval_result = linker_evaluator.compare(qapair,
                                                    LinkedItem.convert_to_linked_item(item['entities'], kb.parse_uri),
                                                    LinkedItem.convert_to_linked_item(item['relations'], kb.parse_uri))
             stats['general'].inc(eval_result)
+
+            if eval_result == '+matched':
+                stats['general']['matched'].append(qid)
+
         else:
             stats['general'].inc('+correct')
+            # stats['general']['corrects'].append(qid)
         for k, v in stats.iteritems():
             v.save(os.path.join(args.base_path, 'output', 'stats-{0}.json'.format(k)))
 
