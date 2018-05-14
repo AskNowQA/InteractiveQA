@@ -13,9 +13,9 @@ import logging
 import pickle as pk
 import os
 import json
+import itertools
 from common.component.chunker.classifierChunkParser import ClassifierChunkParser
 from common.component.chunker.SENNAChunker import SENNAChunker
-
 
 
 class LuceneLinker:
@@ -30,6 +30,25 @@ class LuceneLinker:
         analyzer = analysis.standard.StandardAnalyzer()
         self.indexer = engine.Indexer(directory=directory, analyzer=analyzer)
         self.q = 0
+
+    def link_entities(self, question, chunks=None):
+        return []
+
+    def link_relations(self, question, chunks=None):
+        results = []
+        for chunk in chunks:
+            if chunk['class'] == 'relation':
+                candidate_items = itertools.islice(self.search(chunk['chunk']), 10)
+                candidate_items = [{'confidence': 0.5, 'uri': item} for item in candidate_items]
+                idx = 0
+                if chunk['chunk'] in question:
+                    idx = question.index(chunk['chunk'])
+                results.append({'surface': [idx, idx + len(chunk['chunk'])], 'uris': candidate_items})
+        return results
+
+    def link_entities_relations(self, question, chunks=None):
+        return {"relations": self.link_relations(question, chunks),
+                "entities": self.link_entities(question, chunks)}
 
     def search(self, term):
         try:
@@ -114,7 +133,6 @@ if __name__ == '__main__':
     print linker.q
     with open(os.path.join(args.base_path, args.output_path), 'w') as data_file:
         json.dump(results, data_file)
-
 
     # earl = EARL(os.path.join(args.base_path, args.output_path))
     # print earl.do(ds.qapairs[0])
