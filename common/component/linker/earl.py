@@ -46,9 +46,13 @@ class EARL:
         return []
 
     def link_entities(self, question, chunks=None):
+        if chunks is not None:
+            chunks = [item['chunk'] for item in chunks]
         return self.__hit_endpoint(question, chunks)["entities"]
 
     def link_relations(self, question, chunks=None):
+        if chunks is not None:
+            chunks = [item['chunk'] for item in chunks]
         return self.__hit_endpoint(question, chunks)["relations"]
 
     def link_entities_relations(self, question, chunks=None):

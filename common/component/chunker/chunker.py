@@ -27,6 +27,8 @@ class Chunker(nltk.ChunkParserI):
                 elif item[1] == "O":
                     phrases.append({"chunk": " ".join(phrase), "class": current_type})
                     phrase = []
+            if len(phrase) > 0:
+                phrases.append({"chunk": " ".join(phrase), "class": current_type})
             phrases = [item for item in phrases if len(item["chunk"]) > 1]
             return phrases
         return []
