@@ -5,6 +5,7 @@ from common.component.linker.earl import EARL
 from common.component.linker.compositeLinker import CompositeLinker
 from common.component.linker.rnliwod import RNLIWOD
 from common.component.linker.tagme import TagMe
+from common.component.linker.luceneLinker import LuceneLinker
 from common.component.query.sqg import SQG
 from common.utility.uniqueList import UniqueList
 from common.container.linkeditem import LinkedItem
@@ -29,7 +30,9 @@ class IQAPipeline:
 
         # Init linkers
         earl = EARL(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True)
-        self.__linkers = [earl]
+        luceneLinker = LuceneLinker(index_path=os.path.join(args.base_path, 'output/index/'))
+
+        self.__linkers = [earl, CompositeLinker(entity_linker=earl, relation_liner=luceneLinker)]
 
         if args.dataset == 'lcquad':
             rnliword = RNLIWOD(os.path.join(args.base_path, 'data/LC-QuAD/relnliodLogs'),
@@ -82,7 +85,7 @@ class IQAPipeline:
         return outputs
 
     def __link(self, prev_output):
-        chunks = [item['chunk'] for item in prev_output['chunks']]
+        chunks = prev_output['chunks']
         outputs = [item.link_entities_relations(prev_output['question'], chunks) for item in self.__linkers]
         for item in outputs:
             item['question'] = prev_output['question']
