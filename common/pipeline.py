@@ -26,23 +26,30 @@ class IQAPipeline:
         with open(os.path.join(args.base_path, args.gold_chunk)) as data_file:
             gold_chunk_dataset = pk.load(data_file)
         gold_Chunker = GoldChunker({item[0]: item[1:] for item in gold_chunk_dataset})
-        self.__chunkers = [classifier_chunker, SENNA_chunker]  # , gold_Chunker]
+        self.__chunkers = [SENNA_chunker, classifier_chunker]  # gold_Chunker
 
         # Init linkers
-        earl = EARL(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True)
-        luceneLinker = LuceneLinker(index_path=os.path.join(args.base_path, 'output/index/'))
+        self.__linkers = []
 
-        self.__linkers = [earl, CompositeLinker(entity_linker=earl, relation_liner=luceneLinker)]
+        earl = EARL(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True)
+        self.__linkers.append(earl)
+
+        luceneLinker_ngram = LuceneLinker(index_path=os.path.join(args.base_path, 'output/index/'), use_ngram=True)
+        self.__linkers.append(CompositeLinker(entity_linker=earl, relation_liner=luceneLinker_ngram))
+
+        luceneLinker_stemmer = LuceneLinker(index_path=os.path.join(args.base_path, 'output/index2/'), use_stemmer=True)
+        # self.__linkers.append(CompositeLinker(entity_linker=earl, relation_liner=luceneLinker_stemmer))
 
         if args.dataset == 'lcquad':
             rnliword = RNLIWOD(os.path.join(args.base_path, 'data/LC-QuAD/relnliodLogs'),
                                dataset_path=os.path.join(args.base_path, 'data/LC-QuAD/linked_3200.json'))
             tag_me = TagMe(os.path.join(args.base_path, 'data/LC-QuAD/tagmeNEDLogs'),
                            dataset_path=os.path.join(args.base_path, 'data/LC-QuAD/linked_3200.json'))
-            compositeLinker1 = CompositeLinker(entity_linker=tag_me, relation_liner=earl)  # only on LC-QuAD
-            compositeLinker2 = CompositeLinker(entity_linker=tag_me, relation_liner=rnliword)  # only on LC-QuAD
-            compositeLinker3 = CompositeLinker(entity_linker=earl, relation_liner=rnliword)  # only on LC-QuAD
-            self.__linkers.extend([compositeLinker1, compositeLinker2, compositeLinker3])
+            # self.__linkers.append(CompositeLinker(entity_linker=tag_me, relation_liner=earl))
+            # self.__linkers.append(CompositeLinker(entity_linker=tag_me, relation_liner=rnliword))
+            # self.__linkers.append(CompositeLinker(entity_linker=earl, relation_liner=rnliword))
+            # self.__linkers.append(CompositeLinker(entity_linker=tag_me, relation_liner=luceneLinker_ngram))
+            # self.__linkers.append(CompositeLinker(entity_linker=tag_me, relation_liner=luceneLinker_stemmer))
 
         # Init query builders
         sqg = SQG()
