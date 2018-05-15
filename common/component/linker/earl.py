@@ -38,7 +38,10 @@ class EARL:
             id += "".join(chunks)
 
         if id not in self.cache or not self.use_cache:
-            self.cache[id] = Utils.call_web_api(self.endpoint, input)
+            result = Utils.call_web_api(self.endpoint, input)
+            if result is None:
+                result = {'entities': [], 'relations': []}
+            self.cache[id] = result
             self.__save_cache()
         return self.cache[id]
 
