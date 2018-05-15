@@ -4,7 +4,7 @@ from lupyne.engine import Query
 from java.io import File
 from org.apache.lucene import analysis, index, queryparser, search, store
 from tqdm import tqdm
-
+import nltk
 from common.component.chunker.goldChunker import GoldChunker
 from common.parser.lc_quad_linked import LC_Qaud_Linked
 from common.utility.utils import Utils
@@ -19,9 +19,20 @@ from common.component.chunker.SENNAChunker import SENNAChunker
 
 
 class LuceneLinker:
-    def __init__(self, index_path, input_file_path=None, create_index=False):
+    __special_chars = ['\n', '\r', '!', '#', '$', '%', '&', "'", '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '=',
+                       '?',
+                       '@', '~'] + map(str, range(0, 10))
+
+    def __init__(self, index_path, input_file_path=None, create_index=False, use_ngram=False, use_stemmer=False):
         assert lucene.getVMEnv() or lucene.initVM()
         self.index_path = index_path
+        self.stemmer = nltk.stem.porter.PorterStemmer()
+
+        self.transorm_func = None
+        if use_ngram:
+            self.transorm_func = self.n_grams
+        elif use_stemmer:
+            self.transorm_func = self.split_and_stem
 
         if create_index:
             self.create_index(input_file_path)
@@ -29,6 +40,7 @@ class LuceneLinker:
         directory = store.FSDirectory.open(File(index_path).toPath())
         analyzer = analysis.standard.StandardAnalyzer()
         self.indexer = engine.Indexer(directory=directory, analyzer=analyzer)
+
         self.q = 0
 
     def link_entities(self, question, chunks=None):
@@ -55,9 +67,8 @@ class LuceneLinker:
             term = term.replace('\r\n', '').replace('?', '')
             if len(term) <= 2:
                 return
-            query = " ".join(self.n_grams(term))
+            query = ' '.join(self.transorm_func(term))
             hits = self.indexer.search(query, field='ngram')
-            # print len(hits)
             for hit in hits:  # hits support mapping interface
                 yield hit['uri'].replace('\r\n', '')
         except Exception as err:
@@ -65,7 +76,7 @@ class LuceneLinker:
             self.q += 1
             return
 
-    def create_index(self, input_file_path, n=3):
+    def create_index(self, input_file_path):
         directory = store.FSDirectory.open(File(self.index_path).toPath())
         analyzer = analysis.standard.StandardAnalyzer()
         indexer = engine.Indexer(directory=directory, analyzer=analyzer)
@@ -75,21 +86,40 @@ class LuceneLinker:
 
         with open(input_file_path, 'r') as input_file:
             for line in tqdm(input_file):
-                uri = line.lower()
+                uri = line
                 name = uri[line.rindex('/') + 1:]
-                indexer.add(term=name, uri=uri, ngram=self.n_grams(name, n))
+                ngram = name
+                if self.transorm_func is not None:
+                    ngram = self.transorm_func(name)
+                indexer.add(term=name, uri=uri, ngram=ngram)
             indexer.commit()
 
     def n_grams(self, term, n=3):
+        term = term.lower()
         for i in range(len(term) - n + 1):
             yield term[i:i + n]
 
+    def split_and_stem(self, text):
+        for char in LuceneLinker.__special_chars:
+            text = text.replace(char, ' ')
+        results = []
+        buffer = ''
+        for char in text:
+            if char.isupper() or char == ' ':
+                results.append(buffer.strip())
+                buffer = ''
+            buffer += char
+
+        results.append(buffer)
+        results = [item.strip().lower() for item in results if len(item.strip()) > 0]
+        try:
+            return [self.stemmer.stem(item) for item in results]
+        except:
+            pass
+        return results
+
 
 if __name__ == '__main__':
-    # print list(linker.n_grams('this is a test', 3))
-    linker = LuceneLinker(index_path='../../../output/index/',
-                          input_file_path='../../../data/dbpedia/earl_properties.txt',
-                          create_index=False)
     logger = logging.getLogger(__name__)
     Utils.setup_logging()
 
@@ -98,11 +128,20 @@ if __name__ == '__main__':
     parser.add_argument("--model", help="path to model", default="models/ClassifierChunkParser.tagger.model",
                         dest="model")
     parser.add_argument('--path', help='input dataset', default='data/LC-QuAD/linked2843.json', dest='ds_path')
-    parser.add_argument('--output', help='output path', default='data/LC-QuAD/ngram_linker_classifier_chunker.json',
+    parser.add_argument('--output', help='output path', default='data/LC-QuAD/ngram_linker_classifier_chunker2.json',
                         dest='output_path')
     parser.add_argument("--gold_chunk", help="path to gold chunked dataset", default="data/LC-QuAD/linked_IOB.pk",
                         dest="gold_chunk")
     args = parser.parse_args()
+
+    linker = LuceneLinker(index_path=os.path.join(args.base_path, 'output/index2/'),
+                          input_file_path=os.path.join(args.base_path, 'data/dbpedia/earl_properties.txt'),
+                          create_index=False,
+                          use_ngram=False,
+                          use_stemmer=True)
+
+    # for item in linker.search('comic characters'):
+    #     print item
 
     ds = LC_Qaud_Linked(os.path.join(args.base_path, args.ds_path))
 
