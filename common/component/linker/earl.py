@@ -40,10 +40,13 @@ class EARL:
         if id not in self.cache or not self.use_cache:
             result = Utils.call_web_api(self.endpoint, input)
             if result is None:
-                result = {'entities': [], 'relations': []}
+                return {'entities': [], 'relations': []}
             self.cache[id] = result
             self.__save_cache()
-        return self.cache[id]
+        if self.cache[id] is None:
+            return {'entities': [], 'relations': []}
+        else:
+            return self.cache[id]
 
     def chunk(self, question):
         return []
