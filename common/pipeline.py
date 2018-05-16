@@ -13,6 +13,7 @@ from common.container.linkeditem import LinkedItem
 import pickle as pk
 import os
 import itertools
+import copy
 
 
 class IQAPipeline:
@@ -99,6 +100,31 @@ class IQAPipeline:
         for item in outputs:
             item['question'] = prev_output['question']
             item['chunks'] = prev_output['chunks']
+
+        combinations = []
+        outputs_len = len(outputs)
+        for i in range(outputs_len):
+            for j in range(i + 1, outputs_len):
+                combinations.extend(self.__merge_linkers(outputs[i], outputs[j]))
+        outputs.extend(combinations)
+        return outputs
+
+    def __merge_linkers(self, links1, links2):
+        outputs = []
+        for link_type in ['entities', 'relations']:
+            if links1[link_type] == links2[link_type]:
+                pass
+            else:
+                for item in links2[link_type]:
+                    if item['surface'] == [0, 0]:
+                        for idx in range(len(links1[link_type])):
+                            new_output = copy.deepcopy(links1)
+                            new_output[link_type][idx]['uris'].extend(item['uris'])
+                            outputs.append(new_output)
+                        new_output = copy.deepcopy(links1)
+                        new_output[link_type].append(item)
+                        outputs.append(new_output)
+
         return outputs
 
     def __chunk(self, question):
