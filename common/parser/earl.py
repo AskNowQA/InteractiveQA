@@ -61,6 +61,8 @@ class EARL:
 
     def __parse(self, dataset, name, top):
         output = []
+        if name not in dataset:
+            return output
         for item in dataset[name]:
             uris = []
             for uri in item["uris"]:
