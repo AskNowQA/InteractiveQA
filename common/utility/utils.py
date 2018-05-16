@@ -42,7 +42,7 @@ class Utils:
             response = json.loads(response)
             return response
         except Exception as expt:
-            print(expt)
+            # print(expt)
             return None
 
     @staticmethod
