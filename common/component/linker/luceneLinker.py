@@ -16,12 +16,12 @@ import json
 import itertools
 from common.component.chunker.classifierChunkParser import ClassifierChunkParser
 from common.component.chunker.SENNAChunker import SENNAChunker
+import io
 
 
 class LuceneLinker:
-    __special_chars = ['\n', '\r', '!', '#', '$', '%', '&', "'", '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '=',
-                       '?',
-                       '@', '~'] + map(str, range(0, 10))
+    __special_chars = ['\n', '\r', '!', '#', '$', '%', '&', "'", '(', ')', '*', '+', ',', '-', '_', '.', '/', ':', ';',
+                       '=', '?', '@', '~'] + map(str, range(0, 10))
 
     def __init__(self, index_path, input_file_path=None, create_index=False, use_ngram=False, use_stemmer=False):
         assert lucene.getVMEnv() or lucene.initVM()
@@ -30,7 +30,10 @@ class LuceneLinker:
 
         self.transorm_func = None
         if use_ngram:
-            self.transorm_func = self.n_grams
+            if use_stemmer:
+                self.transorm_func = lambda x: self.n_grams(u" ".join(self.split_and_stem(x)))
+            else:
+                self.transorm_func = self.n_grams
         elif use_stemmer:
             self.transorm_func = self.split_and_stem
 
@@ -43,13 +46,10 @@ class LuceneLinker:
 
         self.q = 0
 
-    def link_entities(self, question, chunks=None):
-        return []
-
-    def link_relations(self, question, chunks=None):
+    def __link(self, question, item_type, chunks=None):
         results = []
         for chunk in chunks:
-            if chunk['class'] == 'relation':
+            if chunk['class'] == item_type:
                 candidate_items = itertools.islice(self.search(chunk['chunk']), 10)
                 candidate_items = [{'confidence': 0.5, 'uri': item} for item in candidate_items]
                 idx = 0
@@ -57,6 +57,12 @@ class LuceneLinker:
                     idx = question.index(chunk['chunk'])
                 results.append({'surface': [idx, idx + len(chunk['chunk'])], 'uris': candidate_items})
         return results
+
+    def link_entities(self, question, chunks=None):
+        return self.__link(question, 'entity', chunks)
+
+    def link_relations(self, question, chunks=None):
+        return self.__link(question, 'relation', chunks)
 
     def link_entities_relations(self, question, chunks=None):
         return {"relations": self.link_relations(question, chunks),
@@ -70,7 +76,7 @@ class LuceneLinker:
             query = ' '.join(self.transorm_func(term))
             hits = self.indexer.search(query, field='ngram')
             for hit in hits:  # hits support mapping interface
-                yield hit['uri'].replace('\r\n', '')
+                yield hit['uri'].replace('\n', '')
         except Exception as err:
             print err
             self.q += 1
@@ -84,9 +90,9 @@ class LuceneLinker:
         indexer.set('uri', engine.Field.Text, stored=True)
         indexer.set('ngram', engine.Field.Text, stored=True)
 
-        with open(input_file_path, 'r') as input_file:
+        with io.open(input_file_path, 'r', encoding='utf-8') as input_file:
             for line in tqdm(input_file):
-                uri = line
+                uri = line.replace('\n', '')
                 name = uri[line.rindex('/') + 1:]
                 ngram = name
                 if self.transorm_func is not None:
@@ -128,20 +134,23 @@ if __name__ == '__main__':
     parser.add_argument("--model", help="path to model", default="models/ClassifierChunkParser.tagger.model",
                         dest="model")
     parser.add_argument('--path', help='input dataset', default='data/LC-QuAD/linked2843.json', dest='ds_path')
-    parser.add_argument('--output', help='output path', default='data/LC-QuAD/ngram_linker_classifier_chunker2.json',
+    parser.add_argument('--output', help='output path',
+                        default='data/LC-QuAD/lucence_ent_stemmer_classifier.json',
                         dest='output_path')
     parser.add_argument("--gold_chunk", help="path to gold chunked dataset", default="data/LC-QuAD/linked_IOB.pk",
                         dest="gold_chunk")
+    parser.add_argument("--type", help="entity|relation", default="entity", dest="link_type")
     args = parser.parse_args()
 
-    linker = LuceneLinker(index_path=os.path.join(args.base_path, 'output/index2/'),
-                          input_file_path=os.path.join(args.base_path, 'data/dbpedia/earl_properties.txt'),
+    linker = LuceneLinker(index_path=os.path.join(args.base_path, 'output/idx_ent_stemmer/'),
+                          input_file_path=os.path.join(args.base_path, 'data/dbpedia/labels_en_entities.ttl'),
                           create_index=False,
                           use_ngram=False,
                           use_stemmer=True)
 
-    # for item in linker.search('comic characters'):
-    #     print item
+    # for item in linker.search('bill finger'):
+    #     if 'finger' in item.lower() or 'bill' in item.lower():
+    #         print item
 
     ds = LC_Qaud_Linked(os.path.join(args.base_path, args.ds_path))
 
@@ -158,7 +167,7 @@ if __name__ == '__main__':
         result = {'entities': [], 'relations': [], 'question': qapair.question.raw_question}
         relations = []
         for chunk in chunks:
-            if chunk['class'] == 'relation':
+            if chunk['class'] == args.link_type:
                 uris = []
                 idx = 0
                 for item in linker.search(chunk['chunk']):
@@ -167,11 +176,11 @@ if __name__ == '__main__':
                     if idx > 10:
                         break
                 relations.append({'surface': [0, 0], 'uris': uris})
-        result['relations'] = relations
+        if args.link_type == 'entity':
+            result['entities'] = relations
+        elif args.link_type == 'relation':
+            result['relations'] = relations
         results.append(result)
     print linker.q
     with open(os.path.join(args.base_path, args.output_path), 'w') as data_file:
         json.dump(results, data_file)
-
-    # earl = EARL(os.path.join(args.base_path, args.output_path))
-    # print earl.do(ds.qapairs[0])
