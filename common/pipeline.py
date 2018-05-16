@@ -30,26 +30,28 @@ class IQAPipeline:
 
         # Init linkers
         self.__linkers = []
+        entity_linkers = []
+        relation_linkers = []
 
         earl = EARL(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True)
-        self.__linkers.append(earl)
+        entity_linkers.append(earl)
+        relation_linkers.append(earl)
 
-        luceneLinker_ngram = LuceneLinker(index_path=os.path.join(args.base_path, 'output/index/'), use_ngram=True)
-        self.__linkers.append(CompositeLinker(entity_linker=earl, relation_liner=luceneLinker_ngram))
-
-        luceneLinker_stemmer = LuceneLinker(index_path=os.path.join(args.base_path, 'output/index2/'), use_stemmer=True)
-        # self.__linkers.append(CompositeLinker(entity_linker=earl, relation_liner=luceneLinker_stemmer))
+        entity_linkers.append(
+            LuceneLinker(index_path=os.path.join(args.base_path, 'output/idx_ent_ngram/'), use_ngram=True))
+        relation_linkers.append(LuceneLinker(index_path=os.path.join(args.base_path, 'output/index/'), use_ngram=True))
+        relation_linkers.append(
+            LuceneLinker(index_path=os.path.join(args.base_path, 'output/index2/'), use_stemmer=True))
 
         if args.dataset == 'lcquad':
-            rnliword = RNLIWOD(os.path.join(args.base_path, 'data/LC-QuAD/relnliodLogs'),
-                               dataset_path=os.path.join(args.base_path, 'data/LC-QuAD/linked_3200.json'))
-            tag_me = TagMe(os.path.join(args.base_path, 'data/LC-QuAD/tagmeNEDLogs'),
-                           dataset_path=os.path.join(args.base_path, 'data/LC-QuAD/linked_3200.json'))
-            # self.__linkers.append(CompositeLinker(entity_linker=tag_me, relation_liner=earl))
-            # self.__linkers.append(CompositeLinker(entity_linker=tag_me, relation_liner=rnliword))
-            # self.__linkers.append(CompositeLinker(entity_linker=earl, relation_liner=rnliword))
-            # self.__linkers.append(CompositeLinker(entity_linker=tag_me, relation_liner=luceneLinker_ngram))
-            # self.__linkers.append(CompositeLinker(entity_linker=tag_me, relation_liner=luceneLinker_stemmer))
+            relation_linkers.append(RNLIWOD(os.path.join(args.base_path, 'data/LC-QuAD/relnliodLogs'),
+                                            dataset_path=os.path.join(args.base_path, 'data/LC-QuAD/linked_3200.json')))
+            entity_linkers.append(TagMe(os.path.join(args.base_path, 'data/LC-QuAD/tagmeNEDLogs'),
+                                        dataset_path=os.path.join(args.base_path, 'data/LC-QuAD/linked_3200.json')))
+
+        for entity_linker in entity_linkers:
+            for relation_linker in relation_linkers:
+                self.__linkers.append(CompositeLinker(entity_linker=entity_linker, relation_linker=relation_linker))
 
         # Init query builders
         sqg = SQG()

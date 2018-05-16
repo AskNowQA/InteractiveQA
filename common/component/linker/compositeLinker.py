@@ -1,7 +1,7 @@
 class CompositeLinker:
-    def __init__(self, entity_linker, relation_liner):
+    def __init__(self, entity_linker, relation_linker):
         self.entity_linker = entity_linker
-        self.relation_liner = relation_liner
+        self.relation_liner = relation_linker
 
     def link_entities(self, question, chunks=None):
         return self.entity_linker.link_entities(question, chunks)
