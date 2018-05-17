@@ -140,17 +140,19 @@ if __name__ == '__main__':
     parser.add_argument("--gold_chunk", help="path to gold chunked dataset", default="data/LC-QuAD/linked_IOB.pk",
                         dest="gold_chunk")
     parser.add_argument("--type", help="entity|relation", default="entity", dest="link_type")
+    parser.add_argument("--index", help="index path ", default="output/index_ngram/", dest="index")
+    parser.add_argument("--input", help="input file path to create the index ",
+                        default="data/dbpedia/labels_en_entities.ttl", dest="input")
     args = parser.parse_args()
 
-    linker = LuceneLinker(index_path=os.path.join(args.base_path, 'output/idx_ent_stemmer/'),
-                          input_file_path=os.path.join(args.base_path, 'data/dbpedia/labels_en_entities.ttl'),
+    linker = LuceneLinker(index_path=os.path.join(args.base_path, args.index),
+                          input_file_path=os.path.join(args.base_path, args.input),
                           create_index=False,
-                          use_ngram=False,
-                          use_stemmer=True)
+                          use_ngram=True,
+                          use_stemmer=False)
 
-    # for item in linker.search('bill finger'):
-    #     if 'finger' in item.lower() or 'bill' in item.lower():
-    #         print item
+    # for item in linker.search('succeed'):
+    #     print item
 
     ds = LC_Qaud_Linked(os.path.join(args.base_path, args.ds_path))
 
