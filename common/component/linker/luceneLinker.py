@@ -143,13 +143,16 @@ if __name__ == '__main__':
     parser.add_argument("--index", help="index path ", default="output/index_ngram/", dest="index")
     parser.add_argument("--input", help="input file path to create the index ",
                         default="data/dbpedia/labels_en_entities.ttl", dest="input")
+    parser.add_argument('--create_idx', dest='create_idx', default=False, action='store_true')
+    parser.add_argument('--ngram', dest='ngram', default=False, action='store_true')
+    parser.add_argument('--stemmer', dest='stemmer', default=False, action='store_true')
     args = parser.parse_args()
 
     linker = LuceneLinker(index_path=os.path.join(args.base_path, args.index),
                           input_file_path=os.path.join(args.base_path, args.input),
-                          create_index=False,
-                          use_ngram=True,
-                          use_stemmer=False)
+                          create_index=args.create_idx,
+                          use_ngram=args.ngram,
+                          use_stemmer=args.stemmer)
 
     # for item in linker.search('succeed'):
     #     print item
