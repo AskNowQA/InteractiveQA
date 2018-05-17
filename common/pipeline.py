@@ -40,9 +40,10 @@ class IQAPipeline:
 
         entity_linkers.append(
             LuceneLinker(index_path=os.path.join(args.base_path, 'output/idx_ent_ngram/'), use_ngram=True))
-        relation_linkers.append(LuceneLinker(index_path=os.path.join(args.base_path, 'output/index/'), use_ngram=True))
         relation_linkers.append(
-            LuceneLinker(index_path=os.path.join(args.base_path, 'output/index2/'), use_stemmer=True))
+            LuceneLinker(index_path=os.path.join(args.base_path, 'output/idx_rel_ngram/'), use_ngram=True))
+        relation_linkers.append(
+            LuceneLinker(index_path=os.path.join(args.base_path, 'output/idx_rel_stemmer/'), use_stemmer=True))
 
         if args.dataset == 'lcquad':
             relation_linkers.append(RNLIWOD(os.path.join(args.base_path, 'data/LC-QuAD/relnliodLogs'),
