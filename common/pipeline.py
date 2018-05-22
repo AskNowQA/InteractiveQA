@@ -112,6 +112,9 @@ class IQAPipeline:
     def __link(self, prev_output):
         chunks = prev_output['chunks']
         outputs = [item.link_entities_relations(prev_output['question'], chunks) for item in self.__linkers]
+
+        # According to LC-QuAD specs, there is no query with more than two entities or three relations
+        outputs = [item for item in outputs if len(item['entities']) <= 2 and len(item['relations']) <= 3]
         for item in outputs:
             item['question'] = prev_output['question']
             item['chunks'] = prev_output['chunks']
