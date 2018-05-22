@@ -110,7 +110,11 @@ class InteractionOptions:
             s = sum([q['complete_confidence'] for q in interpretation_space])
         plogs = []
         for query in interpretation_space:
-            p = query['complete_confidence'] / s
+            if s == 0:
+                p = 0
+            else:
+                p = query['complete_confidence'] / s
+
             if p == 0:
                 plogs.append(0)
             else:
@@ -122,8 +126,12 @@ class InteractionOptions:
         queries_contain_io, queries_not_contain_io = self.__filter_interpretation_space(interaction_option)
         entropy_positive = self.__entropy(queries_contain_io, S_sum)
         entropy_negative = self.__entropy(queries_not_contain_io, S_sum)
-        p_entropy_positive = sum([q['complete_confidence'] for q in queries_contain_io]) / S_sum
-        p_entropy_negative = sum([q['complete_confidence'] for q in queries_not_contain_io]) / S_sum
+        if S_sum == 0:
+            p_entropy_positive = 0
+            p_entropy_negative = 0
+        else:
+            p_entropy_positive = sum([q['complete_confidence'] for q in queries_contain_io]) / S_sum
+            p_entropy_negative = sum([q['complete_confidence'] for q in queries_not_contain_io]) / S_sum
 
         return p_entropy_positive * entropy_positive + p_entropy_negative * entropy_negative
 
@@ -154,7 +162,10 @@ class InteractionOptions:
         for io in self.__all_active_ios():
             p = 0
             for query in io.related_queries:
-                p += query['complete_confidence'] / S_sum
+                if S_sum == 0:
+                    p = 0
+                else:
+                    p += query['complete_confidence'] / S_sum
             probabilities.append(p)
 
         io, idx = max([(v, i) for i, v in enumerate(probabilities)])
