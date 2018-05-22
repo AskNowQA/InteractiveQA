@@ -60,10 +60,23 @@ class IQAPipeline:
         self.__query_builders = [sqg]
 
         self.components = [self.__chunk, self.__link, self.__build_query]
+        self.q__qapair = None
+
+    def __check_linkers(self, entities=[], relations=[]):
+        if self.q__qapair is not None:
+            wrong_ent = len(
+                [uri_o for uri_o in self.q__qapair.sparql.uris if
+                 uri_o.is_entity() and uri_o.uri not in [uri['uri'] for item in entities for uri in item['uris']]]) > 0
+            wrong_rel = len(
+                [uri_o for uri_o in self.q__qapair.sparql.uris if
+                 uri_o.is_ontology() and uri_o.uri not in [uri['uri'] for item in relations for uri in
+                                                           item['uris']]]) > 0
+            return not (wrong_ent or wrong_rel)
+        return True
 
     def __build_query(self, prev_output):
         outputs = [qb.build_query(prev_output['question'], prev_output['entities'], prev_output['relations']) for qb in
-                   self.__query_builders]
+                   self.__query_builders if self.__check_linkers(prev_output['entities'], prev_output['relations'])]
         outputs = [item for item in outputs if len(item['queries']) > 0]
         for output in outputs:
             # Keep only the entity/relation that have been used in the query
@@ -134,6 +147,7 @@ class IQAPipeline:
         return [{'question': question, 'chunks': item} for item in chunkers_output]
 
     def run(self, qapair):
+        self.q__qapair = qapair
         for uri in qapair.sparql.uris:
             if uri.is_entity():
                 uri.types = self.kb.get_types(uri.uri)
