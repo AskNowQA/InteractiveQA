@@ -45,6 +45,9 @@ if __name__ == "__main__":
     stats['general'] = Stats()
     stats['general']['matched'] = []
     stats['general']['corrects'] = []
+    stats['general']['-ent_rel'] = []
+    stats['general']['-ent'] = []
+    stats['general']['-rel'] = []
 
     # baseline
     stats['IQA-SO-RQ'] = Stats()
@@ -108,14 +111,21 @@ if __name__ == "__main__":
         if analyze_failure:
             item = outputs[1][-1]
             stats['general'].inc('-incorrect')
-            eval_result = linker_evaluator.compare(qapair,
-                                                   LinkedItem.convert_to_linked_item(item['entities'], kb.parse_uri),
-                                                   LinkedItem.convert_to_linked_item(item['relations'], kb.parse_uri))
-            stats['general'].inc(eval_result)
 
-            if eval_result == '+matched':
+            wrong_entity = len([uri_o for uri_o in qapair.sparql.uris if uri_o.is_ontology() and uri_o not in set(
+                [uri['uri'] for item in outputs[1] for ents in item['relations'] for uri in ents['uris'] if
+                 len(item['relations']) > 0])]) > 0
+            wrong_relation = len([uri_o for uri_o in qapair.sparql.uris if uri_o.is_entity() and uri_o not in set(
+                [uri['uri'] for item in outputs[1] for ents in item['entities'] for uri in ents['uris'] if
+                 len(item['entities']) > 0])]) > 0
+            if wrong_entity and wrong_relation:
+                stats['general']['-ent_rel'].append(qid)
+            elif wrong_entity:
+                stats['general']['-ent'].append(qid)
+            elif wrong_relation:
+                stats['general']['-rel'].append(qid)
+            else:
                 stats['general']['matched'].append(qid)
-
         else:
             stats['general'].inc('+correct')
             # stats['general']['corrects'].append(qid)
