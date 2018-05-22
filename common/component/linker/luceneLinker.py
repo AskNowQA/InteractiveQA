@@ -55,7 +55,8 @@ class LuceneLinker:
                 idx = 0
                 if chunk['chunk'] in question:
                     idx = question.index(chunk['chunk'])
-                results.append({'surface': [idx, idx + len(chunk['chunk'])], 'uris': candidate_items})
+                if len(candidate_items) > 0:
+                    results.append({'surface': [idx, idx + len(chunk['chunk'])], 'uris': candidate_items})
         return results
 
     def link_entities(self, question, chunks=None):
@@ -78,7 +79,7 @@ class LuceneLinker:
             for hit in hits:  # hits support mapping interface
                 yield hit['uri'].replace('\n', '')
         except Exception as err:
-            print err
+            # print err
             self.q += 1
             return
 
