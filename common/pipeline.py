@@ -64,6 +64,7 @@ class IQAPipeline:
     def __build_query(self, prev_output):
         outputs = [qb.build_query(prev_output['question'], prev_output['entities'], prev_output['relations']) for qb in
                    self.__query_builders]
+        outputs = [item for item in outputs if len(item['queries']) > 0]
         for output in outputs:
             # Keep only the entity/relation that have been used in the query
             output['entities'] = UniqueList()
