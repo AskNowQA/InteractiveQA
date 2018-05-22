@@ -50,7 +50,7 @@ class LuceneLinker:
         results = []
         for chunk in chunks:
             if chunk['class'] == item_type:
-                candidate_items = itertools.islice(self.search(chunk['chunk']), 10)
+                candidate_items = itertools.islice(self.search(chunk['chunk']), 20)
                 candidate_items = [{'confidence': 0.5, 'uri': item} for item in candidate_items]
                 idx = 0
                 if chunk['chunk'] in question:
