@@ -133,15 +133,27 @@ class IQAPipeline:
             if links1[link_type] == links2[link_type]:
                 pass
             else:
-                for item in links2[link_type]:
-                    if item['surface'] == [0, 0]:
+                for item2 in links2[link_type]:
+                    if item2['surface'] == [0, 0]:
                         for idx in range(len(links1[link_type])):
                             new_output = copy.deepcopy(links1)
-                            new_output[link_type][idx]['uris'].extend(item['uris'])
+                            new_output[link_type][idx]['uris'].extend(item2['uris'])
                             outputs.append(new_output)
                         new_output = copy.deepcopy(links1)
-                        new_output[link_type].append(item)
+                        new_output[link_type].append(item2)
                         outputs.append(new_output)
+
+                for idx1 in range(len(links1[link_type])):
+                    item1 = links1[link_type][idx1]
+                    for item2 in links2[link_type]:
+                        if item1['surface'] == item2['surface']:
+                            new_output = copy.deepcopy(links1)
+                            existing_uris = [item['uri'] for item in new_output[link_type][idx1]['uris']]
+                            for uri in item2['uris']:
+                                if uri['uri'] not in existing_uris:
+                                    new_output[link_type][idx1]['uris'].append(uri)
+
+                            outputs.append(new_output)
 
         return outputs
 
