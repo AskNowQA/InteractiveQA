@@ -56,7 +56,7 @@ class LuceneLinker:
                 if chunk['chunk'] in question:
                     idx = question.index(chunk['chunk'])
                 if len(candidate_items) > 0:
-                    results.append({'surface': [idx, idx + len(chunk['chunk'])], 'uris': candidate_items})
+                    results.append({'surface': [idx, len(chunk['chunk'])], 'uris': candidate_items})
         return results
 
     def link_entities(self, question, chunks=None):
