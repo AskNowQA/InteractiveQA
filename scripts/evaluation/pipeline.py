@@ -12,6 +12,7 @@ from scripts.evaluation.linker import LinkerEvaluator
 from tqdm import tqdm
 import argparse
 import os
+import json
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run pipeline')
@@ -37,7 +38,7 @@ if __name__ == "__main__":
     linker_evaluator = LinkerEvaluator(GoldLinker())
 
     interaction_types = [[False, True], [True, True]]
-    strategies = ['InformationGain', 'OptionGain', 'Probability']
+    strategies = ['InformationGain', 'OptionGain']  # , 'Probability']
     w = 1
 
     stats = {('IQA-AO' if all(type) else 'IQA-SO') + '-' + strategy: Stats() for strategy in strategies for type
@@ -53,9 +54,12 @@ if __name__ == "__main__":
     stats['IQA-SO-RQ'] = Stats()
 
     qid = -1
+    failures = []
     for qapair in tqdm(dataset.qapairs):
         qid += 1
         stats['general'].inc("total")
+        # if stats['general']['total'] not in [11, 20]:
+        #     continue
         # if 'municipality' not in qapair.question.text:
         #     continue
         if stats['general']['total'] > 100:
@@ -91,6 +95,7 @@ if __name__ == "__main__":
                 while interaction_options.has_interaction():
                     if oracle.validate_query(qapair, interaction_options.query_with_max_probability()):
                         found = True
+                        break
 
                     if strategy == 'InformationGain':
                         io = interaction_options.interaction_with_max_information_gain()
@@ -112,24 +117,33 @@ if __name__ == "__main__":
             item = outputs[1][-1]
             stats['general'].inc('-incorrect')
 
-            wrong_entity = len([uri_o for uri_o in qapair.sparql.uris if uri_o.is_ontology() and uri_o not in set(
-                [uri['uri'] for item in outputs[1] for ents in item['relations'] for uri in ents['uris'] if
-                 len(item['relations']) > 0])]) > 0
-            wrong_relation = len([uri_o for uri_o in qapair.sparql.uris if uri_o.is_entity() and uri_o not in set(
+            wrong_entity = [uri_o for uri_o in qapair.sparql.uris if uri_o.is_entity() and uri_o.uri not in set(
                 [uri['uri'] for item in outputs[1] for ents in item['entities'] for uri in ents['uris'] if
-                 len(item['entities']) > 0])]) > 0
-            if wrong_entity and wrong_relation:
+                 len(item['entities']) > 0])]
+            wrong_relation = [uri_o for uri_o in qapair.sparql.uris if uri_o.is_ontology() and uri_o.uri not in set(
+                [uri['uri'] for item in outputs[1] for ents in item['relations'] for uri in ents['uris'] if
+                 len(item['relations']) > 0])]
+            if len(wrong_entity) > 0 and len(wrong_relation) > 0:
                 stats['general']['-ent_rel'].append(qid)
-            elif wrong_entity:
+            elif len(wrong_entity) > 0:
                 stats['general']['-ent'].append(qid)
-            elif wrong_relation:
+            elif len(wrong_relation) > 0:
                 stats['general']['-rel'].append(qid)
             else:
                 stats['general']['matched'].append(qid)
+            failures.append(
+                [str(qid), qapair.question.text, ' '.join([item.uri for item in wrong_entity]),
+                 ' '.join([item.uri for item in wrong_relation])])
         else:
             stats['general'].inc('+correct')
             # stats['general']['corrects'].append(qid)
         for k, v in stats.iteritems():
             v.save(os.path.join(args.base_path, 'output', 'stats-{0}.json'.format(k)))
 
+        try:
+            with open('../../output/failures.log', 'w') as f:
+                json.dump(failures, f, indent=4, separators=(',', ': '))
+        except:
+            pass
+    print failures
     print stats
