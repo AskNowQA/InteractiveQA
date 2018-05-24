@@ -122,7 +122,8 @@ if __name__ == "__main__":
             wrong_relation = [uri_o for uri_o in qapair.sparql.uris if uri_o.is_ontology() and uri_o.uri not in set(
                 [uri['uri'] for item in outputs[1] for ents in item['relations'] for uri in ents['uris'] if
                  len(item['relations']) > 0])]
-            info = [qid, qapair.question.text, [item.uri for item in wrong_entity],
+            info = [qid, qapair.question.text, len([uri for uri in qapair.sparql.uris if not uri.is_generic()]),
+                    [item.uri for item in wrong_entity],
                     [item.uri for item in wrong_relation]]
             if len(wrong_entity) > 0 and len(wrong_relation) > 0:
                 stats['general']['-ent_rel'].append(info)
