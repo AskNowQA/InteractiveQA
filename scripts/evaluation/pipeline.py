@@ -54,11 +54,10 @@ if __name__ == "__main__":
     stats['IQA-SO-RQ'] = Stats()
 
     qid = -1
-    failures = []
     for qapair in tqdm(dataset.qapairs):
         qid += 1
         stats['general'].inc("total")
-        # if stats['general']['total'] not in [11, 20]:
+        # if stats['general']['total'] - 1 not in [14]:
         #     continue
         # if 'municipality' not in qapair.question.text:
         #     continue
@@ -123,27 +122,20 @@ if __name__ == "__main__":
             wrong_relation = [uri_o for uri_o in qapair.sparql.uris if uri_o.is_ontology() and uri_o.uri not in set(
                 [uri['uri'] for item in outputs[1] for ents in item['relations'] for uri in ents['uris'] if
                  len(item['relations']) > 0])]
+            info = [qid, qapair.question.text, [item.uri for item in wrong_entity],
+                    [item.uri for item in wrong_relation]]
             if len(wrong_entity) > 0 and len(wrong_relation) > 0:
-                stats['general']['-ent_rel'].append(qid)
+                stats['general']['-ent_rel'].append(info)
             elif len(wrong_entity) > 0:
-                stats['general']['-ent'].append(qid)
+                stats['general']['-ent'].append(info)
             elif len(wrong_relation) > 0:
-                stats['general']['-rel'].append(qid)
+                stats['general']['-rel'].append(info)
             else:
-                stats['general']['matched'].append(qid)
-            failures.append(
-                [str(qid), qapair.question.text, ' '.join([item.uri for item in wrong_entity]),
-                 ' '.join([item.uri for item in wrong_relation])])
+                stats['general']['matched'].append(info)
         else:
             stats['general'].inc('+correct')
             # stats['general']['corrects'].append(qid)
         for k, v in stats.iteritems():
             v.save(os.path.join(args.base_path, 'output', 'stats-{0}.json'.format(k)))
 
-        try:
-            with open('../../output/failures.log', 'w') as f:
-                json.dump(failures, f, indent=4, separators=(',', ': '))
-        except:
-            pass
-    print failures
     print stats
