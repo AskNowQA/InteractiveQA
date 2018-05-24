@@ -75,7 +75,7 @@ class LuceneLinker:
             if len(term) <= 2:
                 return
             query = ' '.join(self.transorm_func(term))
-            hits = self.indexer.search(query, field='ngram')
+            hits = self.indexer.search(query, field='ngram', count=100)
             for hit in hits:  # hits support mapping interface
                 yield hit['uri'].replace('\n', '')
         except Exception as err:
