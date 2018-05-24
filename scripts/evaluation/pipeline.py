@@ -57,8 +57,8 @@ if __name__ == "__main__":
     for qapair in tqdm(dataset.qapairs):
         qid += 1
         stats['general'].inc("total")
-        # if stats['general']['total'] - 1 not in [14]:
-        #     continue
+        if stats['general']['total'] - 1 not in [14]:
+            continue
         # if 'municipality' not in qapair.question.text:
         #     continue
         if stats['general']['total'] > 100:
@@ -123,6 +123,7 @@ if __name__ == "__main__":
                 [uri['uri'] for item in outputs[1] for ents in item['relations'] for uri in ents['uris'] if
                  len(item['relations']) > 0])]
             info = [qid, qapair.question.text, len([uri for uri in qapair.sparql.uris if not uri.is_generic()]),
+                    len([uris.uri for uris in qapair.sparql.uris if not uris.is_generic()]) > len(set([uris.uri for uris in qapair.sparql.uris if not uris.is_generic()])),
                     [item.uri for item in wrong_entity],
                     [item.uri for item in wrong_relation]]
             if len(wrong_entity) > 0 and len(wrong_relation) > 0:
