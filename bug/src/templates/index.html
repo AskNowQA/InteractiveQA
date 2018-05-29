@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="static/jquery.min.js">
+    </script>
+<script>
+$(document).ready(function(){
+     $(".btna").click(function(){
+        $.get("/mystringa",function(data, status){
+            alert("data: " + data.IO.surface + "\nstatus: " + status);
+        });
+    });
+});
+</script>
+
+</head>
+<body>
+    
+<button class="btna">btna</button>
+</body>
+</html>
