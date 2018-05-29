@@ -1,3 +1,4 @@
+<html lang="en">
 {% extends "bootstrap/base.html" %}
 
 {% block title %}
@@ -10,6 +11,43 @@ Demo App
 {% endblock %}
 
 {% block content %}
+<script src="static/jquery.min.js">
+</script>
+<script>
+$(document).ready(function(){
+     $(".btna").click(function(){
+        $.get("/mystringa",function(data, status){
+            alert("data: " + data.question + "\nstatus: " + status);
+        });
+    });
+     $(".ExhiClick").click(function(){
+        $.get("/mystringa",function(data, status){
+            document.getElementById("questionDisplay").innerHTML =(data.question);
+        });
+    });
+     $("#questionDisplay").click(function(){
+        $.get("/mystringa",function(data, status){
+            document.getElementById("q3").innerHTML =(data.IO.surface);
+            document.getElementById("directAnswer1").innerHTML =(data.IO.values[0]);
+            document.getElementById("directAnswer2").innerHTML =(data.IO.values[1]);            
+        });
+    });
+     $("#directAnswer1").click(function(){
+        document.getElementById("accordion2").style.visibility="visible";
+        $.get("/mystringc",function(data, status){
+            document.getElementById("questionDisplay2").innerHTML =(data.IO.surface);
+        });
+    });
+     $("#questionDisplay2").click(function(){
+        $.get("/mystringc",function(data, status){
+            document.getElementById("directAnswer3").innerHTML =(data.IO.values[0]);
+            document.getElementById("directAnswer4").innerHTML =(data.IO.values[1]);            
+        });
+    });
+});
+</script>
+
+<button class="btna">btna</button>
     <nav class="navbar navbar-inverse navbar-fixed-top">
       <div class="container">
         <div class="navbar-header">
@@ -61,11 +99,10 @@ Demo App
             <div class="questionSession">
 
                 <div class="tit">
-                    <p>Exhibit Question:</p>
+                    <p>Exhibit Question: <button class="ExhiClick">go</button> </p>
                 </div>
 
                 <div class = "qusetion">
-                    <p>Is the Sagarmatha Mountain the highest mountain?</p>
                 </div>
 
                 <!--Feedback Area (collapsable feedback questions)-->
@@ -81,8 +118,8 @@ Demo App
                                 <h4 class="panel-title">
                                     <a data-toggle="collapse" data-parent="#accordion"
                                        href="#collapseOne">
-                                        <div id="da3">
-                                            disambiguation #3
+                                        <div id="questionDisplay">
+                                            
                                         </div>
                                     </a>
                                 </h4>
@@ -90,66 +127,42 @@ Demo App
                             <div id="collapseOne" class="panel-collapse collapse collapse">
                                 <div class="panel-body">
                                     <div id="q3">
-                                        Is Sagarmatha Mountain "Mount Everest"?
+                                        
                                     </div>
-                                    <button class="directAnswer" type="button" onclick="myFunctionYes('da3','q3')">Yes</button>
-                                    <button class="directAnswer" type="button" onclick="myFunctionNo('da3','q3')">No</button>
-                                    <button class="directAnswer" type="button" onclick="myFunctionSkipped('da3','q3')">Skip</button>
+                                    <button id="directAnswer1" type="button" ></button>
+                                    <button id="directAnswer2" type="button" ></button>
+                                    <button class="directAnswer" type="button">Skip</button>
                                 </div>
                             </div>
                         </div>
-                        <div class="panel panel-default">
+                    
+
+                    
+                        <div class="panel panel-default" id ="accordion2" style="visibility: hidden">
                             <div class="panel-heading">
                                 <h4 class="panel-title">
                                     <a data-toggle="collapse" data-parent="#accordion"
                                        href="#collapseTwo">
-                                        <div class="question#2" type="text">
-                                            <div id="da2">
-                                                disambiguation #2
-                                            </div>
+                                        <div id="questionDisplay2">
+                                            
                                         </div>
                                     </a>
                                 </h4>
                             </div>
-                            <div id="collapseTwo" class="panel-collapse collapse">
+                            <div id="collapseTwo" class="panel-collapse collapse collapse">
                                 <div class="panel-body">
-                                    <div id="q2">
-                                        Is Sagarmatha Mountain "Chomolungma"(in Tibetan)?
-                                    </div>
-                                    <button class="directAnswer" type="button" onclick="myFunctionYes('da2','q2')">Yes</button>
-                                    <button class="directAnswer" type="button" onclick="myFunctionNo('da2','q2')">No</button>
-                                    <button class="directAnswer" type="button" onclick="myFunctionSkipped('da2','q2')">Skip</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="panel panel-default">
-                            <div class="panel-heading">
-                                <h4 class="panel-title">
-                                    <a data-toggle="collapse" data-parent="#accordion"
-                                       href="#collapseThree">
-                                        <div id="da1">
-                                            disambiguation #1
-                                        </div>
-                                    </a>
-                                </h4>
-                            </div>
-                            <div id="collapseThree" class="panel-collapse collapse">
-                                <div class="panel-body">
-                                    <div id="q1">
-                                        Is Sagarmatha Mountain "珠穆朗玛峰"(in Chinese)?
-                                    </div>
-                                    <button class="directAnswer" type="button" onclick="myFunctionYes('da1','q1')">Yes</button>
-                                    <button class="directAnswer" type="button" onclick="myFunctionNo('da1','q1')">No</button>
-                                    <button class="directAnswer" type="button" onclick="myFunctionSkipped('da1','q1')">Skip</button>
+                                    
+                                    <button id="directAnswer3" type="button"></button>
+                                    <button id="directAnswer4" type="button"></button>
+                                    <button class="directAnswer" type="button">Skip</button>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
                     <!--(Answer Section)-->
-                    <div class="answerSection">
-                        Answer: Yes.
-                    </div>
+                   
 
 
 

@@ -19,6 +19,7 @@ from wtforms.validators import InputRequired, Email, Length
 from flask_sqlalchemy  import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask import jsonify
 
 app = flask.Flask(__name__)
 app.config['SECRET_KEY'] = 'Thisissupposedtobesecret!'
@@ -129,6 +130,30 @@ def interact():
 
     return json.dumps(result)
 
+@app.route('/mystringa')
+def mystringa():
+    #if not flask.request.json:
+     #   flask.abort(400)
+
+    #userid = flask.request.json['userid']
+
+    result = {'question': 'Name the municipality of Robert Clemente Bridge?',
+              'IO': {'surface': 'Robert Clemente Bridge',
+                     'values': ['Robert Clemente Bridge', 'Robert Clemente Community School']}}
+
+    #data = json.dumps(result)
+    #return json.dumps(result)
+    return jsonify(result)
+
+@app.route('/mystringc')
+def mystringc():
+ 
+    #userid = flask.request.json['userid']
+    #io = flask.request.json['IO']
+    result = {'IO': {'surface': 'municipality',
+                     'values': ['municipality', 'city']}}
+
+    return jsonify(result)
 
 if __name__ == '__main__':
     logger = logging.getLogger(__name__)
