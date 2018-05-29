@@ -8,7 +8,7 @@
 $(document).ready(function(){
      $(".btna").click(function(){
         $.get("/mystringa",function(data, status){
-            alert("数据: " + data.IO.surface + "\n状态: " + status);
+            alert("data: " + data.IO.surface + "\nstatus: " + status);
         });
     });
 });
