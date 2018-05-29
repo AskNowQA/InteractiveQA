@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="static/jquery.min.js">
+    </script>
+<script>
+$(document).ready(function(){
+     $(".btna").click(function(){
+        $.get("/mystringa",function(data, status){
+            alert("数据: " + data.IO.surface + "\n状态: " + status);
+        });
+    });
+});
+</script>
+
+</head>
+<body>
+    
+<button class="btna">btna</button>
+</body>
+</html>
