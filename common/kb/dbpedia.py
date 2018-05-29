@@ -1,5 +1,6 @@
 from common.utility.utils import Utils
 import config
+import requests
 import urllib
 import os
 import json
@@ -15,6 +16,17 @@ class DBpedia:
             Utils.makedirs(cache_path)
             self.cache_path = os.path.join(cache_path, 'types.cache')
             self.__load_cache()
+
+    def query(self, q):
+        payload = (
+            ('query', q),
+            ('format', 'application/json'))
+        try:
+            r = requests.get(self.endpoint, params=payload, timeout=60)
+        except:
+            return 0, None
+
+        return r.status_code, r.json() if r.status_code == 200 else None
 
     def __load_cache(self):
         try:
@@ -38,7 +50,7 @@ class DBpedia:
             payload = {'query': query, 'format': 'application/json'}
             results = Utils.call_web_api(self.endpoint + '?' + urllib.urlencode(payload), None)
 
-            self.cache[uri] = [item['t']['value'] for item in results['results']['bindings'] if
+            self.cache[uri] = [item['t']['value'] for item in results['qa_results']['bindings'] if
                                'yago' not in item['t']['value']]
             self.__save_cache()
         return self.cache[uri]
