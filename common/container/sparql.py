@@ -5,10 +5,11 @@ class SPARQL:
         self.where_clause, self.where_clause_template = self.__extrat_where()
 
     def __extrat_where(self):
-        WHERE = "WHERE"
+        WHERE = "WHERE" if "WHERE" in self.query else "where"
         sparql_query = self.query.strip(" {};\t")
-        idx = sparql_query.find(WHERE)
-        where_clause_raw = sparql_query[idx + len(WHERE):].strip(" {}")
+        where_idx = sparql_query.find(WHERE)
+        last_bracket_idx = sparql_query.rfind('}')
+        where_clause_raw = sparql_query[where_idx + len(WHERE):last_bracket_idx].strip(" {}")
         where_clause_raw = [item.strip(" .") for item in where_clause_raw.split(" ")]
         where_clause_raw = [item for item in where_clause_raw if item != ""]
         buffer = []
@@ -60,20 +61,23 @@ class SPARQL:
     def __eq__(self, other):
         if isinstance(other, SPARQL):
             mapping = {}
+            if len(self.where_clause) != other.where_clause:
+                return False
             for line in self.where_clause:
                 found = False
                 for other_line in other.where_clause:
                     match = 0
                     mapping_buffer = mapping.copy()
-                    for i in range(len(line)):
-                        if line[i] == other_line[i]:
-                            match += 1
-                        elif line[i].startswith("?") and other_line[i].startswith("?"):
-                            if line[i] not in mapping_buffer:
-                                mapping_buffer[line[i]] = other_line[i]
+                    if len(line) == len(other_line):
+                        for i in range(len(line)):
+                            if line[i] == other_line[i]:
                                 match += 1
-                            else:
-                                match += mapping_buffer[line[i]] == other_line[i]
+                            elif line[i].startswith("?") and other_line[i].startswith("?"):
+                                if line[i] not in mapping_buffer:
+                                    mapping_buffer[line[i]] = other_line[i]
+                                    match += 1
+                                else:
+                                    match += mapping_buffer[line[i]] == other_line[i]
                     if match == len(line):
                         found = True
                         mapping = mapping_buffer
