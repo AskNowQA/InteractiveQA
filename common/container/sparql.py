@@ -9,6 +9,8 @@ class SPARQL:
         sparql_query = self.query.strip(" {};\t")
         where_idx = sparql_query.find(WHERE)
         last_bracket_idx = sparql_query.rfind('}')
+        if last_bracket_idx == -1:
+            last_bracket_idx = len(sparql_query)
         where_clause_raw = sparql_query[where_idx + len(WHERE):last_bracket_idx].strip(" {}")
         where_clause_raw = [item.strip(" .") for item in where_clause_raw.split(" ")]
         where_clause_raw = [item for item in where_clause_raw if item != ""]
@@ -61,7 +63,10 @@ class SPARQL:
     def __eq__(self, other):
         if isinstance(other, SPARQL):
             mapping = {}
-            if len(self.where_clause) != other.where_clause:
+            if len(self.where_clause) != len(other.where_clause):
+                return False
+            if (("ask " in self.raw_query.lower()) != ("ask " in other.raw_query.lower())) or (
+                    ("count(" in self.raw_query.lower()) != ("count(" in other.raw_query.lower())):
                 return False
             for line in self.where_clause:
                 found = False
