@@ -115,10 +115,14 @@ if __name__ == '__main__':
                 ds_results = pk.load(data_file)
 
             stats_results = Stats()
-            stats_results['p'] = []
-            stats_results['r'] = []
-            stats_results['f1'] = []
+            for i in range(1, 10):
+                stats_id = '#{}-'.format(i)
+                stats_results[stats_id + 'p'] = []
+                stats_results[stats_id + 'r'] = []
+                stats_results[stats_id + 'f1'] = []
             for qapair in tqdm(dataset.qapairs):
+                query_complexity = len([uri for uri in qapair.sparql.uris if not (uri.is_generic() or uri.is_type())])
+                stats_id = '#{}-'.format(query_complexity)
                 if qapair.id in stats['correct_quries']:
                     # try:
                     query_equal = qapair.sparql == SPARQL(
@@ -178,16 +182,23 @@ if __name__ == '__main__':
                             if query_equal:
                                 print "qqq"
                             stats_results.inc('-incorrect')
-                        stats_results['p'].append(p)
-                        stats_results['r'].append(r)
-                        stats_results['f1'].append(f1)
+
+                        stats_results[stats_id + 'p'].append(p)
+                        stats_results[stats_id + 'r'].append(r)
+                        stats_results[stats_id + 'f1'].append(f1)
                     else:
                         stats_results.inc('ds_answer_failed')
 
                     stats_results.inc('total')
+                    stats_results.inc(stats_id + 'total')
                     # except Exception as expt:
                     #     print expt
-            print sum(stats_results['p']) / stats_results['total']
-            print sum(stats_results['r']) / stats_results['total']
-            print sum(stats_results['f1']) / stats_results['total']
+
+            for i in range(1, 10):
+                stats_id = '#{}-'.format(i)
+                if stats_results[stats_id + 'total'] > 0:
+                    print i, sum(stats_results[stats_id + 'p']) / stats_results[stats_id + 'total'], \
+                        sum(stats_results[stats_id + 'r']) / stats_results[stats_id + 'total'], \
+                        sum(stats_results[stats_id + 'f1']) / stats_results[stats_id + 'total'], \
+                        stats_results[stats_id + 'total']
             print stats_results
