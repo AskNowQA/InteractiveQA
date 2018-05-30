@@ -50,7 +50,7 @@ class DBpedia:
             payload = {'query': query, 'format': 'application/json'}
             results = Utils.call_web_api(self.endpoint + '?' + urllib.urlencode(payload), None)
 
-            self.cache[uri] = [item['t']['value'] for item in results['qa_results']['bindings'] if
+            self.cache[uri] = [item['t']['value'] for item in results['results']['bindings'] if
                                'yago' not in item['t']['value']]
             self.__save_cache()
         return self.cache[uri]
