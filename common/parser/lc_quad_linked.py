@@ -1,18 +1,20 @@
 import json
 import re
+import os
 from common.container.qapair import QApair
 from common.container.uri import Uri
 from common.kb.dbpedia import DBpedia
 
 
 class LC_Qaud_Linked:
-    def __init__(self, path='./data/LC-QuAD/linked.json'):
+    def __init__(self, path='./data/LC-QuAD/linked.json', auto_load=True):
         self.raw_data = []
         self.qapairs = []
         self.path = path
         self.parser = LC_Qaud_LinkedParser()
-        self.load()
-        self.parse()
+        if auto_load:
+            self.load()
+            self.parse()
 
     def load(self):
         with open(self.path) as data_file:
