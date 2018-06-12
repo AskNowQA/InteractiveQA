@@ -7,12 +7,11 @@ from common.kb.dbpedia import DBpedia
 from common.utility.stats import Stats
 from common.container.sparql import SPARQL
 from common.component.linker.goldLinker import GoldLinker
-from common.container.linkeditem import LinkedItem
 from scripts.evaluation.linker import LinkerEvaluator
 from tqdm import tqdm
 import argparse
 import os
-import json
+import pickle as pk
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run pipeline')
@@ -37,6 +36,10 @@ if __name__ == "__main__":
     oracle = Oracle()
     linker_evaluator = LinkerEvaluator(GoldLinker())
 
+    pipeline_path = os.path.join(args.base_path, 'output', 'pipeline')
+    if not os.path.exists(pipeline_path):
+        os.mkdir(pipeline_path)
+
     interaction_types = [[False, True], [True, True]]
     strategies = ['InformationGain', 'OptionGain']  # , 'Probability']
     w = 1
@@ -45,7 +48,6 @@ if __name__ == "__main__":
              in interaction_types}
     stats['general'] = Stats()
     stats['general']['matched'] = []
-    stats['general']['corrects'] = []
     stats['general']['-ent_rel'] = []
     stats['general']['-ent'] = []
     stats['general']['-rel'] = []
@@ -57,15 +59,18 @@ if __name__ == "__main__":
     for qapair in tqdm(dataset.qapairs):
         qid += 1
         stats['general'].inc("total")
-        if stats['general']['total'] - 1 not in [14]:
-            continue
-        # if 'municipality' not in qapair.question.text:
+        # if stats['general']['total'] - 1 not in [10, 19, 20, 37, 40, 50, 52]:
+        #     continue
+        # if 'zoro' in qapair.question.text.lower():
         #     continue
         if stats['general']['total'] > 100:
             break
-        # if stats['general']['total'] != 35 + 1:
-        #     continue
         outputs = pipeline.run(qapair)
+
+        # save the output of the pipeline
+        with open(os.path.join(pipeline_path, ('{0}.pickle'.format(qapair.id))), 'w') as file_handler:
+            pk.dump(outputs, file_handler)
+
         analyze_failure = False
         for interaction_type in interaction_types:
             interaction_type_str = 'IQA-AO' if all(interaction_type) else 'IQA-SO'
@@ -110,7 +115,7 @@ if __name__ == "__main__":
                     stats[interaction_type_str + '-' + strategy].inc(str(qid) + "+correct")
                 else:
                     stats[interaction_type_str + '-' + strategy].inc(str(qid) + "-incorrect")
-                    analyze_failure = True
+                    # analyze_failure = True
 
         if analyze_failure:
             item = outputs[1][-1]
@@ -123,7 +128,8 @@ if __name__ == "__main__":
                 [uri['uri'] for item in outputs[1] for ents in item['relations'] for uri in ents['uris'] if
                  len(item['relations']) > 0])]
             info = [qid, qapair.question.text, len([uri for uri in qapair.sparql.uris if not uri.is_generic()]),
-                    len([uris.uri for uris in qapair.sparql.uris if not uris.is_generic()]) > len(set([uris.uri for uris in qapair.sparql.uris if not uris.is_generic()])),
+                    len([uris.uri for uris in qapair.sparql.uris if not uris.is_generic()]) > len(
+                        set([uris.uri for uris in qapair.sparql.uris if not uris.is_generic()])),
                     [item.uri for item in wrong_entity],
                     [item.uri for item in wrong_relation]]
             if len(wrong_entity) > 0 and len(wrong_relation) > 0:
