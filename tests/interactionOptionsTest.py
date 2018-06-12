@@ -1,5 +1,5 @@
-from common.container.interactionOptions import InteractionOptions
-from common.container.interactionOption import InteractionOption
+from common.interaction.interactionOptions import InteractionOptions
+from common.interaction.interactionOption import InteractionOption
 
 if __name__ == "__main__":
     ios = InteractionOptions([], None, None)
