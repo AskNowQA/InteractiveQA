@@ -1,4 +1,3 @@
-#!flask/bin/python
 import sys
 import os
 
@@ -9,10 +8,39 @@ if module_path not in sys.path:
 import flask
 import argparse
 import logging
+import pickle as pk
 import json
 from common.utility.utils import Utils
+from common.kb.dbpedia import DBpedia
+from common.parser.lc_quad_linked import LC_Qaud_Linked
+from common.interaction.interactionManager import InteractionManager
+
+global pipeline_path
+global kb
+global dataset
+global interaction_types
+global strategy
 
 app = flask.Flask(__name__)
+app.secret_key = 'sec key'
+interaction_data = dict()
+
+
+def handle_IO(question, io):
+    result = None
+    if io is None:
+        result = {'question': question}
+    elif io.type == 'linked':
+        start, length = map(int, [item.strip('[]') for item in io.value.surface_form.split(',')])
+
+        result = {'question': question,
+                  'IO': {'surface': question[start:start + length],
+                         'values': [io.value.uris[0].uri]}}
+    elif io.type == 'type':
+        result = {'question': question,
+                  'IO': {'surface': '',
+                         'values': [io.value]}}
+    return result
 
 
 @app.errorhandler(404)
@@ -27,11 +55,15 @@ def start():
 
     userid = flask.request.json['userid']
 
-    result = {'question': 'Name the municipality of Robert Clemente Bridge?',
-              'IO': {'surface': 'Robert Clemente Bridge',
-                     'values': ['Robert Clemente Bridge', 'Robert Clemente Community School']}}
+    question_id = 'f0a9f1ca14764095ae089b152e0e7f12'
+    with open(os.path.join(pipeline_path, ('{0}.pickle'.format(question_id))), 'r') as file_handler:
+        interaction_data[userid] = InteractionManager(pk.load(file_handler), kb, dataset.parser.parse_sparql,
+                                                      interaction_types, strategy)
 
-    return json.dumps(result)
+    question = interaction_data[userid].pipeline_results[-1][0]
+    io = interaction_data[userid].get_interaction_option()
+
+    return json.dumps(handle_IO(question, io))
 
 
 @app.route('/iqa/ui/v1.0/interact', methods=['POST'])
@@ -40,19 +72,26 @@ def interact():
         flask.abort(400)
 
     userid = flask.request.json['userid']
-    io = flask.request.json['IO']
-    result = {'IO': {'surface': 'municipality',
-                     'values': ['municipality', 'city']}}
+    interaction_data[userid].interact(flask.request.json['answer'] == 'True')
+    io = interaction_data[userid].get_interaction_option()
+    question = interaction_data[userid].pipeline_results[-1][0]
 
-    return json.dumps(result)
+    return json.dumps(handle_IO(question, io))
 
 
 if __name__ == '__main__':
     logger = logging.getLogger(__name__)
     Utils.setup_logging()
     parser = argparse.ArgumentParser(description='UI Backend')
+    parser.add_argument("--base_path", help="base path", default="../../", dest="base_path")
     parser.add_argument("--port", help="port", default=5001, type=int, dest="port")
     args = parser.parse_args()
     logger.info(args)
+
+    pipeline_path = os.path.join(args.base_path, 'output', 'pipeline')
+    kb = DBpedia(cache_path=os.path.join(args.base_path, "caches/"), use_cache=True)
+    dataset = LC_Qaud_Linked(auto_load=False)
+    interaction_types = [[False, True], [True, True]]
+    strategy = 'InformationGain'
 
     app.run(debug=False, port=args.port)
