@@ -1,4 +1,4 @@
-from common.container.interactionOption import InteractionOption
+from common.interaction.interactionOption import InteractionOption
 from common.utility.uniqueList import UniqueList
 from common.kb.dbpedia import DBpedia
 from common.container.linkeditem import LinkedItem
@@ -181,7 +181,8 @@ class InteractionOptions:
         return SPARQL(queries[0]['query'], self.sparql_parser)
 
     def has_interaction(self):
-        if len(self.__all_active_queries()) > 1:
+        if len(self.__all_active_queries()) > 1 and len(
+                set([item['query'] for item in self.__all_active_queries()])) > 1:
             return len(self.__all_active_ios()) > 0
         return False
 
