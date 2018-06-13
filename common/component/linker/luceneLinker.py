@@ -51,7 +51,7 @@ class LuceneLinker:
         for chunk in chunks:
             if chunk['class'] == item_type:
                 candidate_items = itertools.islice(self.search(chunk['chunk']), 20)
-                candidate_items = [{'confidence': 0.5, 'uri': item} for item in candidate_items]
+                candidate_items = [{'confidence': item[1], 'uri': item[0]} for item in candidate_items]
                 idx = 0
                 if chunk['chunk'] in question:
                     idx = question.index(chunk['chunk'])
@@ -75,9 +75,9 @@ class LuceneLinker:
             if len(term) <= 2:
                 return
             query = ' '.join(self.transorm_func(term))
-            hits = self.indexer.search(query, field='ngram', count=100)
+            hits = self.indexer.search(query, field='ngram', count=100, maxscore=True)
             for hit in hits:  # hits support mapping interface
-                yield hit['uri'].replace('\n', '')
+                yield hit['uri'].replace('\n', ''), hit.score / hits.maxscore
         except Exception as err:
             # print err
             self.q += 1
@@ -177,7 +177,7 @@ if __name__ == '__main__':
                 uris = []
                 idx = 0
                 for item in linker.search(chunk['chunk']):
-                    uris.append({'confidence': 0.1, 'uri': item})
+                    uris.append({'confidence': item[1], 'uri': item[0]})
                     idx += 1
                     if idx > 10:
                         break
