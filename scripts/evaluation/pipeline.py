@@ -65,11 +65,16 @@ if __name__ == "__main__":
         #     continue
         if stats['general']['total'] > 100:
             break
-        outputs = pipeline.run(qapair)
 
-        # save the output of the pipeline
-        with open(os.path.join(pipeline_path, ('{0}.pickle'.format(qapair.id))), 'w') as file_handler:
-            pk.dump(outputs, file_handler)
+        output_path = os.path.join(pipeline_path, ('{0}.pickle'.format(qapair.id)))
+        if not os.path.exists(output_path):
+            outputs = pipeline.run(qapair)
+            # save the output of the pipeline
+            with open(os.path.join(pipeline_path, ('{0}.pickle'.format(qapair.id))), 'w') as file_handler:
+                pk.dump(outputs, file_handler)
+        else:
+            with open(os.path.join(pipeline_path, ('{0}.pickle'.format(qapair.id))), 'r') as file_handler:
+                outputs = pk.load(file_handler)
 
         analyze_failure = False
         for interaction_type in interaction_types:
