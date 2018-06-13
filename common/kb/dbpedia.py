@@ -45,13 +45,16 @@ class DBpedia:
 
     def get_types(self, uri):
         if uri not in self.cache or not self.use_cache:
-            query = 'SELECT ?t WHERE {{<{}> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?t}}'.format(
+            query = '''SELECT * WHERE {{<{}> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?t. 
+            ?t <http://www.w3.org/2000/01/rdf-schema#subClassOf>* ?t2. 
+            FILTER ( strstarts(str(?t), "http://dbpedia.org/ontology/"))}}'''.format(
                 uri.encode("ascii", "ignore"))
             payload = {'query': query, 'format': 'application/json'}
             results = Utils.call_web_api(self.endpoint + '?' + urllib.urlencode(payload), None)
 
-            self.cache[uri] = [item['t']['value'] for item in results['results']['bindings'] if
-                               'yago' not in item['t']['value']]
+            self.cache[uri] = list(set(
+                [item['t']['value'] for item in results['results']['bindings']] + [item['t2']['value'] for item in
+                                                                                   results['results']['bindings']]))
             self.__save_cache()
         return self.cache[uri]
 
