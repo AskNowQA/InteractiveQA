@@ -16,6 +16,7 @@ class Oracle:
         if io.type == 'linked':
             return len([uri.uri for uri in qapair.sparql.uris if uri.uri == io_uri]) > 0
         elif io.type == 'type':
-            return len([uri for uri in qapair.sparql.uris if uri.is_entity() and io_uri in uri.types]) > 0
+            return len([uri for uri in qapair.sparql.uris if
+                        uri.is_entity() and (uri.types is not None and io_uri in uri.types)]) > 0
         else:
             return False
