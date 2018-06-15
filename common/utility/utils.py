@@ -5,12 +5,21 @@ import logging.config
 import json
 import urllib, urllib2
 import config
+from multiprocessing.dummy import Pool as ThreadPool
 
 
 class Struct(object): pass
 
 
 class Utils:
+
+    @staticmethod
+    def run_in_parallel(args, *fns):
+        pool = ThreadPool(4)
+        p_args = [(args, fns[i]) for i in range(len(fns))]
+        outputs = pool.map(lambda x: x[1](*x[0]), p_args)
+        return outputs
+
     @staticmethod
     def makedirs(dir):
         if not os.path.exists(dir):
