@@ -13,13 +13,11 @@ Demo App
 {% block content %}
 <script src="static/jquery.min.js">
 </script>
+<script src="static/index.js">
+</script>
 <script>
 $(document).ready(function(){
-     $(".btna").click(function(){
-        $.get("/mystringa",function(data, status){
-            alert("data: " + data.question + "\nstatus: " + status);
-        });
-    });
+     
      $(".ExhiClick").click(function(){
         $.get("/mystringa",function(data, status){
             document.getElementById("questionDisplay").innerHTML =(data.question);
@@ -38,16 +36,63 @@ $(document).ready(function(){
             document.getElementById("questionDisplay2").innerHTML =(data.IO.surface);
         });
     });
+     $("#directAnswer2").click(function(){
+        document.getElementById("accordion2").style.visibility="visible";
+        $.get("/mystringc",function(data, status){
+            document.getElementById("questionDisplay2").innerHTML =(data.IO.surface);
+        });
+    });
+     $("#directAnswerSk").click(function(){
+        document.getElementById("accordion2").style.visibility="visible";
+        $.get("/mystringc",function(data, status){
+            document.getElementById("questionDisplay2").innerHTML =(data.IO.surface);
+        });
+    });
+
      $("#questionDisplay2").click(function(){
         $.get("/mystringc",function(data, status){
             document.getElementById("directAnswer3").innerHTML =(data.IO.values[0]);
             document.getElementById("directAnswer4").innerHTML =(data.IO.values[1]);            
         });
     });
+     
+    $("#directAnswer3").click(function(){
+    
+        $("#accordion").append('<div class="panel panel-default" id ="accordion2"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#collapseThree"><div id="questionDisplayNew">municipality</div></a></h4></div><div id="collapseThree" class="panel-collapse collapse collapse"><div class="panel-body"><button id="directAnswerNew" type="button">yes</button><button id="directAnswerNew2" type="button">no</button><button class="directAnswer" type="button">Skip</button></div></div></div>');
+        $.get("/mystringc",function(data, status){
+            document.getElementById("directAnswerNew").innerHTML =(data.IO.values[0]);
+            document.getElementById("directAnswerNew2").innerHTML =(data.IO.values[1]);            
+        });
+
+        $("#directAnswerNew").click(function(){
+        $("#accordion").append('<div class="panel panel-default" id ="accordion3"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#collapseFour"><div id="questionDisplayNew">municipality</div></a></h4></div><div id="collapseFour" class="panel-collapse collapse collapse"><div class="panel-body"><button id="directAnswerNew3" type="button">yes</button><button id="directAnswerNew4" type="button">no</button><button class="directAnswer" type="button">Skip</button></div></div></div>');
+            
+            $.get("/mystringc",function(data, status){
+            document.getElementById("directAnswerNew3").innerHTML =(data.IO.values[0]);
+            document.getElementById("directAnswerNew4").innerHTML =(data.IO.values[1]);    
+            });
+
+
+        $("#directAnswerNew3").click(function(){
+        $("#accordion").append('<div class="panel panel-default" id ="accordion3"><div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#collapseFive"><div id="questionDisplayNew">municipality</div></a></h4></div><div id="collapseFive" class="panel-collapse collapse collapse"><div class="panel-body"><button id="directAnswerNew5" type="button">yes</button><button id="directAnswerNew6" type="button">no</button><button class="directAnswer" type="button">Skip</button></div></div></div>');
+            
+            $.get("/mystringc",function(data, status){
+            document.getElementById("directAnswerNew5").innerHTML =(data.IO.values[0]);
+            document.getElementById("directAnswerNew6").innerHTML =(data.IO.values[1]);    
+            });
+
+            });
+        });
+        
+    });
+ 
+   
+
+
 });
 </script>
 
-<button class="btna">btna</button>
+<button class="btna" onclick="appendText()">btna</button>
     <nav class="navbar navbar-inverse navbar-fixed-top">
       <div class="container">
         <div class="navbar-header">
@@ -92,14 +137,14 @@ $(document).ready(function(){
                     <p>    &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </br>
                            &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp </br>
                     </p>
-                    <button class="directAnswer" type="button">Skip</button>
+                    
                 </div>
             </div>
 
             <div class="questionSession">
 
                 <div class="tit">
-                    <p>Exhibit Question: <button class="ExhiClick">go</button> </p>
+                    <p>Exhibit Question: &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp<button class="ExhiClick">go</button> </p>
                 </div>
 
                 <div class = "qusetion">
@@ -113,6 +158,7 @@ $(document).ready(function(){
 
 
                     <div class="panel-group" id="accordion">
+                        
                         <div class="panel panel-default">
                             <div class="panel-heading">
                                 <h4 class="panel-title">
@@ -131,12 +177,10 @@ $(document).ready(function(){
                                     </div>
                                     <button id="directAnswer1" type="button" ></button>
                                     <button id="directAnswer2" type="button" ></button>
-                                    <button class="directAnswer" type="button">Skip</button>
+                                    <button id="directAnswerSk" type="button">Skip</button>
                                 </div>
                             </div>
                         </div>
-                    
-
                     
                         <div class="panel panel-default" id ="accordion2" style="visibility: hidden">
                             <div class="panel-heading">
@@ -151,13 +195,14 @@ $(document).ready(function(){
                             </div>
                             <div id="collapseTwo" class="panel-collapse collapse collapse">
                                 <div class="panel-body">
-                                    
                                     <button id="directAnswer3" type="button"></button>
                                     <button id="directAnswer4" type="button"></button>
                                     <button class="directAnswer" type="button">Skip</button>
                                 </div>
                             </div>
                         </div>
+
+
                     </div>
                 </div>
 

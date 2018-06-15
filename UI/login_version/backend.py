@@ -131,7 +131,7 @@ def interact():
     return json.dumps(result)
 
 @app.route('/mystringa')
-def mystringa():
+def start1():
     #if not flask.request.json:
      #   flask.abort(400)
 
@@ -146,7 +146,7 @@ def mystringa():
     return jsonify(result)
 
 @app.route('/mystringc')
-def mystringc():
+def interact1():
  
     #userid = flask.request.json['userid']
     #io = flask.request.json['IO']
