@@ -63,8 +63,8 @@ if __name__ == '__main__':
     Utils.setup_logging()
 
     parser = argparse.ArgumentParser(description='Evaluate linker')
-    parser.add_argument('--path', help='input dataset', default='../../data/LC-QuAD/linked_3200.json', dest='ds_path')
-    parser.add_argument('--linker', help='linker output path', default='../../data/LC-QuAD/EARL/output_gold.json',
+    parser.add_argument('--path', help='input dataset', default='../../data/LC-QuAD/linked2843.json', dest='ds_path')
+    parser.add_argument('--linker', help='linker output path', default='../../data/LC-QuAD/EARL/output_nltk.json',
                         dest='linker_path')
     args = parser.parse_args()
 
@@ -73,10 +73,17 @@ if __name__ == '__main__':
     ds = LC_Qaud_Linked(args.ds_path)
     earl = EARL(args.linker_path)
 
+    corrects = []
     for qapair in tqdm(ds.qapairs):
         e2, r2 = earl.do(qapair, force_gold=False, top=100)
-        stats.inc(evaluator.compare(qapair, e2, r2, check_entity=False))
+        result = evaluator.compare(qapair, e2, r2, check_relation=False)
+        stats.inc(result)
+        if result == "+matched":
+            corrects.append(stats['total'])
         stats.inc('total')
-
     print
     print stats
+    print corrects
+    # --path ../../data/LC-QuAD/linked2843.json --linker ../../data/LC-QuAD/lucence_ent_ngram_classifier.json
+
+
