@@ -68,7 +68,7 @@ if __name__ == '__main__':
     ax.bar(complexity_dist[0] + 0.1, correct_dist, color='green', width=0.2, label='IQA-All Query')
     ax.bar(complexity_dist[0] + 0.3, correct_dist_top_k[0], color='blue', width=0.2, label='IQA-No Interaction')
     plt.xticks(complexity_dist[0], np.arange(2, 7, 1))
-    plt.yticks(np.arange(0, number_of_corrects * 2 / 2, 100))
+    plt.yticks(np.arange(0, number_of_corrects * 2 / 2, 10))
     ax.title.set_text('Comp. Dist. of: {}/{}\n'.format(number_of_corrects, total))
     ax.legend(loc='upper right')
 
@@ -78,7 +78,7 @@ if __name__ == '__main__':
         ax.bar(complexity_dist[0] * 1 + 0.1 * k - 0.5, correct_dist_top_k[k], width=0.1,
                label='#{} of interactions'.format(k))
     plt.xticks(complexity_dist[0] * 1, np.arange(2, 7, 1))
-    plt.yticks(np.arange(0, number_of_corrects * 2 / 2, 100))
+    plt.yticks(np.arange(0, number_of_corrects * 2 / 2, 10))
     ax.title.set_text('IQA-Ranking Model'.format(number_of_corrects, total))
     # ax.legend(loc='upper')
 
@@ -89,12 +89,12 @@ if __name__ == '__main__':
     y_values = [[items[1] for items in line] for line in y_values]
     y_values = np.array(y_values, dtype=float)
     corrects_in_complexity = []
-    for idx in range(3, 7):
+    for idx in range(2, 6):
         current_y_values = y_values[:, np.where(question_complexities[:total] == idx)].reshape(len(files), -1)
 
         current_y_values[current_y_values == 0] = np.nan
 
-        ax = fig.add_subplot(230 + idx)
+        ax = fig.add_subplot(231 + idx)
         ax.errorbar(x, np.nanmean(current_y_values, axis=1), np.nanstd(y_values, axis=1), linestyle='None', marker='^')
         plt.xticks(x, files, rotation='vertical')
         ax.title.set_text('Q. Comp.: {}'.format(idx))
