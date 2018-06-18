@@ -40,7 +40,7 @@ class Utils:
             logging.basicConfig(level=default_level)
 
     @staticmethod
-    def call_web_api(endpoint, raw_input, use_json=True, use_url_encode=False):
+    def call_web_api(endpoint, raw_input, use_json=True, use_url_encode=False, parse_response_json=True):
         proxy_handler = urllib2.ProxyHandler({})
         opener = urllib2.build_opener(proxy_handler)
         req = urllib2.Request(endpoint)
@@ -54,8 +54,10 @@ class Utils:
         try:
             response = opener.open(req, data=input, timeout=config.config["general"]["http"]["timeout"])
             response = response.read()
-            response = json.loads(response)
-            return response
+            if parse_response_json:
+                return json.loads(response)
+            else:
+                return response
         except Exception as expt:
             # print(expt)
             return None
