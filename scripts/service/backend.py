@@ -26,20 +26,17 @@ app.secret_key = 'sec key'
 interaction_data = dict()
 
 
-def handle_IO(question, io):
-    result = None
+def handle_IO(question, query, io):
+    result = {'question': question, 'query': query}
     if io is None:
-        result = {'question': question}
+        pass
     elif io.type == 'linked':
         start, length = map(int, [item.strip('[]') for item in io.value.surface_form.split(',')])
 
-        result = {'question': question,
-                  'IO': {'surface': question[start:start + length],
-                         'values': [io.value.uris[0].uri]}}
+        result['IO'] = {'surface': question[start:start + length],
+                        'values': [io.value.uris[0].uri]}
     elif io.type == 'type':
-        result = {'question': question,
-                  'IO': {'surface': '',
-                         'values': [io.value]}}
+        result['IO'] = {'surface': 'Type of Question', 'values': [io.value]}
     return result
 
 
@@ -61,9 +58,9 @@ def start():
                                                       interaction_types, strategy)
 
     question = interaction_data[userid].pipeline_results[-1][0]
-    io = interaction_data[userid].get_interaction_option()
+    io, query = interaction_data[userid].get_interaction_option()
 
-    return json.dumps(handle_IO(question, io))
+    return json.dumps(handle_IO(question, query, io))
 
 
 @app.route('/iqa/ui/v1.0/interact', methods=['POST'])
@@ -73,10 +70,10 @@ def interact():
 
     userid = flask.request.json['userid']
     interaction_data[userid].interact(flask.request.json['answer'] == 'True')
-    io = interaction_data[userid].get_interaction_option()
+    io, query = interaction_data[userid].get_interaction_option()
     question = interaction_data[userid].pipeline_results[-1][0]
 
-    return json.dumps(handle_IO(question, io))
+    return json.dumps(handle_IO(question, query, io))
 
 
 if __name__ == '__main__':
@@ -84,7 +81,7 @@ if __name__ == '__main__':
     Utils.setup_logging()
     parser = argparse.ArgumentParser(description='UI Backend')
     parser.add_argument("--base_path", help="base path", default="../../", dest="base_path")
-    parser.add_argument("--port", help="port", default=5001, type=int, dest="port")
+    parser.add_argument("--port", help="port", default=5002, type=int, dest="port")
     args = parser.parse_args()
     logger.info(args)
 
