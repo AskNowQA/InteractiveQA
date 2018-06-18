@@ -1,10 +1,91 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>$Title$</title>
-</head>
-<body>
-$END$
-</body>
-</html>
+{% extends "layout.html" %}
+
+{% block title %}
+Interactive Question Answering (SDA Research)
+{% endblock %}
+
+{% block content %}
+<div id="loading"
+     style="position: absolute;width: 100%;height: 100%;background-color: #fff;opacity: 0.9;display: none;z-index: 100;text-align: center;">
+    <h1>Loading. Please wait...</h1>
+</div>
+<div id="question">
+    <h2>Question: {{ data['question'] }}</h2>
+</div>
+<div>
+    <div id="interactions" style="width: 60%; float:left">
+        <div>
+            <h4>{{ data['IO']['surface'] }}</h4>
+            <div>
+                {{ data['IO']['values'] }}
+                <div>
+                    <label><input type="radio" name="io-1" value="True">Yes</label>
+                    <label><input type="radio" name="io-1" value="False">No</label>
+                </div>
+                <button id="io-1-submit">Submit answer</button>
+            </div>
+        </div>
+    </div>
+    <div id="sparql" style="width: 30%; float: right;">
+        IQA interpretation of the input question:
+        <div id="sparql2nl">
+            <strong>{{ data['sparql2nl'] }}</strong>
+        </div>
+        if this is the correct interpretation of the question, click below:<br/>
+        <button id="correct-sparql-submit">Correct!</button>
+        <hr/>
+        Or click below if you are bored and want to skip the question:<br/>
+        <button id="skip-submit">Skip</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="http://code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
+<link href="http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css" rel="Stylesheet"/>
+
+<script>
+    var $interactions_accordion = $("#interactions").accordion({
+        header: "> div > h4",
+        collapsible: true,
+        active: false,
+        autoHeight: false,
+        autoActivate: true
+    });
+
+    click_handler = function () {
+        alert('1');
+    };
+    idx = 1;
+    click_handler = function () {
+        selected_option = $('input[name=io-1]:checked').val();
+        if (selected_option != undefined) {
+            $('#loading').show();
+            $.post("/interact", {'answer': selected_option}, function (data, status) {
+                $('#loading').hide();
+                console.log(data);
+                $('#sparql2nl').html('<b>' + data['sparql2nl'] + '</b>');
+                if (data['IO'] != undefined) {
+                    idx += 1
+                    var newDiv = "<div>\n" +
+                        "        <h4>" + data['IO']['surface'] + "</h4>\n" +
+                        "        <div>\n" + data['IO']['values'] +
+                        "            <div>\n" +
+                        "                <label><input type=\"radio\" name=\"io-" + idx + "\" value=\"True\">Yes</label>\n" +
+                        "                <label><input type=\"radio\" name=\"io-" + idx + "\" value=\"False\">No</label>\n" +
+                        "            </div>\n" +
+                        "            <button id=\"io-" + idx + "-submit\">Submit answer</button>\n" +
+                        "        </div>\n" +
+                        "    </div>";
+                    $('#interactions').prepend(newDiv)
+                    $('#interactions').accordion("refresh");
+                    $("#io-" + idx + "-submit").click(click_handler);
+                    $interactions_accordion.accordion({active: 0})
+                }
+            });
+        }
+    };
+    $('#io-1-submit').click(click_handler);
+</script>
+{%- endblock scripts %}
