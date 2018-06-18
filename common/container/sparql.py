@@ -2,20 +2,33 @@ class SPARQL:
     def __init__(self, raw_query, parser):
         self.raw_query = raw_query
         self.query, self.supported, self.uris = parser(raw_query)
-        self.extrat_where_template()
+        self.where_clause, self.where_clause_template = self.__extrat_where()
 
-    def extrat_where_template(self):
-        WHERE = "WHERE"
+    def __extrat_where(self):
+        WHERE = "WHERE" if "WHERE" in self.query else "where"
         sparql_query = self.query.strip(" {};\t")
-        for uri in self.uris:
-            sparql_query = sparql_query.replace(uri.uri, uri.uri_type)
+        where_idx = sparql_query.find(WHERE)
+        last_bracket_idx = sparql_query.rfind('}')
+        if last_bracket_idx == -1:
+            last_bracket_idx = len(sparql_query)
+        where_clause_raw = sparql_query[where_idx + len(WHERE):last_bracket_idx].strip(" {}")
+        where_clause_raw = [item.strip(" .") for item in where_clause_raw.split(" ")]
+        where_clause_raw = [item for item in where_clause_raw if item != ""]
+        buffer = []
+        where_clause = []
+        for item in where_clause_raw:
+            buffer.append(item)
+            if len(buffer) == 3:
+                where_clause.append(buffer)
+                buffer = []
+        if len(buffer) > 0:
+            where_clause.append(buffer)
 
-        idx = sparql_query.find(WHERE)
-        self.where_clause = ' '.join(sparql_query.strip("{}. ").replace(".", " ").split())
-        if idx >= 0:
-            idx = sparql_query.find("{", idx)
-            self.where_clause = ' '.join(
-                self.where_clause[idx + 1:].split())
+        where_clause_template = " ".join([" ".join(item) for item in where_clause])
+        for uri in set(self.uris):
+            where_clause_template = where_clause_template.replace(uri.uri, uri.uri_type)
+
+        return where_clause, where_clause_template
 
     def query_features(self):
         features = {"boolean": ["ask "],
@@ -27,7 +40,7 @@ class SPARQL:
                     }
 
         output = set()
-        if self.where_clause.count(" ") > 3:
+        if self.where_clause_template.count(" ") > 3:
             output.add("compound")
         else:
             output.add("single")
@@ -46,6 +59,42 @@ class SPARQL:
                 if constraint in raw_query:
                     output.add(feature)
         return output
+
+    def __eq__(self, other):
+        if isinstance(other, SPARQL):
+            mapping = {}
+            if len(self.where_clause) != len(other.where_clause):
+                return False
+            if (("ask " in self.raw_query.lower()) != ("ask " in other.raw_query.lower())) or (
+                    ("count(" in self.raw_query.lower()) != ("count(" in other.raw_query.lower())):
+                return False
+            for line in self.where_clause:
+                found = False
+                for other_line in other.where_clause:
+                    match = 0
+                    mapping_buffer = mapping.copy()
+                    if len(line) == len(other_line):
+                        for i in range(len(line)):
+                            if line[i] == other_line[i]:
+                                match += 1
+                            elif line[i].startswith("?") and other_line[i].startswith("?"):
+                                if line[i] not in mapping_buffer:
+                                    mapping_buffer[line[i]] = other_line[i]
+                                    match += 1
+                                else:
+                                    match += mapping_buffer[line[i]] == other_line[i]
+                    if match == len(line):
+                        found = True
+                        mapping = mapping_buffer
+                        break
+                if not found:
+                    return False
+            return True
+        else:
+            return False
+
+    def __ne__(self, other):
+        return not self == other
 
     def __str__(self):
         return self.query.encode("ascii", "ignore")

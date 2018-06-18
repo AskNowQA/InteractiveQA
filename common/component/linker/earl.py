@@ -38,17 +38,27 @@ class EARL:
             id += "".join(chunks)
 
         if id not in self.cache or not self.use_cache:
-            self.cache[id] = Utils.call_web_api(self.endpoint, input)
+            result = Utils.call_web_api(self.endpoint, input)
+            if result is None:
+                return {'entities': [], 'relations': []}
+            self.cache[id] = result
             self.__save_cache()
-        return self.cache[id]
+        if self.cache[id] is None:
+            return {'entities': [], 'relations': []}
+        else:
+            return self.cache[id]
 
     def chunk(self, question):
         return []
 
     def link_entities(self, question, chunks=None):
+        if chunks is not None:
+            chunks = [item['chunk'] for item in chunks]
         return self.__hit_endpoint(question, chunks)["entities"]
 
     def link_relations(self, question, chunks=None):
+        if chunks is not None:
+            chunks = [item['chunk'] for item in chunks]
         return self.__hit_endpoint(question, chunks)["relations"]
 
     def link_entities_relations(self, question, chunks=None):

@@ -3,14 +3,23 @@ from __future__ import print_function
 import os
 import logging.config
 import json
-import urllib2
+import urllib, urllib2
 import config
+from multiprocessing.dummy import Pool as ThreadPool
 
 
 class Struct(object): pass
 
 
 class Utils:
+
+    @staticmethod
+    def run_in_parallel(args, *fns):
+        pool = ThreadPool(4)
+        p_args = [(args, fns[i]) for i in range(len(fns))]
+        outputs = pool.map(lambda x: x[1](*x[0]), p_args)
+        return outputs
+
     @staticmethod
     def makedirs(dir):
         if not os.path.exists(dir):
@@ -31,18 +40,26 @@ class Utils:
             logging.basicConfig(level=default_level)
 
     @staticmethod
-    def call_web_api(endpoint, input):
+    def call_web_api(endpoint, raw_input, use_json=True, use_url_encode=False, parse_response_json=True):
         proxy_handler = urllib2.ProxyHandler({})
         opener = urllib2.build_opener(proxy_handler)
         req = urllib2.Request(endpoint)
-        req.add_header('Content-Type', 'application/json')
+        if use_json:
+            input = json.dumps(raw_input)
+            req.add_header('Content-Type', 'application/json')
+        elif use_url_encode:
+            input = urllib.urlencode(raw_input)
+        else:
+            input = raw_input
         try:
-            response = opener.open(req, json.dumps(input), timeout=config.config["general"]["http"]["timeout"])
+            response = opener.open(req, data=input, timeout=config.config["general"]["http"]["timeout"])
             response = response.read()
-            response = json.loads(response)
-            return response
+            if parse_response_json:
+                return json.loads(response)
+            else:
+                return response
         except Exception as expt:
-            print(expt)
+            # print(expt)
             return None
 
     @staticmethod
