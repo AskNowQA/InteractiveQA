@@ -62,7 +62,7 @@ Interactive Question Answering (SDA Research)
         selected_option = $('input[name=' + clicked_id + ']:checked').val();
         if (selected_option != undefined) {
             $('#loading').show();
-            $.post("/interact", {'answer': selected_option}, function (data, status) {
+            $.post("interact", {'answer': selected_option}, function (data, status) {
                 $('#loading').hide();
                 console.log(data);
                 $('#sparql2nl').html('<b>' + data['sparql2nl'] + '</b>');
