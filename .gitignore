@@ -6,4 +6,4 @@
 .DS_Store
 *.pyc
 *.log
-./UI/database/IQA.db
+UI/database/IQA.db
