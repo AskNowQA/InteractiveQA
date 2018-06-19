@@ -42,7 +42,7 @@ class InteractionOptions:
                         for type in kb.get_types(io.value.uris[0].uri):
                             self.add(InteractionOption(io.id, LinkedItem(io.id, [Uri(type, uri_parser)]),
                                                        io.related_queries,
-                                                       'type'))
+                                                       'linked_type'))
 
         self.__remove_items_contained_in_others()
         # there are cases where an entity is used in one query and not in others, thus can't simply remove it.
