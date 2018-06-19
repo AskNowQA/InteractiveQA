@@ -1,4 +1,9 @@
 /data/
+UI/database/IQA.db
+caches/
+models/
+output/
+**/tmp.py
 .idea/
 .classpath
 .project
@@ -6,4 +11,3 @@
 .DS_Store
 *.pyc
 *.log
-UI/database/IQA.db
