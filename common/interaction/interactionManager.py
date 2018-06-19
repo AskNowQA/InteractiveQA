@@ -19,9 +19,10 @@ class InteractionManager:
                 io = self.interaction_options.interaction_with_max_option_gain(self.w)
             elif self.strategy == 'Probability':
                 io = self.interaction_options.interaction_with_max_probability()
-            self.last_option = io
-            return io, self.interaction_options.query_with_max_probability().query
-        return None, None
+        else:
+            io = None
+        self.last_option = io
+        return io, self.interaction_options.query_with_max_probability().query
 
     def interact(self, answer):
         self.interaction_options.update(self.last_option, answer)
