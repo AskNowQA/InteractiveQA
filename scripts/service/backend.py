@@ -14,6 +14,7 @@ from common.utility.utils import Utils
 from common.kb.dbpedia import DBpedia
 from common.parser.lc_quad_linked import LC_Qaud_Linked
 from common.interaction.interactionManager import InteractionManager
+from common.interaction.bookKeeper import BookKeeper
 
 global pipeline_path
 global kb
@@ -24,16 +25,21 @@ global strategy
 app = flask.Flask(__name__)
 app.secret_key = 'sec key'
 interaction_data = dict()
+book_keeper = BookKeeper()
 
 
 def handle_IO(question, query, io):
     result = {'question': question, 'query': query}
     if io is None:
-        pass
-    elif io.type == 'linked':
+        # there is no IO, but there is one valid query
+        if query is not None:
+            result['IO'] = {'surface': query, 'values': []}
+    elif io.type == 'linked' or io.type == 'linked_type':
         start, length = map(int, [item.strip('[]') for item in io.value.surface_form.split(',')])
-
-        result['IO'] = {'surface': question[start:start + length],
+        surface = question[start:start + length]
+        if io.type == 'linked_type':
+            surface = 'type of "{}"'.format(surface)
+        result['IO'] = {'surface': surface,
                         'values': [io.value.uris[0].uri]}
     elif io.type == 'type':
         result['IO'] = {'surface': 'Type of Question', 'values': [io.value]}
@@ -52,7 +58,7 @@ def start():
 
     userid = flask.request.json['userid']
 
-    question_id = 'f0a9f1ca14764095ae089b152e0e7f12'
+    question_id = book_keeper.new_question(userid)
     with open(os.path.join(pipeline_path, ('{0}.pickle'.format(question_id))), 'r') as file_handler:
         interaction_data[userid] = InteractionManager(pk.load(file_handler), kb, dataset.parser.parse_sparql,
                                                       interaction_types, strategy)
@@ -69,11 +75,13 @@ def interact():
         flask.abort(400)
 
     userid = flask.request.json['userid']
-    interaction_data[userid].interact(flask.request.json['answer'] == 'True')
-    io, query = interaction_data[userid].get_interaction_option()
-    question = interaction_data[userid].pipeline_results[-1][0]
+    if interaction_data[userid].interact(flask.request.json['answer'] == 'True'):
+        io, query = interaction_data[userid].get_interaction_option()
+        question = interaction_data[userid].pipeline_results[-1][0]
 
-    return json.dumps(handle_IO(question, query, io))
+        return json.dumps(handle_IO(question, query, io))
+    else:
+        return json.dumps({'command': 'next_question'})
 
 
 @app.route('/iqa/ui/v1.0/correct', methods=['POST'])
