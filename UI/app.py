@@ -130,7 +130,14 @@ def survey():
 def interact():
     data = {'userid': current_user.username, 'answer': flask.request.values['answer']}
     result = Utils.call_web_api('http://127.0.0.1:5002/iqa/ui/v1.0/interact', data)
-    result['sparql2nl'] = sparql2nl(result['query'])
+    if 'command' in result:
+        pass
+    else:
+        result['sparql2nl'] = sparql2nl(result['query'])
+        if result is not None and 'IO' in result and len(result['IO']['values']) == 0:
+            result['IO']['surface'] = result['sparql2nl']
+            result['IO']['value'] = ['Correct?']
+
     return jsonify(result)
 
 
@@ -152,7 +159,7 @@ def sparql2nl(query):
             return 'No Query'
 
         req = requests.get('https://aifb-ls3-kos.aifb.kit.edu/projects/spartiqulator/v5/verbalize.pl',
-                     params={'sparql': query})
+                           params={'sparql': query})
         raw_output = req.text
         idx_start = raw_output.index('verbalization"><b>') + len('verbalization"><b>')
         idx_end = raw_output.index('</b>', idx_start)
