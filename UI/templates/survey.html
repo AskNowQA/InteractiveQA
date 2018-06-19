@@ -5,15 +5,14 @@ Interactive Question Answering (SDA Research)
 {% endblock %}
 
 {% block content %}
-<div id="loading"
+<div id="message"
      style="position: absolute;width: 100%;height: 100%;background-color: #fff;opacity: 0.9;display: none;z-index: 100;text-align: center;">
-    <h1>Loading. Please wait...</h1>
 </div>
 <div id="question" style="margin-left: 10px">
     <h2>Question: {{ data['question'] }}</h2>
 </div>
-<div style="margin-left: 10px">
-    <div id="interactions" style="width: 60%; float:left">
+<div style="margin: 0 10px">
+    <div id="interactions" style="width: 45%; float:left">
         <div>
             <h4>{{ data['IO']['surface'] }}</h4>
             <div>
@@ -26,8 +25,11 @@ Interactive Question Answering (SDA Research)
             </div>
         </div>
     </div>
-    <div id="sparql" style="width: 30%; float: right;">
+    <div id="sparql" style="width: 50%; float: right;">
         IQA interpretation of the input question:
+        <div id="query">
+            <pre style='white-space: pre-wrap;'>{{ data['query'] }}</pre>
+        </div>
         <div id="sparql2nl">
             <strong>{{ data['sparql2nl'] }}</strong>
         </div>
@@ -61,11 +63,23 @@ Interactive Question Answering (SDA Research)
         clicked_id = this.id.substring(0, this.id.indexOf('-', 3))
         selected_option = $('input[name=' + clicked_id + ']:checked').val();
         if (selected_option != undefined) {
-            $('#loading').show();
+            $message=$('#message')
+            $message.html('<h1>Loading. Please wait...</h1>');
+            $message.show();
             $.post("interact", {'answer': selected_option}, function (data, status) {
-                $('#loading').hide();
-                console.log(data);
+                $message.hide();
+                if (data['command'] == 'next_question'){
+                    setTimeout(function (){
+                        window.location.replace("survey");
+                    }, 2000);
+                    $message.html('<h1>Well done! Let\'s go for the next question</h1>');
+                    $message.show();
+
+                    return false;
+                }
+
                 $('#sparql2nl').html('<b>' + data['sparql2nl'] + '</b>');
+                $('#query').html($('<pre style="white-space: pre-wrap;"></pre>').text(data['query']));
                 if (data['IO'] != undefined) {
                     new_id ='io-'+(parseInt(clicked_id.substring(clicked_id.indexOf('-')+1))+1)
                     var newDiv = "<div>\n" +
