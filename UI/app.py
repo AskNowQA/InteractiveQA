@@ -51,7 +51,7 @@ def login():
             if check_password_hash(user.password, form.password.data):
                 login_user(user, remember=form.remember.data)
                 return redirect(url_for('index'))
-        flash('Invalid username or password')
+        flash('Error: Invalid username or password')
 
     return render_template('login.html', form=form)
 
@@ -94,14 +94,31 @@ def interact():
     return jsonify(result)
 
 
+@app.route('/correct')
+@login_required
+def correct():
+    return redirect('survey')
+
+
+@app.route('/skip')
+@login_required
+def skip():
+    return redirect('survey')
+
+
 def sparql2nl(query):
-    raw_output = Utils.call_web_api(
-        'https://aifb-ls3-kos.aifb.kit.edu/projects/spartiqulator/v5/verbalize.pl',
-        raw_input={'sparql': query},
-        use_json=False, use_url_encode=True, parse_response_json=False)
-    idx_start = raw_output.index('verbalization"><b>') + len('verbalization"><b>')
-    idx_end = raw_output.index('</b>', idx_start)
-    return raw_output[idx_start:idx_end]
+    try:
+        if query is None:
+            return 'No Query'
+        raw_output = Utils.call_web_api(
+            'https://aifb-ls3-kos.aifb.kit.edu/projects/spartiqulator/v5/verbalize.pl',
+            raw_input={'sparql': query},
+            use_json=False, use_url_encode=True, parse_response_json=False)
+        idx_start = raw_output.index('verbalization"><b>') + len('verbalization"><b>')
+        idx_end = raw_output.index('</b>', idx_start)
+        return raw_output[idx_start:idx_end]
+    except:
+        return query
 
 
 if __name__ == '__main__':
