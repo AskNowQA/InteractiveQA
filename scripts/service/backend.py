@@ -28,8 +28,8 @@ interaction_data = dict()
 book_keeper = BookKeeper()
 
 
-def handle_IO(question, query, io):
-    result = {'question': question, 'query': query}
+def handle_IO(question, qid, query, io):
+    result = {'question': question, 'query': query, 'qid': qid}
     if io is None:
         # there is no IO, but there is one valid query
         if query is not None:
@@ -57,8 +57,11 @@ def start():
         flask.abort(400)
 
     userid = flask.request.json['userid']
+    qid = None
+    if 'qid' in flask.request.json:
+        qid = flask.request.json['qid']
 
-    question_id = book_keeper.new_question(userid)
+    question_id = book_keeper.new_question(userid, qid)
     with open(os.path.join(pipeline_path, ('{0}.pickle'.format(question_id))), 'r') as file_handler:
         interaction_data[userid] = InteractionManager(pk.load(file_handler), kb, dataset.parser.parse_sparql,
                                                       interaction_types, strategy)
@@ -66,7 +69,7 @@ def start():
     question = interaction_data[userid].pipeline_results[-1][0]
     io, query = interaction_data[userid].get_interaction_option()
 
-    return json.dumps(handle_IO(question, query, io))
+    return json.dumps(handle_IO(question, question_id, query, io))
 
 
 @app.route('/iqa/ui/v1.0/interact', methods=['POST'])
@@ -79,7 +82,7 @@ def interact():
         io, query = interaction_data[userid].get_interaction_option()
         question = interaction_data[userid].pipeline_results[-1][0]
 
-        return json.dumps(handle_IO(question, query, io))
+        return json.dumps(handle_IO(question, None, query, io))
     else:
         return json.dumps({'command': 'next_question'})
 

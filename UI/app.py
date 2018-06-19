@@ -120,7 +120,10 @@ def signup():
 @app.route('/survey')
 @login_required
 def survey():
-    result = Utils.call_web_api('http://127.0.0.1:5002/iqa/ui/v1.0/start', {'userid': current_user.username})
+    data = {'userid': current_user.username}
+    if 'qid' in flask.request.values:
+        data['qid'] = flask.request.values['qid']
+    result = Utils.call_web_api('http://127.0.0.1:5002/iqa/ui/v1.0/start', data)
     result['sparql2nl'] = sparql2nl(result['query'])
     return render_template('survey.html', data=result)
 

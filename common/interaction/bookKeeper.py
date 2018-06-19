@@ -5,7 +5,7 @@ class BookKeeper:
     def __init__(self):
         pass
 
-    def new_question(self, userid):
+    def new_question(self, userid, qid=None):
         # return 'fb1bfcc7943943b892d6d22690b2ef48'
         questions = ['81218ea48e2f44a1bef8c118ae5b965a', '8216e5b6033a407191548689994aa32e',
                      '6ac000fc0bb7458f8556f603ed42e4b3', 'dad51bf9d0294cac99d176aba17c0241',
@@ -27,6 +27,8 @@ class BookKeeper:
                      '418b062f88884aff8095211e8c44cbed', '556d585ed3d04cff978e0f6c86b73d8d',
                      'a969284fc29d4b659e9088088a2c49f2', 'a899e312823543e7b728a2517d29392d',
                      '80d88d56a6634b49b41ded0bdc54ae5c', '873c3fe1ec484dcfbb114320042f298d']
+        if qid in questions:
+            return qid
         return questions[randint(0, len(questions) - 1)]
 
 
