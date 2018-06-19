@@ -76,6 +76,16 @@ def interact():
     return json.dumps(handle_IO(question, query, io))
 
 
+@app.route('/iqa/ui/v1.0/correct', methods=['POST'])
+def correct():
+    if not flask.request.json:
+        flask.abort(400)
+
+    userid = flask.request.json['userid']
+    # TODO: Mark current query as selected query by the user
+    return flask.make_response(flask.jsonify({}), 200)
+
+
 if __name__ == '__main__':
     logger = logging.getLogger(__name__)
     Utils.setup_logging()
