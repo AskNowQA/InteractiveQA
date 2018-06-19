@@ -22,7 +22,18 @@ class InteractionManager:
         else:
             io = None
         self.last_option = io
-        return io, self.interaction_options.query_with_max_probability().query
+
+        query = self.interaction_options.query_with_max_probability()
+        if query is not None:
+            query = query.query
+            if self.last_option is None:
+                self.last_option = 'query'
+        return io, query
 
     def interact(self, answer):
-        self.interaction_options.update(self.last_option, answer)
+        if isinstance(self.last_option, basestring) and self.last_option == 'query':
+            # TODO: do some bookkeeping
+            return False
+        else:
+            self.interaction_options.update(self.last_option, answer)
+            return True
