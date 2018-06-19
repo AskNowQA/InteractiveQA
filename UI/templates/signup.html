@@ -16,25 +16,8 @@ Sign Up
         {{ wtf.form_field(form.password) }}
         <button class="btn btn-lg btn-primary btn-block" type="submit">Sign Up</button>
     </form>
-    <br>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
 
-        {% for message in messages %}
-            {% if "Error" not in message[1]: %}
-                <div class="alert alert-info">
-                <strong>Success! </strong> {{ message[1] }}
-                </div>
-            {% endif %}
-
-            {% if "Error" in message[1]: %}
-                <div class="alert alert-warning">
-                {{ message[1] }}
-                </div>
-            {% endif %}
-        {% endfor %}
-            {% endif %}
-        {% endwith %}
+    {{ super() }}
 
 </div> <!-- /container -->
 {% endblock %}
