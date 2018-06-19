@@ -3,6 +3,7 @@
 
 import argparse
 import logging
+import requests
 import flask
 from flask_bootstrap import Bootstrap
 from flask import Flask, flash, render_template, redirect, url_for
@@ -149,10 +150,10 @@ def sparql2nl(query):
     try:
         if query is None:
             return 'No Query'
-        raw_output = Utils.call_web_api(
-            'https://aifb-ls3-kos.aifb.kit.edu/projects/spartiqulator/v5/verbalize.pl',
-            raw_input={'sparql': query},
-            use_json=False, use_url_encode=True, parse_response_json=False)
+
+        req = requests.get('https://aifb-ls3-kos.aifb.kit.edu/projects/spartiqulator/v5/verbalize.pl',
+                     params={'sparql': query})
+        raw_output = req.text
         idx_start = raw_output.index('verbalization"><b>') + len('verbalization"><b>')
         idx_end = raw_output.index('</b>', idx_start)
         return raw_output[idx_start:idx_end]
