@@ -183,7 +183,11 @@ class InteractionOptions:
     def has_interaction(self):
         if len(self.__all_active_queries()) > 1 and len(
                 set([item['query'] for item in self.__all_active_queries()])) > 1:
-            return len(self.__all_active_ios()) > 0
+            if len(self.__all_active_ios()) > 0:
+                information_gains = [item[1] for item in self.__informationGain()]
+                return sum(information_gains) > 0
+            else:
+                return False
         return False
 
     def update(self, io, value):
