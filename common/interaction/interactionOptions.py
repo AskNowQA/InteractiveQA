@@ -9,7 +9,7 @@ import math
 
 class InteractionOptions:
     def __init__(self, complete_interpretation_space, uri_parser=None, sparql_parser=None, kb=DBpedia(), c2=True,
-                 c3=True):
+                 c3=True, c4=True):
         self.dic = dict()
         self.sparql_parser = sparql_parser
         self.kb = kb
@@ -20,8 +20,7 @@ class InteractionOptions:
             for linked_item_type in ['entities', 'relations']:
                 if linked_item_type in output:
                     for item in output[linked_item_type]:
-                        io = InteractionOption(item.surface_form, item, [], 'linked')
-                        self.add(io)
+                        self.add(InteractionOption(item.surface_form, item, [], 'linked'))
 
             if 'queries' in output:
                 for query in output['queries']:
@@ -45,6 +44,9 @@ class InteractionOptions:
                             self.add(InteractionOption(io.id, LinkedItem(io.id, [Uri(type, uri_parser)]),
                                                        io.related_queries,
                                                        'linked_type'))
+        if c4:
+            for query in self.all_queries:
+                self.add(InteractionOption('query', SPARQL(query['query'], self.sparql_parser), query, 'query'))
 
         self.__remove_items_contained_in_others()
         # there are cases where an entity is used in one query and not in others, thus can't simply remove it.
