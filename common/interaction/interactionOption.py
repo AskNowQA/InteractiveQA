@@ -15,7 +15,7 @@ class InteractionOption:
 
     def addQuery(self, query):
         for item in query:
-            self.related_queries.addIfNotExists(item)
+            self.related_queries.add_if_not_exists(item)
 
     def probability(self):
         confidences = [query['complete_confidence'] for query in self.related_queries]

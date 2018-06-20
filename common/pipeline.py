@@ -107,9 +107,9 @@ class IQAPipeline:
                                 linked_item_type = 'entities' if '/resource/' in raw_uri else 'relations'
                                 uri.confidence = linked_uri['confidence']
                                 linked_item = LinkedItem(str(entity_relation['surface']), [uri], UniqueList([query]))
-                                added_item = output[linked_item_type].addIfNotExists(linked_item)
+                                added_item = output[linked_item_type].add_if_not_exists(linked_item)
                                 if added_item != linked_item:
-                                    added_item.related_queries.addIfNotExists(query)
+                                    added_item.related_queries.add_if_not_exists(query)
                                 linked_items_confidence *= uri.confidence
                                 found = True
                                 break
