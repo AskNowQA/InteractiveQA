@@ -13,7 +13,7 @@ class InteractionOptions:
         self.dic = dict()
         self.sparql_parser = sparql_parser
         self.kb = kb
-        self.complete_interpretation_space = complete_interpretation_space
+        # self.complete_interpretation_space = complete_interpretation_space
         self.all_queries = UniqueList()
         self.all_ios = UniqueList()
         for output in complete_interpretation_space:
@@ -26,7 +26,9 @@ class InteractionOptions:
             if 'queries' in output:
                 for query in output['queries']:
                     query['removed'] = False
-                    self.all_queries.addIfNotExists(query)
+                    self.all_queries.add_or_update(query, eq_func=lambda x, y: x['query'] == y['query'],
+                                                   opt_func=lambda x, y: x if x['complete_confidence'] > y[
+                                                       'complete_confidence'] else y)
                     if c3:
                         self.add(InteractionOption('type', query['type'], query, 'type'))
 
@@ -50,7 +52,7 @@ class InteractionOptions:
 
         for item in self.dic:
             for io in self.dic[item]:
-                self.all_ios.addIfNotExists(io)
+                self.all_ios.add_if_not_exists(io)
 
     def __related_queries(self, uri):
         for query in self.all_queries:
@@ -81,7 +83,7 @@ class InteractionOptions:
 
     def add(self, interactionOption):
         if interactionOption.id in self.dic:
-            result = self.dic[interactionOption.id].addIfNotExists(interactionOption)
+            result = self.dic[interactionOption.id].add_if_not_exists(interactionOption)
             if result != interactionOption:
                 if isinstance(interactionOption, InteractionOption):
                     result.addQuery(interactionOption.related_queries)
