@@ -22,6 +22,18 @@ class InteractionOption:
         return sum(confidences) / len(confidences)
 
     def usability(self):
+        if self.type == 'query':
+            return 0.1
+        elif self.type == 'type':
+            return 0.9
+        elif self.type == 'linked':
+            if self.value.uris[0].is_entity():
+                return 0.8
+            else:
+                return 0.5
+        elif self.type == 'linked_type':
+            return 0.4
+
         return 0.5
 
     def set_removed(self, val):
