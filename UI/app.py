@@ -133,13 +133,14 @@ def survey():
 def interact():
     data = {'userid': current_user.username, 'answer': flask.request.values['answer']}
     result = Utils.call_web_api('http://127.0.0.1:5002/iqa/ui/v1.0/interact', data)
-    if 'command' in result:
-        pass
-    else:
-        result['sparql2nl'] = sparql2nl(result['query'])
-        if result is not None and 'IO' in result and len(result['IO']['values']) == 0:
-            result['IO']['surface'] = result['sparql2nl']
-            result['IO']['value'] = ['Correct?']
+    if result is not None:
+        if 'command' in result:
+            pass
+        else:
+            result['sparql2nl'] = sparql2nl(result['query'])
+            if result is not None and 'IO' in result and len(result['IO']['values']) == 0:
+                result['IO']['surface'] = result['sparql2nl']
+                result['IO']['value'] = ['Correct?']
 
     return jsonify(result)
 
