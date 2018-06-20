@@ -123,6 +123,9 @@ def survey():
     data = {'userid': current_user.username}
     if 'qid' in flask.request.values:
         data['qid'] = flask.request.values['qid']
+    if 'strategy' in flask.request.values:
+        data['strategy'] = flask.request.values['strategy']
+
     result = Utils.call_web_api('http://127.0.0.1:5002/iqa/ui/v1.0/start', data)
     result['sparql2nl'] = sparql2nl(result['query'])
     return render_template('survey.html', data=result)

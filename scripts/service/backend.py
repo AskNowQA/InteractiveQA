@@ -53,6 +53,7 @@ def not_found(error):
 
 @app.route('/iqa/ui/v1.0/start', methods=['POST'])
 def start():
+    global strategy
     if not flask.request.json:
         flask.abort(400)
 
@@ -60,6 +61,9 @@ def start():
     qid = None
     if 'qid' in flask.request.json:
         qid = flask.request.json['qid']
+    if 'strategy' in flask.request.json:
+        if flask.request.json['strategy'] in ['InformationGain', 'OptionGain', 'Probability']:
+            strategy = flask.request.json['strategy']
 
     question_id = book_keeper.new_question(userid, qid)
     with open(os.path.join(pipeline_path, ('{0}.pickle'.format(question_id))), 'r') as file_handler:
