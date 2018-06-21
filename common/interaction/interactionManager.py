@@ -35,5 +35,7 @@ class InteractionManager:
             # TODO: do some bookkeeping
             return False
         else:
+            if self.last_option.type == 'query' and answer:
+                return False
             self.interaction_options.update(self.last_option, answer)
             return True

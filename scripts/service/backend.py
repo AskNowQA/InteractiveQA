@@ -43,6 +43,8 @@ def handle_IO(question, qid, query, io):
                         'values': [io.value.uris[0].uri]}
     elif io.type == 'type':
         result['IO'] = {'surface': 'Type of Question', 'values': [io.value]}
+    elif io.type == 'query':
+        result['IO'] = {'surface': io.value.query, 'values': []}
     return result
 
 
