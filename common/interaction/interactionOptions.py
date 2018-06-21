@@ -58,7 +58,7 @@ class InteractionOptions:
 
     def __related_queries(self, uri):
         for query in self.all_queries:
-            if uri.uri in query['query']:
+            if uri.raw_uri in query['query']:
                 yield query
 
     def __remove_single_options(self):
