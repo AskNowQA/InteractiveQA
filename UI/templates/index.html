@@ -6,7 +6,6 @@ Star the survey
 {% endblock %}
 
 {% block content %}
-
 <div class="container">
     <h3>Welcome {{ current_user.username }}</h3>
     This survey is designed to study the interactions of the user with IQA in order to find the concise answer given a
@@ -15,4 +14,5 @@ Star the survey
     <hr/>
     <a href="{{ url_for('survey') }}">Star IQA Survey</a>
 </div> <!-- /container -->
+{{ super() }}
 {% endblock %}
