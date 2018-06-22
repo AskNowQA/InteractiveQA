@@ -6,12 +6,17 @@ import json
 import urllib, urllib2
 import config
 from multiprocessing.dummy import Pool as ThreadPool
+import random, string
 
 
 class Struct(object): pass
 
 
 class Utils:
+
+    @staticmethod
+    def rand_id(N=10):
+        return ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(N))
 
     @staticmethod
     def run_in_parallel(args, *fns):
