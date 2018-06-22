@@ -190,6 +190,16 @@ def correct():
 @app.route('/skip')
 @login_required
 def skip():
+    log_record = InteractionLog(current_user.username,
+                                session['question_id'],
+                                session['session_id'],
+                                '',
+                                '',
+                                session['current_query'],
+                                datetime.datetime.utcnow(),
+                                'skip:skip')
+    db.session.add(log_record)
+    db.session.commit()
     return redirect('survey')
 
 

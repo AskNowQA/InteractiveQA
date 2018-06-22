@@ -51,8 +51,9 @@ class InteractionLog(Base):
     answer = Column(String)
     query = Column(String)
     time = Column(DateTime)
+    data = Column(String)
 
-    def __init__(self, username, question_id, session_id, interaction, answer, query, time):
+    def __init__(self, username, question_id, session_id, interaction, answer, query, time, data=''):
         self.username = username
         self.question_id = question_id
         self.session_id = session_id
@@ -60,6 +61,7 @@ class InteractionLog(Base):
         self.interaction = interaction
         self.query = query
         self.time = time
+        self.data = data
 
 
 if __name__ == '__main__':
