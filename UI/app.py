@@ -200,6 +200,9 @@ def correct():
 @app.route('/skip')
 @login_required
 def skip():
+    reason = 'skip'
+    if 'reason' in flask.request.values:
+        reason = flask.request.values['reason']
     log_record = InteractionLog(current_user.username,
                                 session['question_id'],
                                 session['session_id'],
@@ -207,7 +210,7 @@ def skip():
                                 '',
                                 session['current_query'],
                                 datetime.datetime.utcnow(),
-                                'skip:skip')
+                                'skip:' + reason)
     db.session.add(log_record)
     db.session.commit()
     return redirect('survey')
