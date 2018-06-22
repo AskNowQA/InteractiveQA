@@ -184,6 +184,16 @@ def reformat(result):
 @app.route('/correct')
 @login_required
 def correct():
+    log_record = InteractionLog(current_user.username,
+                                session['question_id'],
+                                session['session_id'],
+                                '',
+                                '',
+                                session['current_query'],
+                                datetime.datetime.utcnow(),
+                                'early_correct')
+    db.session.add(log_record)
+    db.session.commit()
     return redirect('survey')
 
 
