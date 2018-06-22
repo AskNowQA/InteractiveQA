@@ -26,5 +26,42 @@ class User(Base, UserMixin):
         self.password = password
 
 
-# create tables
-Base.metadata.create_all(engine)
+class AssignedQuestion(Base):
+    __tablename__ = "assigned_questions"
+
+    id = Column(Integer, primary_key=True)
+    username = Column(String, nullable=False)
+    question_id = Column(String)
+    strategy = Column(String)
+
+    def __init__(self, username, question_id, strategy):
+        self.username = username
+        self.question_id = question_id
+        self.strategy = strategy
+
+
+class InteractionLog(Base):
+    __tablename__ = "interaction_log"
+
+    id = Column(Integer, primary_key=True)
+    username = Column(String, nullable=False)
+    question_id = Column(String)
+    session_id = Column(String)
+    interaction = Column(String)
+    answer = Column(String)
+    query = Column(String)
+    time = Column(DateTime)
+
+    def __init__(self, username, question_id, session_id, interaction, answer, query, time):
+        self.username = username
+        self.question_id = question_id
+        self.session_id = session_id
+        self.answer = answer
+        self.interaction = interaction
+        self.query = query
+        self.time = time
+
+
+if __name__ == '__main__':
+    # create tables
+    Base.metadata.create_all(engine)
