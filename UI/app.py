@@ -1,12 +1,12 @@
 #!flask/bin/python
 
-
+import datetime
 import argparse
 import logging
 import requests
 import flask
 from flask_bootstrap import Bootstrap
-from flask import Flask, flash, render_template, redirect, url_for
+from flask import Flask, flash, render_template, redirect, url_for, session
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
@@ -15,9 +15,7 @@ from flask import jsonify
 from forms.loginForm import LoginForm
 from forms.registerForm import RegisterForm
 from common.utility.utils import Utils
-from database.tabledef import User
-
-from common.utility.utils import Utils
+from database.tabledef import User, InteractionLog
 
 
 class ReverseProxied(object):
@@ -128,6 +126,19 @@ def survey():
 
     result = Utils.call_web_api('http://127.0.0.1:5002/iqa/ui/v1.0/start', data)
     result = reformat(result)
+
+    # Log the record
+    session['session_id'] = Utils.rand_id()
+    log_record = InteractionLog(current_user.username,
+                                session['question_id'],
+                                session['session_id'],
+                                '',
+                                '',
+                                session['current_query'],
+                                datetime.datetime.utcnow())
+    db.session.add(log_record)
+    db.session.commit()
+
     return render_template('survey.html', data=result)
 
 
@@ -135,6 +146,17 @@ def survey():
 @login_required
 def interact():
     data = {'userid': current_user.username, 'answer': flask.request.values['answer']}
+
+    log_record = InteractionLog(current_user.username,
+                                session['question_id'],
+                                session['session_id'],
+                                jsonify(session['current_IO']).data,
+                                data['answer'],
+                                session['current_query'],
+                                datetime.datetime.utcnow())
+    db.session.add(log_record)
+    db.session.commit()
+
     result = Utils.call_web_api('http://127.0.0.1:5002/iqa/ui/v1.0/interact', data)
     return jsonify(reformat(result))
 
@@ -144,12 +166,20 @@ def reformat(result):
         if 'command' in result:
             pass
         else:
+            if 'qid' in result and result['qid'] is not None:
+                session['question_id'] = result['qid']
+            if 'IO' in result:
+                session['current_IO'] = result['IO']
+            if 'query' in result:
+                session['current_query'] = result['query']
+
             result['sparql2nl'] = sparql2nl(result['query'])
             if 'IO' in result and len(result['IO']['values']) == 0:
                 result['IO']['surface'] = result['sparql2nl']
                 result['IO']['value'] = ['Correct?']
 
     return result
+
 
 @app.route('/correct')
 @login_required
