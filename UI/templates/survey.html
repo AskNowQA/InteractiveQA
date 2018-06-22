@@ -34,11 +34,12 @@ Interactive Question Answering (SDA Research)
         <div id="sparql2nl">
             <strong>{{ data['sparql2nl'] }}</strong>
         </div>
-        if this is the correct interpretation of the question, click below:<br/>
-        <a href="{{ url_for('correct') }}">Correct!</a>
         <hr/>
-        Or click below if you are bored and want to skip the question:<br/>
-        <a href="{{ url_for('skip') }}">Skip</a>
+        <a href="{{ url_for('correct') }}">Correct! if this is the correct interpretation of the question.</a>
+        <hr/>
+        <a href="{{ url_for('skip') }}?reason=notunderstandle">Skip if you don't understand the question</a>
+        <hr/>
+        <a href="{{ url_for('skip') }}">Skip if you are bored and want to skip the question</a>
     </div>
 </div>
 {% endblock %}
@@ -64,13 +65,13 @@ Interactive Question Answering (SDA Research)
         clicked_id = this.id.substring(0, this.id.indexOf('-', 3))
         selected_option = $('input[name=' + clicked_id + ']:checked').val();
         if (selected_option != undefined) {
-            $message=$('#message')
+            $message = $('#message')
             $message.html('<h1>Loading. Please wait...</h1>');
             $message.show();
             $.post("interact", {'answer': selected_option}, function (data, status) {
                 $message.hide();
-                if (data['command'] == 'next_question'){
-                    setTimeout(function (){
+                if (data['command'] == 'next_question') {
+                    setTimeout(function () {
                         window.location.replace("survey");
                     }, 2000);
                     $message.html('<h1>Well done! Let\'s go for the next question</h1>');
@@ -82,7 +83,7 @@ Interactive Question Answering (SDA Research)
                 $('#sparql2nl').html('<b>' + data['sparql2nl'] + '</b>');
                 $('#query').html($('<pre style="white-space: pre-wrap;"></pre>').text(data['query']));
                 if (data['IO'] != undefined) {
-                    new_id ='io-'+(parseInt(clicked_id.substring(clicked_id.indexOf('-')+1))+1)
+                    new_id = 'io-' + (parseInt(clicked_id.substring(clicked_id.indexOf('-') + 1)) + 1)
                     var newDiv = "<div>\n" +
                         "        <h4>" + data['IO']['surface'] + "</h4>\n" +
                         "        <div>\n" + data['IO']['values'] +
