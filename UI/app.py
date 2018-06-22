@@ -176,7 +176,7 @@ def reformat(result):
             result['sparql2nl'] = sparql2nl(result['query'])
             if 'IO' in result and len(result['IO']['values']) == 0:
                 result['IO']['surface'] = result['sparql2nl']
-                result['IO']['value'] = ['Correct?']
+                result['IO']['values'] = ['Correct?']
 
     return result
 
