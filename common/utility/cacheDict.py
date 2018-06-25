@@ -19,11 +19,8 @@ class CacheDict(dict):
         if os.path.exists(self.file_path):
             with open(self.file_path) as data_file:
                 data = json.load(data_file)
-                output = CacheDict(self.file_path, False)
                 for item in data:
-                    output[item] = data[item]
-                return output
-        return CacheDict(self.file_path, False)
+                    self[item] = data[item]
 
     def save(self):
         Utils.makedirs(os.path.dirname(self.file_path))
