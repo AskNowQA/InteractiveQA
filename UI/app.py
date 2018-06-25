@@ -1,5 +1,6 @@
 #!flask/bin/python
 
+import os
 import datetime
 import argparse
 import logging
@@ -15,6 +16,7 @@ from flask import jsonify
 from forms.loginForm import LoginForm
 from forms.registerForm import RegisterForm
 from common.utility.utils import Utils
+from common.utility.cacheDict import CacheDict
 from database.tabledef import User, InteractionLog
 
 
@@ -65,6 +67,7 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
+global sparql2nl_cache
 global LoginForm
 
 
@@ -217,26 +220,37 @@ def skip():
 
 
 def sparql2nl(query):
+    global sparql2nl_cache
     try:
         if query is None:
             return 'No Query'
+        if query in sparql2nl_cache:
+            return sparql2nl_cache[query]
+        if 'ASK ' in query:
+            return query
 
         req = requests.get('https://aifb-ls3-kos.aifb.kit.edu/projects/spartiqulator/v5/verbalize.pl',
                            params={'sparql': query})
         raw_output = req.text
         idx_start = raw_output.index('verbalization"><b>') + len('verbalization"><b>')
         idx_end = raw_output.index('</b>', idx_start)
-        return raw_output[idx_start:idx_end]
+        output = raw_output[idx_start:idx_end]
+        sparql2nl_cache[query] = output
+        return output
     except:
         return query
 
 
 if __name__ == '__main__':
+    global sparql2nl_cache
     logger = logging.getLogger(__name__)
     Utils.setup_logging()
     parser = argparse.ArgumentParser(description='UI Backend')
     parser.add_argument("--port", help="port", default=5001, type=int, dest="port")
+    parser.add_argument("--base_path", help="base path", default="../", dest="base_path")
     args = parser.parse_args()
     logger.info(args)
+
+    sparql2nl_cache = CacheDict(os.path.join(args.base_path, 'caches', 'sparql2nl.cache'))
 
     app.run(debug=True, port=args.port)
