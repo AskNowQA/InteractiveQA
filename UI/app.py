@@ -15,52 +15,17 @@ from flask import jsonify
 
 from forms.loginForm import LoginForm
 from forms.registerForm import RegisterForm
+from common.kb.dbpedia import DBpedia
 from common.utility.utils import Utils
 from common.utility.cacheDict import CacheDict
+from common.utility.reverseProxied import ReverseProxied
 from database.tabledef import User, InteractionLog
-
-
-class ReverseProxied(object):
-    '''Wrap the application in this middleware and configure the
-    front-end server to add these headers, to let you quietly bind
-    this to a URL other than / and to an HTTP scheme that is
-    different than what is used locally.
-
-    In nginx:
-    location /myprefix {
-        proxy_pass http://192.168.0.1:5001;
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Scheme $scheme;
-        proxy_set_header X-Script-Name /myprefix;
-        }
-
-    :param app: the WSGI application
-    '''
-
-    def __init__(self, app):
-        self.app = app
-
-    def __call__(self, environ, start_response):
-        script_name = environ.get('HTTP_X_SCRIPT_NAME', '')
-        if script_name:
-            environ['SCRIPT_NAME'] = script_name
-            path_info = environ['PATH_INFO']
-            if path_info.startswith(script_name):
-                environ['PATH_INFO'] = path_info[len(script_name):]
-        scheme = environ.get('HTTP_X_SCHEME', '')
-        if scheme:
-            environ['wsgi.url_scheme'] = scheme
-        server = environ.get('HTTP_X_FORWARDED_SERVER', '')
-        if server:
-            environ['HTTP_HOST'] = server
-        return self.app(environ, start_response)
-
 
 app = flask.Flask(__name__)
 app.wsgi_app = ReverseProxied(app.wsgi_app)
 app.config['SECRET_KEY'] = 'Thisissupposedtobesecret!'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database/IQA.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 bootstrap = Bootstrap(app)
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -69,6 +34,7 @@ login_manager.login_view = 'login'
 
 global sparql2nl_cache
 global LoginForm
+global kb
 
 
 @login_manager.user_loader
@@ -177,9 +143,16 @@ def reformat(result):
                 session['current_query'] = result['query']
 
             result['sparql2nl'] = sparql2nl(result['query'])
-            if 'IO' in result and len(result['IO']['values']) == 0:
-                result['IO']['surface'] = result['sparql2nl']
-                result['IO']['values'] = ['Correct?']
+            if 'IO' in result:
+                if len(result['IO']['values']) == 0:
+                    result['IO']['surface'] = result['sparql2nl']
+                    result['IO']['values'] = ['Correct?']
+                else:
+                    for idx in range(len(result['IO']['values'])):
+                        val = result['IO']['values'][idx]
+                        if 'dbpedia.org' in val:
+                            label, abstract = kb.get_label_abstract(val)
+                            result['IO']['values'][idx] = {'label': label, 'abstract': abstract}
 
     return result
 
@@ -243,6 +216,7 @@ def sparql2nl(query):
 
 if __name__ == '__main__':
     global sparql2nl_cache
+    global kb
     logger = logging.getLogger(__name__)
     Utils.setup_logging()
     parser = argparse.ArgumentParser(description='UI Backend')
@@ -252,5 +226,6 @@ if __name__ == '__main__':
     logger.info(args)
 
     sparql2nl_cache = CacheDict(os.path.join(args.base_path, 'caches', 'sparql2nl.cache'))
+    kb = DBpedia(cache_path=os.path.join(args.base_path, "caches/"), use_cache=True)
 
     app.run(debug=True, port=args.port)
