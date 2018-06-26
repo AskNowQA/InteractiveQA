@@ -55,6 +55,9 @@ if __name__ == "__main__":
     # baseline
     stats['IQA-SO-RQ'] = Stats()
 
+    with open(os.path.join(args.base_path, 'output', 'wdaqua_core1.pk'), "r") as data_file:
+        wdaqua_results = pk.load(data_file)
+
     qid = -1
     for qapair in tqdm(dataset.qapairs):
         qid += 1
@@ -63,8 +66,10 @@ if __name__ == "__main__":
         #     continue
         # if 'zoro' in qapair.question.text.lower():
         #     continue
-        if stats['general']['total'] > 100:
-            break
+        # if stats['general']['total'] > 100:
+        #     break
+        if qapair.id not in wdaqua_results:
+            continue
 
         output_path = os.path.join(pipeline_path, ('{0}.pickle'.format(qapair.id)))
         if not os.path.exists(output_path):
