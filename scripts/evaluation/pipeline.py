@@ -58,9 +58,9 @@ if __name__ == "__main__":
     with open(os.path.join(args.base_path, 'output', 'wdaqua_core1.pk'), "r") as data_file:
         wdaqua_results = pk.load(data_file)
 
-    qid = -1
+    qid = ''
     for qapair in tqdm(dataset.qapairs):
-        qid += 1
+        qid = qapair.id
         stats['general'].inc("total")
         # if stats['general']['total'] - 1 not in [10, 19, 20, 37, 40, 50, 52]:
         #     continue
@@ -89,22 +89,22 @@ if __name__ == "__main__":
             if interaction_type_str == 'IQA-SO':
                 interaction_options = InteractionOptions(outputs[2], kb.parse_uri, parse_sparql, kb, *interaction_type)
                 ranked_queries = interaction_options.ranked_queries()
-                stats[interaction_type_str + '-RQ'].inc(str(qid), 0)
+                stats[interaction_type_str + '-RQ'].inc(qid, 0)
                 found = False
                 for query in ranked_queries:
                     if oracle.validate_query(qapair, SPARQL(query['query'], parse_sparql)):
                         found = True
                         break
-                    stats['IQA-SO-RQ'].inc(str(qid))
+                    stats['IQA-SO-RQ'].inc(qid)
                 if found:
-                    stats['IQA-SO-RQ'].inc(str(qid) + "+correct")
+                    stats['IQA-SO-RQ'].inc(qid + "+correct")
                 else:
-                    stats['IQA-SO-RQ'].inc(str(qid) + "-incorrect")
+                    stats['IQA-SO-RQ'].inc(qid + "-incorrect")
                     analyze_failure = True
 
             for strategy in strategies:
                 found = False
-                stats[interaction_type_str + '-' + strategy].inc(str(qid), 0)
+                stats[interaction_type_str + '-' + strategy].inc(qid, 0)
                 interaction_options = InteractionOptions(outputs[2], kb.parse_uri, parse_sparql, kb, *interaction_type)
                 while interaction_options.has_interaction():
                     if oracle.validate_query(qapair, interaction_options.query_with_max_probability()):
@@ -119,12 +119,12 @@ if __name__ == "__main__":
                         io = interaction_options.interaction_with_max_probability()
 
                     interaction_options.update(io, oracle.answer(qapair, io))
-                    stats[interaction_type_str + '-' + strategy].inc(str(qid))
+                    stats[interaction_type_str + '-' + strategy].inc(qid)
 
                 if found or oracle.validate_query(qapair, interaction_options.query_with_max_probability()):
-                    stats[interaction_type_str + '-' + strategy].inc(str(qid) + "+correct")
+                    stats[interaction_type_str + '-' + strategy].inc(qid + "+correct")
                 else:
-                    stats[interaction_type_str + '-' + strategy].inc(str(qid) + "-incorrect")
+                    stats[interaction_type_str + '-' + strategy].inc(qid + "-incorrect")
                     # analyze_failure = True
 
         if analyze_failure:
