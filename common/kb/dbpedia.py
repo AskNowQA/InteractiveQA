@@ -1,9 +1,9 @@
 from common.utility.utils import Utils
+from common.utility.cacheDict import CacheDict
 import config
 import requests
 import urllib
 import os
-import json
 
 
 class DBpedia:
@@ -11,11 +11,13 @@ class DBpedia:
         self.endpoint = endpoint
         self.cache_path = cache_path
         self.use_cache = use_cache
-        self.cache = {}
+        self.type_cache = {}
+        self.label_abstract_cache = {}
+
         if self.use_cache:
             Utils.makedirs(cache_path)
-            self.cache_path = os.path.join(cache_path, 'types.cache')
-            self.__load_cache()
+            self.type_cache = CacheDict(os.path.join(cache_path, 'types.cache'))
+            self.label_abstract_cache = CacheDict(os.path.join(cache_path, 'label_abstract.cache'))
 
     def query(self, q):
         payload = (
@@ -28,23 +30,8 @@ class DBpedia:
 
         return r.status_code, r.json() if r.status_code == 200 else None
 
-    def __load_cache(self):
-        try:
-            with open(self.cache_path) as cache_file:
-                self.cache = json.load(cache_file)
-        except:
-            self.cache = {}
-
-    def __save_cache(self):
-        try:
-            with open(self.cache_path, 'w') as cache_file:
-                json.dump(self.cache, cache_file)
-            return True
-        except:
-            return False
-
     def get_types(self, uri):
-        if uri not in self.cache or not self.use_cache:
+        if not self.use_cache or uri not in self.type_cache:
             query = '''SELECT * WHERE {{<{}> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?t. 
             ?t <http://www.w3.org/2000/01/rdf-schema#subClassOf>* ?t2. 
             FILTER ( strstarts(str(?t), "http://dbpedia.org/ontology/"))}}'''.format(
@@ -52,11 +39,33 @@ class DBpedia:
             payload = {'query': query, 'format': 'application/json'}
             results = Utils.call_web_api(self.endpoint + '?' + urllib.urlencode(payload), None)
 
-            self.cache[uri] = list(set(
+            self.type_cache[uri] = list(set(
                 [item['t']['value'] for item in results['results']['bindings']] + [item['t2']['value'] for item in
                                                                                    results['results']['bindings']]))
-            self.__save_cache()
-        return self.cache[uri]
+        return self.type_cache[uri]
+
+    def get_label_abstract(self, uri):
+        if not self.use_cache or uri not in self.label_abstract_cache:
+            query = '''select distinct ?label, SUBSTR(?abstract,1,200) where {{ 
+<{0}> <http://www.w3.org/2000/01/rdf-schema#label> ?label.
+OPTIONAL {{ <{0}> <http://dbpedia.org/ontology/abstract> ?abstract FILTER (lang(?abstract) = 'en')}}
+FILTER (lang(?label) = 'en')  }}'''.format(uri.encode("ascii", "ignore"))
+            payload = {'query': query, 'format': 'application/json'}
+            results = Utils.call_web_api(self.endpoint + '?' + urllib.urlencode(payload), None)
+
+            label = uri[uri.rindex('/') + 1:]
+            try:
+                label = results['results']['bindings'][0]['label']['value']
+            except:
+                pass
+            abstract = ''
+            try:
+                abstract = results['results']['bindings'][0]['abstract']['value']
+            except:
+                pass
+
+            self.label_abstract_cache[uri] = [label, abstract]
+        return self.label_abstract_cache[uri]
 
     @staticmethod
     def parse_uri(input_uri):
