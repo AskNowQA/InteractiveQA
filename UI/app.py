@@ -118,6 +118,8 @@ def interact():
 def reformat(result):
     if result is not None:
         if 'command' in result:
+            if result['command'] == 'next_question':
+                mark_as_answered()
             pass
         else:
             if 'qid' in result and result['qid'] is not None:
