@@ -6,8 +6,8 @@ from sqlalchemy.orm import relationship, backref
 from flask_login import UserMixin
 import os, json, pickle as pk
 from common.parser.lc_quad_linked import LC_Qaud_Linked
+import argparse
 
-engine = create_engine('sqlite:///IQA.db', echo=True)
 Base = declarative_base()
 
 
@@ -93,24 +93,41 @@ class InteractionLog(Base):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Create tables for IQA')
+    parser.add_argument("--base_path", help="base path", default="../../", dest="base_path")
+    parser.add_argument("--def_users", dest='def_users', action='store_true')
+    args = parser.parse_args()
+
+    engine = create_engine('sqlite:///{0}'.format(os.path.join(args.base_path, 'UI', 'database', 'IQA.db')))
+
     create_tables = True
     if create_tables:
         Base.metadata.create_all(engine)
 
+    if args.def_users:
+        users = [
+            "1,'Jens','jens.lehmann@cs.uni-bonn.de','sha256$fo4Uw234$d28c32c3f9c1e4da53dfa22a62373759174252d1aba2ec1ca6e681ced2ccd291'",
+            "2,'hamid','hamid.zafar.tud@gmail.com','sha256$FrQhkuX9$6d0bcefc3a9f77e5272e8fe70c050cc8ade02b1806d0971b00b4b86ff3306e23'",
+            "3,'Dubey','mohnish.rygbee@gmail.com','sha256$mfbgluwf$4fe4f23a3c34a96e53a72902619656390c93adf874094fec77689c520de2cdea'",
+            "4,'elena','demidova@l3s.de','sha256$vfap2HPS$f81d4bcd74ea4d53078416ca099e64f1ae70536a1db0fffe12e80ac173431500'"]
+        for user in users:
+            engine.execute('INSERT INTO users VALUES({0})'.format(user))
+
+
+
     populate_questions_table = True
-    base_path = "../../"
     if populate_questions_table:
-        dataset = LC_Qaud_Linked(os.path.join(base_path, 'data', 'LC-QuAD', 'linked.json'))
+        dataset = LC_Qaud_Linked(os.path.join(args.base_path, 'data', 'LC-QuAD', 'linked.json'))
         question_complexities = {
             qapair.id: len([uri for uri in qapair.sparql.uris if not (uri.is_generic() or uri.is_type())]) for qapair in
             dataset.qapairs}
 
-        with open(os.path.join(base_path, 'output', 'wdaqua_core1.pk'), "r") as data_file:
+        with open(os.path.join(args.base_path, 'output', 'wdaqua_core1.pk'), "r") as data_file:
             wdaqua_results = pk.load(data_file)
-        with open(os.path.join(base_path, 'output', 'stats-IQA-SO-RQ.json'), "r") as data_file:
+        with open(os.path.join(args.base_path, 'output', 'stats-IQA-SO-RQ.json'), "r") as data_file:
             iqa_results = json.load(data_file)
 
-        question_ids = os.listdir(os.path.join(base_path, 'output', 'pipeline'))
+        question_ids = os.listdir(os.path.join(args.base_path, 'output', 'pipeline'))
         for file_name in question_ids:
             question_id = file_name[:-7]
             if question_id in wdaqua_results and ((question_id + '+correct') in iqa_results):
