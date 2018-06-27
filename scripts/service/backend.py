@@ -21,11 +21,11 @@ global kb
 global dataset
 global interaction_types
 global strategy
+global book_keeper
 
 app = flask.Flask(__name__)
 app.secret_key = 'sec key'
 interaction_data = dict()
-book_keeper = BookKeeper()
 
 
 def handle_IO(question, qid, query, io):
@@ -55,7 +55,7 @@ def not_found(error):
 
 @app.route('/iqa/ui/v1.0/start', methods=['POST'])
 def start():
-    global strategy
+    global strategy, book_keeper
     if not flask.request.json:
         flask.abort(400)
 
@@ -117,5 +117,6 @@ if __name__ == '__main__':
     dataset = LC_Qaud_Linked(auto_load=False)
     interaction_types = [[False, True], [True, True]]
     strategy = 'InformationGain'
+    book_keeper = BookKeeper(os.path.join(args.base_path, 'UI', 'database', 'IQA.db'))
 
     app.run(debug=False, port=args.port)
