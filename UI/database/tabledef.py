@@ -12,7 +12,6 @@ Base = declarative_base()
 
 
 class User(Base, UserMixin):
-    """"""
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True)
@@ -20,9 +19,7 @@ class User(Base, UserMixin):
     email = Column(String, unique=True)
     password = Column(String)
 
-    # ----------------------------------------------------------------------
     def __init__(self, username, email, password):
-        """"""
         self.username = username
         self.email = email
         self.password = password
@@ -44,11 +41,13 @@ class AssignedQuestion(Base):
 
     id = Column(Integer, primary_key=True)
     username = Column(String)
-    question_ids = Column(String)
+    question_id = Column(String)
+    strategy = Column(String)
 
-    def __init__(self, username, question_ids):
+    def __init__(self, username, question_id, strategy):
         self.username = username
-        self.question_ids = question_ids
+        self.question_id = question_id
+        self.strategy = strategy
 
 
 class AnsweredQuestion(Base):
@@ -94,11 +93,11 @@ class InteractionLog(Base):
 
 
 if __name__ == '__main__':
-    create_tables = False
+    create_tables = True
     if create_tables:
         Base.metadata.create_all(engine)
 
-    populate_questions_table = False
+    populate_questions_table = True
     base_path = "../../"
     if populate_questions_table:
         dataset = LC_Qaud_Linked(os.path.join(base_path, 'data', 'LC-QuAD', 'linked.json'))
@@ -108,16 +107,19 @@ if __name__ == '__main__':
 
         with open(os.path.join(base_path, 'output', 'wdaqua_core1.pk'), "r") as data_file:
             wdaqua_results = pk.load(data_file)
+        with open(os.path.join(base_path, 'output', 'stats-IQA-SO-RQ.json'), "r") as data_file:
+            iqa_results = json.load(data_file)
 
         question_ids = os.listdir(os.path.join(base_path, 'output', 'pipeline'))
         for file_name in question_ids:
             question_id = file_name[:-7]
-            if question_id in wdaqua_results:
+            if question_id in wdaqua_results and ((question_id + '+correct') in iqa_results):
                 engine.execute(
                     'INSERT INTO questions VALUES("{0}",{1})'.format(question_id, question_complexities[question_id]))
 
-    populate_assigned_question_table = False
+    populate_assigned_question_table = True
     if populate_assigned_question_table:
+        strategies = ['IO', 'OG']
         result = engine.execute('SELECT * FROM questions ORDER BY 2')
         number_of_users = 5
         number_of_question_per_complexity = 2
@@ -132,8 +134,11 @@ if __name__ == '__main__':
                     if len(candidate_qids) > 0:
                         qids.append(candidate_qids[0])
                         del question_complexities[candidate_qids[0]]
-            engine.execute(
-                'INSERT INTO assigned_questions(question_ids) VALUES("{0}")'.format('-'.join(qids)))
+            for strategy in strategies:
+                for qid in qids:
+                    engine.execute(
+                        'INSERT INTO assigned_questions(username, question_id) VALUES("#{0}-{1}","{2}")'.format(
+                            str(user_idx), strategy, qid))
 
     result = engine.execute('SELECT * FROM assigned_questions')
     print(list(result))
