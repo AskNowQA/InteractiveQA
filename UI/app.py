@@ -130,9 +130,10 @@ def reformat(result):
             result['sparql2nl'] = sparql2nl(result['query'])
             if 'IO' in result:
                 if len(result['IO']['values']) == 0:
-                    result['IO']['surface'] = result['sparql2nl']
-                    result['IO']['values'] = ['Correct?']
+                    result['IO']['surface'] = 'Is it what the question means?'
+                    result['IO']['values'] = [{'label': result['sparql2nl'], 'abstract': ''}]
                 else:
+                    result['IO']['surface'] = 'Does "{0}" refers to ...?'.format(result['IO']['surface'])
                     for idx in range(len(result['IO']['values'])):
                         val = result['IO']['values'][idx]
                         if 'dbpedia.org' in val:
