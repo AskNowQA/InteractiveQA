@@ -19,7 +19,7 @@ from common.kb.dbpedia import DBpedia
 from common.utility.utils import Utils
 from common.utility.cacheDict import CacheDict
 from common.utility.reverseProxied import ReverseProxied
-from database.tabledef import User, InteractionLog
+from database.tabledef import User, InteractionLog, AnsweredQuestion
 
 app = flask.Flask(__name__)
 app.wsgi_app = ReverseProxied(app.wsgi_app)
@@ -98,15 +98,8 @@ def survey():
 
     # Log the record
     session['session_id'] = Utils.rand_id()
-    log_record = InteractionLog(current_user.username,
-                                session['question_id'],
-                                session['session_id'],
-                                '',
-                                '',
-                                session['current_query'],
-                                datetime.datetime.utcnow())
-    db.session.add(log_record)
-    db.session.commit()
+    session['start'] = datetime.datetime.utcnow()
+    log_interaction()
 
     return render_template('survey.html', data=result)
 
@@ -116,15 +109,7 @@ def survey():
 def interact():
     data = {'userid': current_user.username, 'answer': flask.request.values['answer']}
 
-    log_record = InteractionLog(current_user.username,
-                                session['question_id'],
-                                session['session_id'],
-                                jsonify(session['current_IO']).data,
-                                data['answer'],
-                                session['current_query'],
-                                datetime.datetime.utcnow())
-    db.session.add(log_record)
-    db.session.commit()
+    log_interaction(interaction=jsonify(session['current_IO']).data, answer=data['answer'])
 
     result = Utils.call_web_api('http://127.0.0.1:5002/iqa/ui/v1.0/interact', data)
     return jsonify(reformat(result))
@@ -160,16 +145,8 @@ def reformat(result):
 @app.route('/correct')
 @login_required
 def correct():
-    log_record = InteractionLog(current_user.username,
-                                session['question_id'],
-                                session['session_id'],
-                                '',
-                                '',
-                                session['current_query'],
-                                datetime.datetime.utcnow(),
-                                'early_correct')
-    db.session.add(log_record)
-    db.session.commit()
+    log_interaction(data='early_correct')
+    mark_as_answered()
     return redirect('survey')
 
 
@@ -179,16 +156,8 @@ def skip():
     reason = 'skip'
     if 'reason' in flask.request.values:
         reason = flask.request.values['reason']
-    log_record = InteractionLog(current_user.username,
-                                session['question_id'],
-                                session['session_id'],
-                                '',
-                                '',
-                                session['current_query'],
-                                datetime.datetime.utcnow(),
-                                'skip:' + reason)
-    db.session.add(log_record)
-    db.session.commit()
+
+    log_interaction(data='skip:' + reason)
     return redirect('survey')
 
 
@@ -212,6 +181,30 @@ def sparql2nl(query):
         return output
     except:
         return query
+
+
+def log_interaction(interaction='', answer='', data=''):
+    log_record = InteractionLog(current_user.username,
+                                session['question_id'],
+                                session['session_id'],
+                                interaction,
+                                answer,
+                                session['current_query'],
+                                datetime.datetime.utcnow(),
+                                data)
+    db.session.add(log_record)
+    db.session.commit()
+
+
+def mark_as_answered():
+    now = datetime.datetime.utcnow()
+    record = AnsweredQuestion(current_user.username,
+                              session['question_id'],
+                              '',
+                              now,
+                              (now - session['start']).total_seconds())
+    db.session.add(record)
+    db.session.commit()
 
 
 if __name__ == '__main__':
