@@ -85,18 +85,19 @@ Interactive Question Answering (SDA Research)
                 $('#sparql2nl').html('<b>' + data['sparql2nl'] + '</b>');
                 $('#query').html($('<pre style="white-space: pre-wrap;"></pre>').text(data['query']));
                 if (data['IO'] != undefined) {
-                    new_id = 'io-' + (parseInt(clicked_id.substring(clicked_id.indexOf('-') + 1)) + 1)
-                    var newDiv = "<div>\n" +
-                        "        <h4>" + data['IO']['surface'] + "</h4>\n" +
-                        "        <div>\n" + data['IO']['values'][0]['label'] + '<br />' + data['IO']['values'][0]['abstract'] +
-                        "            <div>\n" +
-                        "                <label><input type=\"radio\" name=\"" + new_id + "\" value=\"True\">Yes</label>\n" +
-                        "                <label><input type=\"radio\" name=\"" + new_id + "\" value=\"False\">No</label>\n" +
-                        "            </div>\n" +
-                        "            <button id=\"" + new_id + "-submit\">Submit answer</button>\n" +
-                        "        </div>\n" +
-                        "    </div>";
-                    $('#interactions').prepend(newDiv)
+                    var new_id = 'io-' + (parseInt(clicked_id.substring(clicked_id.indexOf('-') + 1)) + 1);
+
+                    var $content = $('<div>').append(
+                        $('<pre style="white-space: pre-wrap;background-color:white;border:none;padding:unset;"></pre>').text(data['IO']['values'][0]['label']))
+                        .append($('<span>').text(data['IO']['values'][0]['abstract']))
+                        .append("<div>" +
+                        "<label><input type=\"radio\" name=\"" + new_id + "\" value=\"True\">Yes</label>\n" +
+                        "<label><input type=\"radio\" name=\"" + new_id + "\" value=\"False\">No</label>\n" +
+                        "</div>\n" +
+                        "<button id=\"" + new_id + "-submit\">Submit answer</button>\n");
+                    var $newDiv = $('<div>').append($('<h4>' + data['IO']['surface'] + '</h4>')).append($content);
+
+                    $('#interactions').prepend($newDiv)
                     $('#interactions').accordion("refresh");
                     $("#" + new_id + "-submit").click(click_handler);
                     $interactions_accordion.accordion({active: 0})

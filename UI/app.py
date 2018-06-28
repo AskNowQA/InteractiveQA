@@ -135,12 +135,16 @@ def reformat(result):
                     result['IO']['surface'] = 'Is it what the question means?'
                     result['IO']['values'] = [{'label': result['sparql2nl'], 'abstract': ''}]
                 else:
-                    result['IO']['surface'] = 'Does "{0}" refers to ...?'.format(result['IO']['surface'])
-                    for idx in range(len(result['IO']['values'])):
-                        val = result['IO']['values'][idx]
-                        if 'dbpedia.org' in val:
-                            label, abstract = kb.get_label_abstract(val)
-                            result['IO']['values'][idx] = {'label': label, 'abstract': abstract}
+                    if result['IO']['surface'] == 'question_type':
+                        result['IO']['surface'] = 'Is the type of question ...?'
+                        result['IO']['values'][0] = {'label': result['IO']['values'][0], 'abstract': ''}
+                    else:
+                        result['IO']['surface'] = 'Does "{0}" refers to ...?'.format(result['IO']['surface'])
+                        for idx in range(len(result['IO']['values'])):
+                            val = result['IO']['values'][idx]
+                            if 'dbpedia.org' in val:
+                                label, abstract = kb.get_label_abstract(val)
+                                result['IO']['values'][idx] = {'label': label, 'abstract': abstract}
 
     return result
 
