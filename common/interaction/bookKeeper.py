@@ -12,6 +12,7 @@ class BookKeeper:
             return qid
 
         result = list(self.engine.execute('SELECT * FROM assigned_questions WHERE username = "{}"'.format(userid)))
+        total_question = len(result)
         if len(result) > 0:
             questions = [item[2] for item in result]
 
@@ -21,7 +22,7 @@ class BookKeeper:
                 qid = row[2]
                 if qid in questions:
                     questions.remove(qid)
-            return questions[randint(0, len(questions) - 1)]
+            return questions[randint(0, len(questions) - 1)], total_question, len(answered_questions)
         else:
             result = list(
                 self.engine.execute('SELECT min(username) FROM assigned_questions WHERE substr(username,1,1)="#"'))

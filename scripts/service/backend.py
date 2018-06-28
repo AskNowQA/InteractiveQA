@@ -67,7 +67,7 @@ def start():
         if flask.request.json['strategy'] in ['InformationGain', 'OptionGain', 'Probability']:
             strategy = flask.request.json['strategy']
 
-    question_id = book_keeper.new_question(userid, qid)
+    question_id, total, answered = book_keeper.new_question(userid, qid)
     with open(os.path.join(pipeline_path, ('{0}.pickle'.format(question_id))), 'r') as file_handler:
         interaction_data[userid] = InteractionManager(pk.load(file_handler), kb, dataset.parser.parse_sparql,
                                                       interaction_types, strategy)
@@ -75,7 +75,9 @@ def start():
     question = interaction_data[userid].pipeline_results[-1][0]
     io, query = interaction_data[userid].get_interaction_option()
 
-    return json.dumps(handle_IO(question, question_id, query, io))
+    output = handle_IO(question, question_id, query, io)
+    output['stats'] = {'total': total, 'answered': answered}
+    return json.dumps(output)
 
 
 @app.route('/iqa/ui/v1.0/interact', methods=['POST'])
