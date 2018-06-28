@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 
 class BookKeeper:
     def __init__(self, db_path):
-        self.engine = create_engine('sqlite:///' + db_path, echo=True)
+        self.engine = create_engine('sqlite:///' + db_path)
 
     def new_question(self, userid, qid=None):
         # for debugging purposes
