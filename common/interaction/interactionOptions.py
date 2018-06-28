@@ -148,16 +148,33 @@ class InteractionOptions:
 
         return information_gains
 
+    def pick_interaction(self, scores):
+        max_val = max(scores)
+        max_idxs = [i for i, v in enumerate(scores) if v == max_val]
+        top_query = self.query_with_max_probability()
+        idx = max_idxs[0]
+        active_ios = self.__all_active_ios()
+
+        if len(max_idxs) > 1 and top_query is not None:
+            in_top_query = {}
+            for item in max_idxs:
+                in_top_query[item] = 0
+                if active_ios[item].type == 'linked':
+                    if active_ios[item].value.uris[0].raw_uri in top_query.query:
+                        in_top_query[item] += 1
+            tmp_max = max(in_top_query.values())
+            idx = [k for k, v in in_top_query.iteritems() if v == tmp_max][0]
+
+        return active_ios[idx]
+
     def interaction_with_max_information_gain(self):
         information_gains = [item[1] for item in self.__informationGain()]
-        io, idx = max([(v, i) for i, v in enumerate(information_gains)])
-        return self.__all_active_ios()[idx]
+        return self.pick_interaction(information_gains)
 
     def interaction_with_max_option_gain(self, w):
         information_gains = self.__informationGain()
         option_gains = [math.pow(item[0].usability(), w) * item[1] for item in information_gains]
-        io, idx = max([(v, i) for i, v in enumerate(option_gains)])
-        return self.__all_active_ios()[idx]
+        return self.pick_interaction(option_gains)
 
     def interaction_with_max_probability(self):
         S_sum = sum([q['complete_confidence'] for q in self.__all_active_queries()])
@@ -172,8 +189,7 @@ class InteractionOptions:
                     p += query['complete_confidence'] / S_sum
             probabilities.append(p)
 
-        io, idx = max([(v, i) for i, v in enumerate(probabilities)])
-        return self.__all_active_ios()[idx]
+        return self.pick_interaction(probabilities)
 
     def ranked_queries(self):
         return sorted(self.__all_active_queries(), key=lambda x: x['complete_confidence'], reverse=True)
