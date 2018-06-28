@@ -38,7 +38,8 @@ class DBpedia:
                 uri.encode("ascii", "ignore"))
             payload = {'query': query, 'format': 'application/json'}
             results = Utils.call_web_api(self.endpoint + '?' + urllib.urlencode(payload), None)
-
+            if results is None:
+                return []
             self.type_cache[uri] = list(set(
                 [item['t']['value'] for item in results['results']['bindings']] + [item['t2']['value'] for item in
                                                                                    results['results']['bindings']]))
