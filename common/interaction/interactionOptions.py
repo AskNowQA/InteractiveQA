@@ -212,6 +212,12 @@ class InteractionOptions:
 
     def update(self, io, value):
         queries_contain_io, queries_not_contain_io = self.__filter_interpretation_space(io)
+
+        # Remove current IO
+        io.set_removed(True)
+
+        if value is None:
+            return
         if value:
             for query in queries_not_contain_io:
                 query['removed'] = True
@@ -219,8 +225,6 @@ class InteractionOptions:
             for query in queries_contain_io:
                 query['removed'] = True
 
-        # Remove current IO
-        io.set_removed(True)
         # remove IOs which have no active query
         for io in self.__all_active_ios():
             if not io.removed():

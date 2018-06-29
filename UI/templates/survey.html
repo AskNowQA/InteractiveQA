@@ -68,6 +68,7 @@ Interactive Question Answering (SDA Research)
                 .append("<div>" +
                 "<label><input type=\"radio\" name=\"" + new_id + "\" value=\"True\">Yes</label>\n" +
                 "<label><input type=\"radio\" name=\"" + new_id + "\" value=\"False\">No</label>\n" +
+                "<label><input type=\"radio\" name=\"" + new_id + "\" value=\"uncertain\">I don't know</label>\n" +
                 "</div>\n" +
                 "<button id=\"" + new_id + "-submit\">Submit answer</button>\n");
             var $newDiv = $('<div>').append($('<h4>' + data['IO']['surface'] + '</h4>')).append($content);

@@ -84,9 +84,13 @@ def start():
 def interact():
     if not flask.request.json:
         flask.abort(400)
-
     userid = flask.request.json['userid']
-    if interaction_data[userid].interact(flask.request.json['answer'] == 'True'):
+
+    if flask.request.json['answer'] == 'uncertain':
+        answer = None
+    else:
+        answer = flask.request.json['answer'] == 'True'
+    if interaction_data[userid].interact(answer):
         io, query = interaction_data[userid].get_interaction_option()
         question = interaction_data[userid].pipeline_results[-1][0]
 
