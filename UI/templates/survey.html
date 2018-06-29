@@ -14,18 +14,6 @@ Interactive Question Answering (SDA Research)
 </div>
 <div style="margin: 0 10px">
     <div id="interactions" style="width: 45%; float:left">
-        <div>
-            <h4>{{ data['IO']['surface'] }}</h4>
-            <div>
-                {{ data['IO']['values'][0]['label'] }}<br/>
-                {{ data['IO']['values'][0]['abstract'] }}
-                <div>
-                    <label><input type="radio" name="io-1" value="True">Yes</label>
-                    <label><input type="radio" name="io-1" value="False">No</label>
-                </div>
-                <button id="io-1-submit">Submit answer</button>
-            </div>
-        </div>
     </div>
     <div id="sparql" style="width: 50%; float: right;">
         IQA interpretation of the input question:
@@ -56,7 +44,68 @@ Interactive Question Answering (SDA Research)
 <link href="http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css" rel="Stylesheet"/>
 
 <script>
+    click_handler = function () { };
+
+    function handle_IO(data, new_id) {
+        $message = $('#message');
+        $message.hide();
+        if (data['command'] == 'next_question') {
+            setTimeout(function () {
+                window.location.replace("survey");
+            }, 2000);
+            $message.html('<h1>Well done! Let\'s go for the next question</h1>');
+            $message.show();
+
+            return false;
+        }
+
+        $('#sparql2nl').html('<b>' + data['sparql2nl'] + '</b>');
+        $('#query').html($('<pre style="white-space: pre-wrap;"></pre>').text(data['query']));
+        if (data['IO'] != undefined) {
+            var $content = $('<div>').append(
+                $('<pre style="white-space: pre-wrap;background-color:white;border:none;padding:unset;"></pre>').text(data['IO']['values'][0]['label']))
+                .append($('<span>').text(data['IO']['values'][0]['abstract']))
+                .append("<div>" +
+                "<label><input type=\"radio\" name=\"" + new_id + "\" value=\"True\">Yes</label>\n" +
+                "<label><input type=\"radio\" name=\"" + new_id + "\" value=\"False\">No</label>\n" +
+                "</div>\n" +
+                "<button id=\"" + new_id + "-submit\">Submit answer</button>\n");
+            var $newDiv = $('<div>').append($('<h4>' + data['IO']['surface'] + '</h4>')).append($content);
+
+            $('#interactions').prepend($newDiv)
+            $('#interactions').accordion("refresh");
+            $("#" + new_id + "-submit").click(click_handler);
+            $interactions_accordion.accordion({active: 0})
+        }
+        return false;
+    }
+
+    var $interactions_accordion = $("#interactions").accordion({
+        header: "> div > h4",
+        collapsible: true,
+        active: 0,
+        autoHeight: false,
+        autoActivate: true
+    });
+
+    click_handler = function () {
+        clicked_id = this.id.substring(0, this.id.indexOf('-', 3))
+        selected_option = $('input[name=' + clicked_id + ']:checked').val();
+        if (selected_option != undefined) {
+            $message = $('#message')
+            $message.html('<h1>Loading. Please wait...</h1>');
+            $message.show();
+            $.post("interact", {'answer': selected_option}, function (data, status) {
+                var new_id = 'io-' + (parseInt(clicked_id.substring(clicked_id.indexOf('-') + 1)) + 1);
+                return handle_IO(data, new_id);
+            });
+        }
+    };
+    $('#io-1-submit').click(click_handler);
+
     $( function() {
+        first_interaction_data = {{ data|tojson }};
+        handle_IO(first_interaction_data, 'io-1');
         var progressbar = $("#progressbar"), progressLabel = $("#progress-label");
 
         progressbar.progressbar({
@@ -70,60 +119,5 @@ Interactive Question Answering (SDA Research)
         });
         progressbar.progressbar( "value", {{ data['stats']['progress']}} );
     });
-
-    var $interactions_accordion = $("#interactions").accordion({
-        header: "> div > h4",
-        collapsible: true,
-        active: 0,
-        autoHeight: false,
-        autoActivate: true
-    });
-
-    click_handler = function () {
-    };
-
-    click_handler = function () {
-        clicked_id = this.id.substring(0, this.id.indexOf('-', 3))
-        selected_option = $('input[name=' + clicked_id + ']:checked').val();
-        if (selected_option != undefined) {
-            $message = $('#message')
-            $message.html('<h1>Loading. Please wait...</h1>');
-            $message.show();
-            $.post("interact", {'answer': selected_option}, function (data, status) {
-                $message.hide();
-                if (data['command'] == 'next_question') {
-                    setTimeout(function () {
-                        window.location.replace("survey");
-                    }, 2000);
-                    $message.html('<h1>Well done! Let\'s go for the next question</h1>');
-                    $message.show();
-
-                    return false;
-                }
-
-                $('#sparql2nl').html('<b>' + data['sparql2nl'] + '</b>');
-                $('#query').html($('<pre style="white-space: pre-wrap;"></pre>').text(data['query']));
-                if (data['IO'] != undefined) {
-                    var new_id = 'io-' + (parseInt(clicked_id.substring(clicked_id.indexOf('-') + 1)) + 1);
-
-                    var $content = $('<div>').append(
-                        $('<pre style="white-space: pre-wrap;background-color:white;border:none;padding:unset;"></pre>').text(data['IO']['values'][0]['label']))
-                        .append($('<span>').text(data['IO']['values'][0]['abstract']))
-                        .append("<div>" +
-                        "<label><input type=\"radio\" name=\"" + new_id + "\" value=\"True\">Yes</label>\n" +
-                        "<label><input type=\"radio\" name=\"" + new_id + "\" value=\"False\">No</label>\n" +
-                        "</div>\n" +
-                        "<button id=\"" + new_id + "-submit\">Submit answer</button>\n");
-                    var $newDiv = $('<div>').append($('<h4>' + data['IO']['surface'] + '</h4>')).append($content);
-
-                    $('#interactions').prepend($newDiv)
-                    $('#interactions').accordion("refresh");
-                    $("#" + new_id + "-submit").click(click_handler);
-                    $interactions_accordion.accordion({active: 0})
-                }
-            });
-        }
-    };
-    $('#io-1-submit').click(click_handler);
 </script>
 {%- endblock scripts %}
