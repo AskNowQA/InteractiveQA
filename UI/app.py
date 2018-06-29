@@ -167,6 +167,7 @@ def skip():
         reason = flask.request.values['reason']
 
     log_interaction(data='skip:' + reason)
+    mark_as_answered(data='skip:' + reason)
     return redirect('survey')
 
 
@@ -205,13 +206,14 @@ def log_interaction(interaction='', answer='', data=''):
     db.session.commit()
 
 
-def mark_as_answered():
+def mark_as_answered(data=None):
     now = datetime.datetime.utcnow()
     record = AnsweredQuestion(current_user.username,
                               session['question_id'],
                               '',
                               now,
-                              (now - session['start']).total_seconds())
+                              (now - session['start']).total_seconds(),
+                              data)
     db.session.add(record)
     db.session.commit()
 

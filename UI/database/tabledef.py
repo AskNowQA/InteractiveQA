@@ -59,13 +59,15 @@ class AnsweredQuestion(Base):
     strategy = Column(String)
     time = Column(DateTime)
     duration = Column(Integer)
+    data = Column(String)
 
-    def __init__(self, username, question_id, strategy, time, duration):
+    def __init__(self, username, question_id, strategy, time, duration, data):
         self.username = username
         self.question_id = question_id
         self.strategy = strategy
         self.time = time
         self.duration = duration
+        self.data = data
 
 
 class InteractionLog(Base):
