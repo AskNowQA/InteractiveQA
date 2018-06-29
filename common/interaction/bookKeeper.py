@@ -9,7 +9,7 @@ class BookKeeper:
     def new_question(self, userid, qid=None):
         # for debugging purposes
         if qid is not None:
-            return qid
+            return qid, 1, 1
 
         result = list(self.engine.execute('SELECT * FROM assigned_questions WHERE username = "{}"'.format(userid)))
         total_question = len(result)
