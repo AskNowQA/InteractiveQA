@@ -26,13 +26,21 @@ Interactive Question Answering (SDA Research)
         <hr/>
         <a href="{{ url_for('correct') }}">Correct! if this is the correct interpretation of the question.</a>
         <hr/>
-        <a href="{{ url_for('skip') }}?reason=notunderstandle">Skip if you don't understand the question</a>
-        <hr/>
-        <a href="{{ url_for('skip') }}">Skip if you are bored and want to skip the question</a>
+        <span>Skip the question because: </span>
+        <select id="skip_reason">
+            <option value="">please select the reason ...</option>
+            <option value="question_not_understandable">I don't understand the question</option>
+            <option value="IO_not_understandable">I don't understand the options</option>
+            <option value="other">Other</option>
+        </select>
+        <input type="text" style="width: 150px" id="skip_reason_other"/>
+        <button id="skip_button">Skip</button>
     </div>
 </div>
 <div style="position: absolute; bottom: 40px;margin: 0 auto;text-align: center;width: 100%;">
-    <div id="progressbar"><div id="progress-label" style="position: absolute; left:48%;">Loading...</div></div>
+    <div id="progressbar">
+        <div id="progress-label" style="position: absolute; left:48%;">Loading...</div>
+    </div>
 </div>
 
 {{ super() }}
@@ -44,7 +52,9 @@ Interactive Question Answering (SDA Research)
 <link href="http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css" rel="Stylesheet"/>
 
 <script>
-    click_handler = function () { };
+
+    click_handler = function () {
+    };
 
     function handle_IO(data, new_id) {
         $message = $('#message');
@@ -66,11 +76,11 @@ Interactive Question Answering (SDA Research)
                 $('<pre style="white-space: pre-wrap;background-color:white;border:none;padding:unset;"></pre>').text(data['IO']['values'][0]['label']))
                 .append($('<span>').text(data['IO']['values'][0]['abstract']))
                 .append("<div>" +
-                "<label><input type=\"radio\" name=\"" + new_id + "\" value=\"True\">Yes</label>\n" +
-                "<label><input type=\"radio\" name=\"" + new_id + "\" value=\"False\">No</label>\n" +
-                "<label><input type=\"radio\" name=\"" + new_id + "\" value=\"uncertain\">I don't know</label>\n" +
-                "</div>\n" +
-                "<button id=\"" + new_id + "-submit\">Submit answer</button>\n");
+                    "<label><input type=\"radio\" name=\"" + new_id + "\" value=\"True\">Yes</label>\n" +
+                    "<label><input type=\"radio\" name=\"" + new_id + "\" value=\"False\">No</label>\n" +
+                    "<label><input type=\"radio\" name=\"" + new_id + "\" value=\"uncertain\">I don't know</label>\n" +
+                    "</div>\n" +
+                    "<button id=\"" + new_id + "-submit\">Submit answer</button>\n");
             var $newDiv = $('<div>').append($('<h4>' + data['IO']['surface'] + '</h4>')).append($content);
 
             $('#interactions').prepend($newDiv)
@@ -104,7 +114,29 @@ Interactive Question Answering (SDA Research)
     };
     $('#io-1-submit').click(click_handler);
 
-    $( function() {
+    $(function () {
+        var $skip_reason_other = $('#skip_reason_other'),
+            $skip_reason = $('#skip_reason');
+        $skip_reason_other.hide();
+        $skip_reason.change(function () {
+            if ($skip_reason.val() == 'other')
+                $skip_reason_other.show();
+            else
+                $skip_reason_other.hide();
+        })
+        $('#skip_button').click(function () {
+            if ($skip_reason.val() == '') {
+                alert('Please select the reason');
+                return false;
+            } else if (($skip_reason.val() == 'other') & ($skip_reason_other.val() == '')) {
+                alert('Please fill the reason');
+                return false;
+            }
+            var reason = $skip_reason.val();
+            if (reason == 'other')
+                reason = $skip_reason_other.val()
+            window.location.href = "/skip?reason=" + reason;
+        });
         first_interaction_data = {{ data|tojson }};
         handle_IO(first_interaction_data, 'io-1');
         var progressbar = $("#progressbar"), progressLabel = $("#progress-label");
@@ -118,7 +150,7 @@ Interactive Question Answering (SDA Research)
                 progressLabel.text("Complete!");
             }
         });
-        progressbar.progressbar( "value", {{ data['stats']['progress']}} );
+        progressbar.progressbar("value", {{ data['stats']['progress'] }} );
     });
 </script>
 {%- endblock scripts %}
