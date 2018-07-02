@@ -85,10 +85,12 @@ Interactive Question Answering (SDA Research)
             $content.append($label_desc_abst);
             var $example_div = $('<div style="border: solid; width:50%; float: right;">').append($('<p style="font-weight: bold;">').text('Examples using same predicate'));
             var example_triples = data['IO']['values'][0]['example_triples'];
-            for (var idx = 0; idx < example_triples.length; idx++)
+            if (typeof example_triples != "undefined") {
+                for (var idx = 0; idx < example_triples.length; idx++)
                     $example_div.append($('<p>').text(example_triples[idx]));
-            if (example_triples.length > 0)
-                $content.append($example_div);
+                if (example_triples.length > 0)
+                    $content.append($example_div);
+            }
             $content.append('<div style="clear: both">' +
                     "<label><input type=\"radio\" name=\"" + new_id + "\" value=\"True\">Yes</label>\n" +
                     "<label><input type=\"radio\" name=\"" + new_id + "\" value=\"False\">No</label>\n" +
