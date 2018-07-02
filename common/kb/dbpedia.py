@@ -102,10 +102,10 @@ FILTER (lang(?label) = 'en')  }}'''.format(uri.encode("ascii", "ignore"))
     def get_example_triples(self, uri):
         if 'ontology/' in uri or 'property/' in uri:
             if not self.use_cache or uri not in self.example_triples_cache:
-                query = '''SELECT DISTINCT ?a ?b  where {{ ?a <{0}> ?b}} 
+                query = '''SELECT DISTINCT ?a ?b  where {{ ?a <{0}> ?b 
                 FILTER strstarts(str(?a), "http://dbpedia.org/") 
                 FILTER strstarts(str(?b), "http://dbpedia.org/") 
-                LIMIT 5'''.format(
+                }} LIMIT 5'''.format(
                     uri.encode("ascii", "ignore"))
                 payload = {'query': query, 'format': 'application/json'}
                 results = Utils.call_web_api(self.endpoint + '?' + urllib.urlencode(payload), None)
