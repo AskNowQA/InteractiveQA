@@ -149,7 +149,7 @@ Interactive Question Answering (SDA Research)
             var reason = $skip_reason.val();
             if (reason == 'other')
                 reason = $skip_reason_other.val()
-            window.location.href = "/skip?reason=" + reason;
+            window.location.href = "{{ url_for('skip') }}?reason=" + reason;
         });
         first_interaction_data = {{ data|tojson }};
         handle_IO(first_interaction_data, 'io-1');
