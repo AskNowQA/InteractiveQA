@@ -5,6 +5,9 @@ config = {
         },
         'dbpedia': {
             'endpoint': 'http://sda-srv01.iai.uni-bonn.de:8164/sparql'
+        },
+        'wikidata': {
+            'endpoint': 'https://query.wikidata.org/sparql'
         }
     },
     'EARL': {
