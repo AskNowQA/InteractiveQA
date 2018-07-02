@@ -23,7 +23,7 @@ class InteractionManager:
             io = None
         self.last_option = io
 
-        query = self.interaction_options.query_with_max_probability()
+        query = self.interaction_options.query_with_max_probability(io)
         if query is not None:
             query = query.query
             if self.last_option is None:

@@ -95,8 +95,12 @@ class InteractionOptions:
         else:
             self.dic[interactionOption.id] = UniqueList([interactionOption])
 
-    def __all_active_queries(self):
-        return [query for query in self.all_queries if not query['removed']]
+    def __all_active_queries(self, io=None):
+        if io is None:
+            queries = self.all_queries
+        else:
+            queries = io.related_queries
+        return [query for query in queries if not query['removed']]
 
     def __all_active_ios(self):
         return [io for io in self.all_ios if not io.removed()]
@@ -125,7 +129,7 @@ class InteractionOptions:
                 plogs.append(p * math.log(p, 2))
         return -sum(plogs)
 
-    def __averageEntropy(self, interaction_option):
+    def __average_entropy(self, interaction_option):
         S_sum = sum([q['complete_confidence'] for q in self.__all_active_queries()])
         queries_contain_io, queries_not_contain_io = self.__filter_interpretation_space(interaction_option)
         entropy_positive = self.__entropy(queries_contain_io, S_sum)
@@ -139,21 +143,43 @@ class InteractionOptions:
 
         return p_entropy_positive * entropy_positive + p_entropy_negative * entropy_negative
 
-    def __informationGain(self):
+    def __information_gain(self):
         entropy = self.__entropy(self.__all_active_queries())
         information_gains = []
 
         for io in self.__all_active_ios():
-            information_gains.append([io, entropy - self.__averageEntropy(io)])
+            information_gains.append([io, entropy - self.__average_entropy(io)])
 
         return information_gains
 
+    def interaction_with_max_information_gain(self):
+        return self.pick_interaction(self.__information_gain())
+
+    def interaction_with_max_option_gain(self, w):
+        information_gains = self.__information_gain()
+        option_gains = [(item[0], math.pow(item[0].usability(), w) * item[1]) for item in information_gains]
+        return self.pick_interaction(option_gains)
+
+    def interaction_with_max_probability(self):
+        S_sum = sum([q['complete_confidence'] for q in self.__all_active_queries()])
+        probabilities = []
+        for io in self.__all_active_ios():
+            p = 0
+            for query in io.related_queries:
+                if S_sum == 0:
+                    p = 0
+                else:
+                    p += query['complete_confidence'] / S_sum
+            probabilities.append([io, p])
+
+        return self.pick_interaction(probabilities)
+
     def pick_interaction(self, scores):
-        max_val = max(scores)
-        max_idxs = [i for i, v in enumerate(scores) if v == max_val]
+        active_ios = [item[0] for item in scores]
+        max_val = max([item[1] for item in scores])
+        max_idxs = [i for i, v in enumerate(scores) if v[1] == max_val]
         top_query = self.query_with_max_probability()
         idx = max_idxs[0]
-        active_ios = self.__all_active_ios()
 
         if len(max_idxs) > 1 and top_query is not None:
             in_top_query = {}
@@ -167,35 +193,11 @@ class InteractionOptions:
 
         return active_ios[idx]
 
-    def interaction_with_max_information_gain(self):
-        information_gains = [item[1] for item in self.__informationGain()]
-        return self.pick_interaction(information_gains)
+    def ranked_queries(self, io=None):
+        return sorted(self.__all_active_queries(io), key=lambda x: x['complete_confidence'], reverse=True)
 
-    def interaction_with_max_option_gain(self, w):
-        information_gains = self.__informationGain()
-        option_gains = [math.pow(item[0].usability(), w) * item[1] for item in information_gains]
-        return self.pick_interaction(option_gains)
-
-    def interaction_with_max_probability(self):
-        S_sum = sum([q['complete_confidence'] for q in self.__all_active_queries()])
-        probabilities = []
-
-        for io in self.__all_active_ios():
-            p = 0
-            for query in io.related_queries:
-                if S_sum == 0:
-                    p = 0
-                else:
-                    p += query['complete_confidence'] / S_sum
-            probabilities.append(p)
-
-        return self.pick_interaction(probabilities)
-
-    def ranked_queries(self):
-        return sorted(self.__all_active_queries(), key=lambda x: x['complete_confidence'], reverse=True)
-
-    def query_with_max_probability(self):
-        queries = self.ranked_queries()
+    def query_with_max_probability(self, io=None):
+        queries = self.ranked_queries(io)
         if queries is None or len(queries) == 0:
             return None
         return SPARQL(queries[0]['query'], self.sparql_parser)
@@ -204,7 +206,7 @@ class InteractionOptions:
         if len(self.__all_active_queries()) > 1 and len(
                 set([item['query'] for item in self.__all_active_queries()])) > 1:
             if len(self.__all_active_ios()) > 0:
-                information_gains = [item[1] for item in self.__informationGain()]
+                information_gains = [item[1] for item in self.__information_gain()]
                 return sum(information_gains) > 0
             else:
                 return False
