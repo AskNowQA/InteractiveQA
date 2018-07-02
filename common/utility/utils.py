@@ -13,6 +13,13 @@ class Struct(object): pass
 
 
 class Utils:
+    @staticmethod
+    def triple_to_nl(uri1, uri2, uri3):
+        def __extract_label(uri):
+            if '/' in uri:
+                return uri[uri.rindex('/') + 1:]
+            return uri
+        return __extract_label(uri1) + '-' + __extract_label(uri2) + '-' + __extract_label(uri3)
 
     @staticmethod
     def rand_id(N=10):

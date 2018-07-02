@@ -147,8 +147,16 @@ def reformat(result):
                             if 'dbpedia.org' in val:
                                 label, abstract = kb.get_label_abstract(val)
                                 description = kb.get_wikidata_description(val)
-                                result['IO']['values'][idx] = {'label': label, 'abstract': abstract,
-                                                               'description': description}
+                                raw_example_triples = kb.get_example_triples(val)
+                                example_triples = []
+                                for i in range(len(raw_example_triples)):
+                                    example_triples.append(Utils.triple_to_nl(raw_example_triples[i][0],
+                                                                              val,
+                                                                              raw_example_triples[i][1]))
+                                result['IO']['values'][idx] = {'label': label,
+                                                               'abstract': abstract,
+                                                               'description': description,
+                                                               'example_triples': example_triples}
 
     return result
 

@@ -7,19 +7,23 @@ import os
 
 
 class DBpedia:
-    def __init__(self, endpoint=config.config['general']['dbpedia']['endpoint'], use_cache=False, cache_path=None):
+    def __init__(self, endpoint=config.config['general']['dbpedia']['endpoint'],
+                 wikidata_endpoint=config.config['general']['wikidata']['endpoint'], use_cache=False, cache_path=None):
         self.endpoint = endpoint
+        self.wikidata_endpoint = wikidata_endpoint
         self.cache_path = cache_path
         self.use_cache = use_cache
         self.type_cache = {}
         self.label_abstract_cache = {}
         self.wikidata_cache = {}
+        self.example_triples_cache = {}
 
         if self.use_cache:
             Utils.makedirs(cache_path)
             self.type_cache = CacheDict(os.path.join(cache_path, 'types.cache'))
             self.label_abstract_cache = CacheDict(os.path.join(cache_path, 'label_abstract.cache'))
             self.wikidata_cache = CacheDict(os.path.join(cache_path, 'wikidata.cache'))
+            self.example_triples_cache = CacheDict(os.path.join(cache_path, 'example_triples.cache'))
 
     def query(self, q):
         payload = (
@@ -84,7 +88,7 @@ FILTER (lang(?label) = 'en')  }}'''.format(uri.encode("ascii", "ignore"))
                 query = '''SELECT * WHERE {{ <{0}> <http://schema.org/description> ?b FILTER(lang(?b) = 'en' )}}'''.format(
                     wikidata_id)
                 payload = {'query': query, 'format': 'json'}
-                results = Utils.call_web_api('https://query.wikidata.org/sparql' + '?' + urllib.urlencode(payload),
+                results = Utils.call_web_api(self.wikidata_endpoint + '?' + urllib.urlencode(payload),
                                              None)
                 description = ''
                 try:
@@ -94,6 +98,25 @@ FILTER (lang(?label) = 'en')  }}'''.format(uri.encode("ascii", "ignore"))
 
                 self.wikidata_cache[uri] = description
         return self.wikidata_cache[uri]
+
+    def get_example_triples(self, uri):
+        if 'ontology/' in uri or 'property/' in uri:
+            if not self.use_cache or uri not in self.example_triples_cache:
+                query = '''SELECT DISTINCT ?a ?b  where {{ ?a <{0}> ?b}} LIMIT 5'''.format(
+                    uri.encode("ascii", "ignore"))
+                payload = {'query': query, 'format': 'application/json'}
+                results = Utils.call_web_api(self.endpoint + '?' + urllib.urlencode(payload), None)
+
+                if len(results['results']['bindings']) == 0:
+                    self.example_triples_cache[uri] = []
+                else:
+                    output = []
+                    for item in results['results']['bindings']:
+                        output.append([item['a']['value'], item['b']['value']])
+
+                    self.example_triples_cache[uri] = output
+            return self.example_triples_cache[uri]
+        return []
 
     @staticmethod
     def parse_uri(input_uri):
