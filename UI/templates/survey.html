@@ -74,6 +74,7 @@ Interactive Question Answering (SDA Research)
         if (data['IO'] != undefined) {
             var $content = $('<div>').append(
                 $('<pre style="white-space: pre-wrap;background-color:white;border:none;padding:unset;"></pre>').text(data['IO']['values'][0]['label']))
+                .append($('<span>').text(data['IO']['values'][0]['description']))
                 .append($('<span>').text(data['IO']['values'][0]['abstract']))
                 .append("<div>" +
                     "<label><input type=\"radio\" name=\"" + new_id + "\" value=\"True\">Yes</label>\n" +

@@ -146,7 +146,9 @@ def reformat(result):
                             val = result['IO']['values'][idx]
                             if 'dbpedia.org' in val:
                                 label, abstract = kb.get_label_abstract(val)
-                                result['IO']['values'][idx] = {'label': label, 'abstract': abstract}
+                                description = kb.get_wikidata_description(val)
+                                result['IO']['values'][idx] = {'label': label, 'abstract': abstract,
+                                                               'description': description}
 
     return result
 

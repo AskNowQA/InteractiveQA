@@ -13,11 +13,13 @@ class DBpedia:
         self.use_cache = use_cache
         self.type_cache = {}
         self.label_abstract_cache = {}
+        self.wikidata_cache = {}
 
         if self.use_cache:
             Utils.makedirs(cache_path)
             self.type_cache = CacheDict(os.path.join(cache_path, 'types.cache'))
             self.label_abstract_cache = CacheDict(os.path.join(cache_path, 'label_abstract.cache'))
+            self.wikidata_cache = CacheDict(os.path.join(cache_path, 'wikidata.cache'))
 
     def query(self, q):
         payload = (
@@ -47,7 +49,7 @@ class DBpedia:
 
     def get_label_abstract(self, uri):
         if not self.use_cache or uri not in self.label_abstract_cache:
-            query = '''select distinct ?label, SUBSTR(?abstract,1,200) where {{ 
+            query = '''SELECT DISTINCT ?label, SUBSTR(?abstract,1,200) where {{ 
 <{0}> <http://www.w3.org/2000/01/rdf-schema#label> ?label.
 OPTIONAL {{ <{0}> <http://dbpedia.org/ontology/abstract> ?abstract FILTER (lang(?abstract) = 'en')}}
 FILTER (lang(?label) = 'en')  }}'''.format(uri.encode("ascii", "ignore"))
@@ -67,6 +69,31 @@ FILTER (lang(?label) = 'en')  }}'''.format(uri.encode("ascii", "ignore"))
 
             self.label_abstract_cache[uri] = [label, abstract]
         return self.label_abstract_cache[uri]
+
+    def get_wikidata_description(self, uri):
+        if not self.use_cache or uri not in self.wikidata_cache:
+            query = '''SELECT DISTINCT * WHERE {{ <{0}> <http://www.w3.org/2002/07/owl#sameAs> ?a 
+            FILTER regex(?a,'wikidata.org','i') }} LIMIT 1'''.format(uri.encode("ascii", "ignore"))
+            payload = {'query': query, 'format': 'application/json'}
+            results = Utils.call_web_api(self.endpoint + '?' + urllib.urlencode(payload), None)
+
+            if len(results['results']['bindings']) == 0:
+                self.wikidata_cache[uri] = ''
+            else:
+                wikidata_id = results['results']['bindings'][0]['a']['value']
+                query = '''SELECT * WHERE {{ <{0}> <http://schema.org/description> ?b FILTER(lang(?b) = 'en' )}}'''.format(
+                    wikidata_id)
+                payload = {'query': query, 'format': 'json'}
+                results = Utils.call_web_api('https://query.wikidata.org/sparql' + '?' + urllib.urlencode(payload),
+                                             None)
+                description = ''
+                try:
+                    description = results['results']['bindings'][0]['b']['value']
+                except:
+                    pass
+
+                self.wikidata_cache[uri] = description
+        return self.wikidata_cache[uri]
 
     @staticmethod
     def parse_uri(input_uri):
