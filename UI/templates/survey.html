@@ -77,9 +77,11 @@ Interactive Question Answering (SDA Research)
             var $label_desc_abst = $('<div style="width:50%; float: left;">').append(
                 $('<pre style="white-space: pre-wrap;background-color:white;border:none;padding:unset;"></pre>').
                     text(data['IO']['values'][0]['label']));
-            if (data['IO']['values'][0]['description'] != '')
+            if ((typeof data['IO']['values'][0]['description'] != "undefined") &
+                (data['IO']['values'][0]['description'] != ''))
                 $label_desc_abst.append($('<span>').text('description:' + data['IO']['values'][0]['description']));
-            if (data['IO']['values'][0]['abstract'] != '')
+            if ((typeof data['IO']['values'][0]['description'] != "undefined") &
+                (data['IO']['values'][0]['abstract'] != ''))
                 $label_desc_abst.append($('<span>').text('abstract:' + data['IO']['values'][0]['abstract']));
 
             $content.append($label_desc_abst);
