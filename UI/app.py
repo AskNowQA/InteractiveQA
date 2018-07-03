@@ -119,6 +119,8 @@ def reformat(result):
     if result is not None:
         if 'stats' in result:
             result['stats'] = {'progress': (100.0 * result['stats']['answered'] / result['stats']['total'])}
+        else:
+            result['stats'] = {'progress': 0}
         if 'command' in result:
             if result['command'] == 'next_question':
                 mark_as_answered()
