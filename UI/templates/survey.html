@@ -104,7 +104,7 @@ Interactive Question Answering (SDA Research)
             $('#interactions').prepend($newDiv);
             $('#interactions').accordion("refresh");
             $("#" + new_id + "-submit").click(click_handler);
-            $interactions_accordion.accordion({active: 0})
+            $interactions_accordion.accordion({active: 0, disabled: true})
         }
         return false;
     }
