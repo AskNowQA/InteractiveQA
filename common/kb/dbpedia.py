@@ -76,8 +76,15 @@ FILTER (lang(?label) = 'en')  }}'''.format(uri.encode("ascii", "ignore"))
 
     def get_wikidata_description(self, uri):
         if not self.use_cache or uri not in self.wikidata_cache:
-            query = '''SELECT DISTINCT * WHERE {{ <{0}> <http://www.w3.org/2002/07/owl#sameAs> ?a 
-            FILTER regex(?a,'wikidata.org','i') }} LIMIT 1'''.format(uri.encode("ascii", "ignore"))
+            # http://www.w3.org/2000/01/rdf-schema#comment
+            if 'ontology/' in uri:
+                owl_str = 'equivalentClass'
+            elif 'property/' in uri:
+                owl_str = 'equivalentProperty'
+            else:
+                owl_str = 'sameAs'
+            query = '''SELECT DISTINCT * WHERE {{ <{0}> <http://www.w3.org/2002/07/owl#{1}> ?a 
+            FILTER regex(?a,'wikidata.org','i') }} LIMIT 1'''.format(uri.encode("ascii", "ignore"), owl_str)
             payload = {'query': query, 'format': 'application/json'}
             results = Utils.call_web_api(self.endpoint + '?' + urllib.urlencode(payload), None)
 
