@@ -16,12 +16,16 @@ Interactive Question Answering (SDA Research)
     <div id="interactions" style="width: 45%; float:left">
     </div>
     <div id="sparql" style="width: 50%; float: right;">
-        IQA interpretation of the input question:
-        <div id="query">
-            <pre style='white-space: pre-wrap;'>{{ data['query'] }}</pre>
-        </div>
+        <h3>Interpretation of the input question:</h3>
         <div id="sparql2nl">
             <strong>{{ data['sparql2nl'] }}</strong>
+        </div>
+        <hr />
+        <div id="sparql-query">
+            <div>
+                <h4>SPARQL</h4>
+                <div id="query"><pre style='white-space: pre-wrap;'>{{ data['query'] }}</pre></div>
+            </div>
         </div>
         <hr/>
         <a href="{{ url_for('correct') }}">If this interpretation of the question is correct, please click here</a>
@@ -81,7 +85,7 @@ Interactive Question Answering (SDA Research)
             else
                 $label_desc_abst = $('<div style="width:50%; float: left;">');
 
-            $label_desc_abst.append('<b>label: </b>').append(
+            $label_desc_abst.append(
                 $('<pre style="white-space: pre-wrap;background-color:white;border:none;padding:unset;"></pre>').
                     text(data['IO']['values'][0]['label']));
             if ((typeof data['IO']['values'][0]['description'] != "undefined") &&
@@ -128,6 +132,15 @@ Interactive Question Answering (SDA Research)
                 event.preventDefault();
         }
     });
+
+    $("#sparql-query").accordion({
+        header: "> div > h4",
+        collapsible: true,
+        autoHeight: false,
+        autoActivate: false,
+        active: null
+    });
+
 
     click_handler = function () {
         clicked_id = this.id.substring(0, this.id.indexOf('-', 3))
