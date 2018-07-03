@@ -2,7 +2,9 @@ from common.interaction.interactionOptions import InteractionOptions
 
 
 class InteractionManager:
-    def __init__(self, pipeline_results, kb, sparql_parser=None, interaction_type=None, strategy=None):
+    def __init__(self, pipeline_results, kb, target_query=None, sparql_parser=None, interaction_type=None,
+                 strategy=None):
+        self.target_query = target_query
         self.pipeline_results = pipeline_results
         self.kb = kb
         self.strategy = strategy
@@ -37,5 +39,24 @@ class InteractionManager:
         else:
             if self.last_option.type == 'query' and answer:
                 return False
+
+            if answer is not None and self.last_option.type == 'linked':
+                uri = self.last_option.value.uris[0].uri
+                similar_ios = [io for io in self.interaction_options.all_ios if
+                               not io.removed() and io.type == 'linked' and
+                               io.value.surface_form == self.last_option.value.surface_form
+                               and uri[uri.rindex('/'):] in io.value.uris[0].uri
+                               and io != self.last_option]
+                if uri not in self.target_query.sparql.query:
+                    if len(similar_ios) > 0:
+                        for io in similar_ios:
+                            if io.value.uris[0].uri in self.target_query.sparql.query:
+                                # self.interaction_options.update(self.last_option, None)
+                                self.last_option = io
+                                break
+                else:
+                    if answer:
+                        for io in similar_ios:
+                            self.interaction_options.update(io, False)
             self.interaction_options.update(self.last_option, answer)
             return True

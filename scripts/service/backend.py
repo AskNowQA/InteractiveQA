@@ -69,8 +69,11 @@ def start():
 
     question_id, total, answered = book_keeper.new_question(userid, qid)
     with open(os.path.join(pipeline_path, ('{0}.pickle'.format(question_id))), 'r') as file_handler:
-        interaction_data[userid] = InteractionManager(pk.load(file_handler), kb, dataset.parser.parse_sparql,
-                                                      interaction_types, strategy)
+        interaction_data[userid] = InteractionManager(pk.load(file_handler), kb=kb,
+                                                      sparql_parser=dataset.parser.parse_sparql,
+                                                      interaction_type=interaction_types, strategy=strategy,
+                                                      target_query=[qapair for qapair in dataset.qapairs if
+                                                                    qapair.id == question_id][0])
 
     question = interaction_data[userid].pipeline_results[-1][0]
     io, query = interaction_data[userid].get_interaction_option()
@@ -120,7 +123,7 @@ if __name__ == '__main__':
 
     pipeline_path = os.path.join(args.base_path, 'output', 'pipeline')
     kb = DBpedia(cache_path=os.path.join(args.base_path, "caches/"), use_cache=True)
-    dataset = LC_Qaud_Linked(auto_load=False)
+    dataset = LC_Qaud_Linked(os.path.join(args.base_path, 'data', 'LC-QuAD', 'linked.json'))
     interaction_types = [[False, True], [True, True]]
     strategy = 'InformationGain'
     book_keeper = BookKeeper(os.path.join(args.base_path, 'UI', 'database', 'IQA.db'))
