@@ -74,26 +74,32 @@ Interactive Question Answering (SDA Research)
         if (data['IO'] != undefined) {
 
             var $content = $('<div>');
-            var $label_desc_abst = $('<div style="width:50%; float: left;">').append(
+            var example_triples = data['IO']['values'][0]['example_triples'];
+            var $label_desc_abst;
+            if ((typeof example_triples == "undefined") || (example_triples.length == 0))
+                $label_desc_abst = $('<div style="width:90%; float: left;">');
+            else
+                $label_desc_abst = $('<div style="width:50%; float: left;">');
+
+            $label_desc_abst.append('<b>label: </b>').append(
                 $('<pre style="white-space: pre-wrap;background-color:white;border:none;padding:unset;"></pre>').
                     text(data['IO']['values'][0]['label']));
-            if ((typeof data['IO']['values'][0]['description'] != "undefined") &
+            if ((typeof data['IO']['values'][0]['description'] != "undefined") &&
                 (data['IO']['values'][0]['description'] != ''))
-                $label_desc_abst.append($('<span>').text('description:' + data['IO']['values'][0]['description']));
-            if ((typeof data['IO']['values'][0]['description'] != "undefined") &
+                $label_desc_abst.append($('<span>').html('<b>description: </b>' + data['IO']['values'][0]['description']));
+            if ((typeof data['IO']['values'][0]['description'] != "undefined") &&
                 (data['IO']['values'][0]['abstract'] != ''))
-                $label_desc_abst.append($('<span>').text('abstract:' + data['IO']['values'][0]['abstract']));
+                $label_desc_abst.append($('<span>').html('<b>abstract: </b>' + data['IO']['values'][0]['abstract']));
 
             $content.append($label_desc_abst);
             var $example_div = $('<div style="border: solid; width:50%; float: right;">').append($('<p style="font-weight: bold;">').text('Examples using same predicate'));
-            var example_triples = data['IO']['values'][0]['example_triples'];
             if (typeof example_triples != "undefined") {
                 for (var idx = 0; idx < example_triples.length; idx++)
                     $example_div.append($('<p>').text(example_triples[idx]));
                 if (example_triples.length > 0)
                     $content.append($example_div);
             }
-            $content.append('<div style="clear: both">' +
+            $content.append('<div style="clear: both;padding-top:10px;">' +
                     "<label><input type=\"radio\" name=\"" + new_id + "\" value=\"True\">Yes</label>\n" +
                     "<label><input type=\"radio\" name=\"" + new_id + "\" value=\"False\">No</label>\n" +
                     "<label><input type=\"radio\" name=\"" + new_id + "\" value=\"uncertain\">I don't know</label>\n" +
@@ -104,7 +110,9 @@ Interactive Question Answering (SDA Research)
             $('#interactions').prepend($newDiv);
             $('#interactions').accordion("refresh");
             $("#" + new_id + "-submit").click(click_handler);
-            $interactions_accordion.accordion({active: 0, disabled: true})
+            manual = true;
+            $interactions_accordion.accordion({active: 0})
+            manual = false;
         }
         return false;
     }
@@ -114,7 +122,11 @@ Interactive Question Answering (SDA Research)
         collapsible: true,
         active: 0,
         autoHeight: false,
-        autoActivate: true
+        autoActivate: true,
+        beforeActivate: function(event, ui) {
+            if (!manual)
+                event.preventDefault();
+        }
     });
 
     click_handler = function () {
@@ -146,7 +158,7 @@ Interactive Question Answering (SDA Research)
             if ($skip_reason.val() == '') {
                 alert('Please select the reason');
                 return false;
-            } else if (($skip_reason.val() == 'other') & ($skip_reason_other.val() == '')) {
+            } else if (($skip_reason.val() == 'other') && ($skip_reason_other.val() == '')) {
                 alert('Please fill the reason');
                 return false;
             }
