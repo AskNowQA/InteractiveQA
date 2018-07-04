@@ -68,6 +68,8 @@ def start():
             strategy = flask.request.json['strategy']
 
     question_id, total, answered = book_keeper.new_question(userid, qid)
+    if question_id is None:
+        return json.dumps({'command': 'end_survey'})
     with open(os.path.join(pipeline_path, ('{0}.pickle'.format(question_id))), 'r') as file_handler:
         interaction_data[userid] = InteractionManager(pk.load(file_handler), kb=kb,
                                                       sparql_parser=dataset.parser.parse_sparql,

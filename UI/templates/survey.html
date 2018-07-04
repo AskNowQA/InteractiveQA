@@ -63,6 +63,12 @@ Interactive Question Answering (SDA Research)
     function handle_IO(data, new_id) {
         $message = $('#message');
         $message.hide();
+        if (data['command'] == 'end_survey') {
+            $message.html('<h1>Thanks for your participation!<br/> We really apperciate your help.</h1>');
+            $message.show();
+
+            return false;
+        }
         if (data['command'] == 'next_question') {
             setTimeout(function () {
                 window.location.replace("survey");

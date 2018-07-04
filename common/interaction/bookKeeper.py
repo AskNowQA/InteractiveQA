@@ -22,6 +22,8 @@ class BookKeeper:
                 qid = row[2]
                 if qid in questions:
                     questions.remove(qid)
+            if len(questions) == 0:
+                return None, 0, 0
             return questions[randint(0, len(questions) - 1)], total_question, len(answered_questions)
         else:
             result = list(
