@@ -54,6 +54,8 @@ class InteractionManager:
                                 break
                 if answer:
                     for io in similar_ios:
-                        self.interaction_options.update(io, False)
+                        other_ios = self.interaction_options.get_ios_by_uri(uri)
+                        if len(set([tio.id for tio in other_ios])) == 1:
+                            self.interaction_options.update(io, False)
             self.interaction_options.update(self.last_option, answer)
             return True

@@ -250,6 +250,9 @@ class InteractionOptions:
     def ios_of_same_id(self, io_val):
         return [io for io in self.__all_active_ios() if io.id == io_val.id and io != io_val]
 
+    def get_ios_by_uri(self, uri):
+        return [io for io in [io for io in self.all_ios if not io.removed()] if io.type == 'linked' and io.value.uris[0].uri == uri]
+
     def __iter__(self):
         for item in self.dic:
             yield item
