@@ -5,6 +5,7 @@ from common.container.linkeditem import LinkedItem
 from common.container.uri import Uri
 from common.container.sparql import SPARQL
 import math
+import re
 
 
 class InteractionOptions:
@@ -23,8 +24,12 @@ class InteractionOptions:
                         self.add(InteractionOption(item.surface_form, item, [], 'linked'))
 
             if 'queries' in output:
+                # Hack to
                 for query in output['queries']:
                     query['removed'] = False
+                    uris = [raw_uri for raw_uri in re.findall('(<[^>]*>|\?[^ ]*)', query['query']) if 'http' in raw_uri]
+                    if len(uris) > len(set(uris)):
+                        query['complete_confidence'] = query['complete_confidence'] * 2 / 3
                     self.all_queries.add_or_update(query, eq_func=lambda x, y: x['query'] == y['query'],
                                                    opt_func=lambda x, y: x if x['complete_confidence'] > y[
                                                        'complete_confidence'] else y)
@@ -220,6 +225,10 @@ class InteractionOptions:
 
         if value is None:
             return
+        elif value and io.type == 'linked':
+            ios_of_same_id = [io for io in self.ios_of_same_id(io) if io.type == 'linked']
+            for io in ios_of_same_id:
+                self.update(io, False)
         if value:
             for query in queries_not_contain_io:
                 query['removed'] = True
@@ -231,6 +240,9 @@ class InteractionOptions:
         for io in self.__all_active_ios():
             if not io.removed():
                 io.set_removed(all([query['removed'] for query in io.related_queries]))
+
+    def ios_of_same_id(self, io_val):
+        return [io for io in self.__all_active_ios() if io.id == io_val.id and io != io_val]
 
     def __iter__(self):
         for item in self.dic:
