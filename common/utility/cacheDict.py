@@ -16,10 +16,13 @@ class CacheDict(dict):
 
     def load(self):
         if os.path.exists(self.file_path):
-            with open(self.file_path) as data_file:
-                data = json.load(data_file)
-                for item in data:
-                    self[item] = data[item]
+            try:
+                with open(self.file_path) as data_file:
+                    data = json.load(data_file)
+                    for item in data:
+                        self[item] = data[item]
+            except:
+                pass
 
     def save(self):
         with open(self.file_path, "w") as data_file:
