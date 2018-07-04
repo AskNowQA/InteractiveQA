@@ -19,6 +19,7 @@ class Utils:
             if '/' in uri:
                 return uri[uri.rindex('/') + 1:]
             return uri
+
         return __extract_label(uri1) + '-' + __extract_label(uri2) + '-' + __extract_label(uri3)
 
     @staticmethod
@@ -54,7 +55,7 @@ class Utils:
     @staticmethod
     def call_web_api(endpoint, raw_input, use_json=True, use_url_encode=False, parse_response_json=True):
         proxy_handler = urllib2.ProxyHandler({})
-        if 'sda-srv' in endpoint:
+        if 'sda-srv' in endpoint or '127.0.0.1' in endpoint:
             opener = urllib2.build_opener(proxy_handler)
         else:
             opener = urllib2.build_opener()
