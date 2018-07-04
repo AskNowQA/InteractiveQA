@@ -16,14 +16,14 @@ Interactive Question Answering (SDA Research)
     <div id="interactions" style="width: 45%; float:left">
     </div>
     <div id="sparql" style="width: 50%; float: right;">
-        <h3>Interpretation of the input question:</h3>
+        <h5>Interpretation of the input question:</h5>
         <div id="sparql2nl">
-            <strong>{{ data['sparql2nl'] }}</strong>
+            <h4>{{ data['sparql2nl'] }}</h4>
         </div>
         <hr />
         <div id="sparql-query">
             <div>
-                <h4>SPARQL</h4>
+                <h5>SPARQL</h5>
                 <div id="query"><pre style='white-space: pre-wrap;'>{{ data['query'] }}</pre></div>
             </div>
         </div>
@@ -73,7 +73,7 @@ Interactive Question Answering (SDA Research)
             return false;
         }
 
-        $('#sparql2nl').html('<b>' + data['sparql2nl'] + '</b>');
+        $('#sparql2nl').html('<h4>' + data['sparql2nl'] + '</h4>');
         $('#query').html($('<pre style="white-space: pre-wrap;"></pre>').text(data['query']));
         if (data['IO'] != undefined) {
 
@@ -134,7 +134,7 @@ Interactive Question Answering (SDA Research)
     });
 
     $("#sparql-query").accordion({
-        header: "> div > h4",
+        header: "> div > h5",
         collapsible: true,
         autoHeight: false,
         autoActivate: false,
