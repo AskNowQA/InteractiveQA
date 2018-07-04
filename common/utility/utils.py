@@ -54,7 +54,10 @@ class Utils:
     @staticmethod
     def call_web_api(endpoint, raw_input, use_json=True, use_url_encode=False, parse_response_json=True):
         proxy_handler = urllib2.ProxyHandler({})
-        opener = urllib2.build_opener(proxy_handler)
+        if 'sda-srv' in endpoint:
+            opener = urllib2.build_opener(proxy_handler)
+        else:
+            opener = urllib2.build_opener()
         req = urllib2.Request(endpoint)
         if use_json:
             input = json.dumps(raw_input)
