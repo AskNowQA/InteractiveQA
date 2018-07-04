@@ -26,14 +26,18 @@ class Utils:
     def triple2nl(uri1, uri2, uri3):
         cache_id = uri1 + uri2 + uri3
         if cache_id not in Utils.triple2nl_cache:
+            done = False
             try:
-                data = {'val1': uri1, 'val2': uri2, 'val3': uri3}
+                data = {'val1': uri1.encode("ascii", "ignore"),
+                        'val2': uri2.encode("ascii", "ignore"),
+                        'val3': uri3.encode("ascii", "ignore")}
                 result = Utils.call_web_api(
                     config.config['semweb2nl']['endpoint'] + 'triple2nl?',
                     raw_input=data,
                     use_json=False, use_url_encode=True, parse_response_json=False)
                 if result is not None:
                     Utils.triple2nl_cache[cache_id] = result
+                    done = True
             except:
                 pass
 
@@ -41,8 +45,9 @@ class Utils:
                 if '/' in uri:
                     return uri[uri.rindex('/') + 1:]
                 return uri
-
-                Utils.triple2nl_cache[cache_id] = __extract_label(uri1) + '-' + __extract_label(uri2) + '-' + __extract_label(uri3)
+            if not done:
+                Utils.triple2nl_cache[cache_id] = __extract_label(uri1) + '->' + __extract_label(
+                    uri2) + '->' + __extract_label(uri3)
         return Utils.triple2nl_cache[cache_id]
 
     @staticmethod
