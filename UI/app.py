@@ -4,7 +4,6 @@ import os
 import datetime
 import argparse
 import logging
-import requests
 import flask
 from flask_bootstrap import Bootstrap
 from flask import Flask, flash, render_template, redirect, url_for, session
@@ -32,7 +31,6 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-global sparql2nl_cache
 global LoginForm
 global kb
 
@@ -133,7 +131,7 @@ def reformat(result):
             if 'query' in result:
                 session['current_query'] = result['query']
 
-            result['sparql2nl'] = sparql2nl(result['query'])
+            result['sparql2nl'] = Utils.sparql2nl(result['query'])
             if 'IO' in result:
                 if len(result['IO']['values']) == 0:
                     result['IO']['surface'] = 'Is it what the question means?'
@@ -183,26 +181,7 @@ def skip():
     return redirect('survey')
 
 
-def sparql2nl(query):
-    global sparql2nl_cache
-    try:
-        if query is None:
-            return 'No Query'
-        if query in sparql2nl_cache:
-            return sparql2nl_cache[query]
-        if 'ASK ' in query:
-            return query
 
-        req = requests.get('https://aifb-ls3-kos.aifb.kit.edu/projects/spartiqulator/v5/verbalize.pl',
-                           params={'sparql': query})
-        raw_output = req.text
-        idx_start = raw_output.index('verbalization"><b>') + len('verbalization"><b>')
-        idx_end = raw_output.index('</b>', idx_start)
-        output = raw_output[idx_start:idx_end]
-        sparql2nl_cache[query] = output
-        return output
-    except:
-        return query
 
 
 def log_interaction(interaction='', answer='', data=''):
@@ -231,7 +210,6 @@ def mark_as_answered(data=None):
 
 
 if __name__ == '__main__':
-    global sparql2nl_cache
     global kb
     logger = logging.getLogger(__name__)
     Utils.setup_logging()
@@ -242,7 +220,6 @@ if __name__ == '__main__':
     logger.info(args)
 
     cache_path = os.path.join(args.base_path, "caches/")
-    sparql2nl_cache = CacheDict(os.path.join(cache_path, 'sparql2nl.cache'))
     kb = DBpedia(cache_path=cache_path, use_cache=True)
     Utils.set_cache_path(cache_path)
     app.run(debug=True, port=args.port)

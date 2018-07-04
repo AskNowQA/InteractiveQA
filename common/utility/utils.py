@@ -6,7 +6,8 @@ import json
 import urllib, urllib2
 import config
 from multiprocessing.dummy import Pool as ThreadPool
-import random, string
+import random, string, re
+import requests
 from cacheDict import CacheDict
 
 
@@ -16,11 +17,35 @@ class Struct(object): pass
 class Utils:
     cache_path = './caches'
     triple2nl_cache = {}
+    sparql2nl_cache = {}
 
     @staticmethod
     def set_cache_path(path):
         Utils.cache_path = path
         Utils.triple2nl_cache = CacheDict(os.path.join(Utils.cache_path, 'triple2nl.cache'))
+        Utils.sparql2nl_cache = CacheDict(os.path.join(Utils.cache_path, 'sparql2nl.cache'))
+
+    @staticmethod
+    def sparql2nl(query):
+        try:
+            if query is None:
+                return 'No Query'
+            if query in Utils.sparql2nl_cache:
+                return Utils.sparql2nl_cache[query]
+            if 'ASK ' in query:
+                uris = [raw_uri[1:-1] for raw_uri in re.findall('(<[^>]*>|\?[^ ]*)', query) if 'http' in raw_uri]
+                return Utils.triple2nl(*uris)
+
+            req = requests.get('https://aifb-ls3-kos.aifb.kit.edu/projects/spartiqulator/v5/verbalize.pl',
+                               params={'sparql': query})
+            raw_output = req.text
+            idx_start = raw_output.index('verbalization"><b>') + len('verbalization"><b>')
+            idx_end = raw_output.index('</b>', idx_start)
+            output = raw_output[idx_start:idx_end]
+            Utils.sparql2nl_cache[query] = output
+            return output
+        except:
+            return query
 
     @staticmethod
     def triple2nl(uri1, uri2, uri3):
@@ -45,6 +70,7 @@ class Utils:
                 if '/' in uri:
                     return uri[uri.rindex('/') + 1:]
                 return uri
+
             if not done:
                 Utils.triple2nl_cache[cache_id] = __extract_label(uri1) + '->' + __extract_label(
                     uri2) + '->' + __extract_label(uri3)
