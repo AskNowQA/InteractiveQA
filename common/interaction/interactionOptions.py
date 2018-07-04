@@ -24,17 +24,24 @@ class InteractionOptions:
                         self.add(InteractionOption(item.surface_form, item, [], 'linked'))
 
             if 'queries' in output:
-                # Hack to
+
                 for query in output['queries']:
                     query['removed'] = False
+
                     uris = [raw_uri for raw_uri in re.findall('(<[^>]*>|\?[^ ]*)', query['query']) if 'http' in raw_uri]
-                    uris = [uri[uri.rindex('/'):-1] for uri in uris if 'dbpedia' in uri]
-                    uris = [uri[:-1] if uri.endswith('s') else uri for uri in uris]
-                    diff = len(uris) - len(set(uris))
-                    if diff > 1:
-                        query['complete_confidence'] = query['complete_confidence'] * 1 / 100
-                    elif diff == 1:
-                        query['complete_confidence'] = query['complete_confidence'] * 1 / 3
+                    # $$Hack remove invalid boolean queries
+                    if 'ask ' in query['query'].lower():
+                        if '?u' in query['query'] or len(uris) != 3:
+                            continue
+                    else:
+                        # $$Hack to decrase the score of queries where one relation/resource is used more than once.
+                        uris = [uri[uri.rindex('/'):-1] for uri in uris if 'dbpedia' in uri]
+                        uris = [uri[:-1] if uri.endswith('s') else uri for uri in uris]
+                        diff = len(uris) - len(set(uris))
+                        if diff > 1:
+                            query['complete_confidence'] = query['complete_confidence'] * 1 / 100
+                        elif diff == 1:
+                            query['complete_confidence'] = query['complete_confidence'] * 1 / 3
 
                     self.all_queries.add_or_update(query, eq_func=lambda x, y: x['query'] == y['query'],
                                                    opt_func=lambda x, y: x if x['complete_confidence'] > y[
@@ -251,7 +258,8 @@ class InteractionOptions:
         return [io for io in self.__all_active_ios() if io.id == io_val.id and io != io_val]
 
     def get_ios_by_uri(self, uri):
-        return [io for io in [io for io in self.all_ios if not io.removed()] if io.type == 'linked' and io.value.uris[0].uri == uri]
+        return [io for io in [io for io in self.all_ios if not io.removed()] if
+                io.type == 'linked' and io.value.uris[0].uri == uri]
 
     def __iter__(self):
         for item in self.dic:
