@@ -28,8 +28,14 @@ class InteractionOptions:
                 for query in output['queries']:
                     query['removed'] = False
                     uris = [raw_uri for raw_uri in re.findall('(<[^>]*>|\?[^ ]*)', query['query']) if 'http' in raw_uri]
-                    if len(uris) > len(set(uris)):
-                        query['complete_confidence'] = query['complete_confidence'] * 2 / 3
+                    uris = [uri[uri.rindex('/'):-1] for uri in uris if 'dbpedia' in uri]
+                    uris = [uri[:-1] if uri.endswith('s') else uri for uri in uris]
+                    diff = len(uris) - len(set(uris))
+                    if diff > 1:
+                        query['complete_confidence'] = query['complete_confidence'] * 1 / 100
+                    elif diff == 1:
+                        query['complete_confidence'] = query['complete_confidence'] * 1 / 3
+
                     self.all_queries.add_or_update(query, eq_func=lambda x, y: x['query'] == y['query'],
                                                    opt_func=lambda x, y: x if x['complete_confidence'] > y[
                                                        'complete_confidence'] else y)
