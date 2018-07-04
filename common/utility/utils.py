@@ -7,20 +7,43 @@ import urllib, urllib2
 import config
 from multiprocessing.dummy import Pool as ThreadPool
 import random, string
+from cacheDict import CacheDict
 
 
 class Struct(object): pass
 
 
 class Utils:
-    @staticmethod
-    def triple_to_nl(uri1, uri2, uri3):
-        def __extract_label(uri):
-            if '/' in uri:
-                return uri[uri.rindex('/') + 1:]
-            return uri
+    cache_path = './caches'
+    triple2nl_cache = {}
 
-        return __extract_label(uri1) + '-' + __extract_label(uri2) + '-' + __extract_label(uri3)
+    @staticmethod
+    def set_cache_path(path):
+        Utils.cache_path = path
+        Utils.triple2nl_cache = CacheDict(os.path.join(Utils.cache_path, 'triple2nl.cache'))
+
+    @staticmethod
+    def triple2nl(uri1, uri2, uri3):
+        cache_id = uri1 + uri2 + uri3
+        if cache_id not in Utils.triple2nl_cache:
+            try:
+                data = {'val1': uri1, 'val2': uri2, 'val3': uri3}
+                result = Utils.call_web_api(
+                    config.config['semweb2nl']['endpoint'] + 'triple2nl?',
+                    raw_input=data,
+                    use_json=False, use_url_encode=True, parse_response_json=False)
+                if result is not None:
+                    Utils.triple2nl_cache[cache_id] = result
+            except:
+                pass
+
+            def __extract_label(uri):
+                if '/' in uri:
+                    return uri[uri.rindex('/') + 1:]
+                return uri
+
+                Utils.triple2nl_cache[cache_id] = __extract_label(uri1) + '-' + __extract_label(uri2) + '-' + __extract_label(uri3)
+        return Utils.triple2nl_cache[cache_id]
 
     @staticmethod
     def rand_id(N=10):
@@ -53,7 +76,7 @@ class Utils:
             logging.basicConfig(level=default_level)
 
     @staticmethod
-    def call_web_api(endpoint, raw_input, use_json=True, use_url_encode=False, parse_response_json=True):
+    def call_web_api(endpoint, raw_input=None, use_json=True, use_url_encode=False, parse_response_json=True):
         proxy_handler = urllib2.ProxyHandler({})
         if 'sda-srv' in endpoint or '127.0.0.1' in endpoint:
             opener = urllib2.build_opener(proxy_handler)

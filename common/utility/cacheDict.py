@@ -1,6 +1,5 @@
 import os
 import json
-from utils import Utils
 
 
 class CacheDict(dict):
@@ -23,6 +22,5 @@ class CacheDict(dict):
                     self[item] = data[item]
 
     def save(self):
-        Utils.makedirs(os.path.dirname(self.file_path))
         with open(self.file_path, "w") as data_file:
             json.dump(self, data_file, sort_keys=True, indent=4, separators=(',', ': '))

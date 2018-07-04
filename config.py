@@ -4,11 +4,15 @@ config = {
             'timeout': 120
         },
         'dbpedia': {
-            'endpoint': 'http://sda-srv01.iai.uni-bonn.de:8164/sparql'
+            'endpoint': 'http://dbpedia.org/sparql'
+            # 'endpoint': 'http://sda-srv01.iai.uni-bonn.de:8164/sparql'
         },
         'wikidata': {
             'endpoint': 'https://query.wikidata.org/sparql'
         }
+    },
+    'semweb2nl': {
+        'endpoint': 'http://127.0.0.1:8680/semweb2nl/'
     },
     'EARL': {
         'endpoint': 'http://sda-srv02.iai.uni-bonn.de:4999/processQuery'

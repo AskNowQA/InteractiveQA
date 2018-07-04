@@ -152,9 +152,9 @@ def reformat(result):
                                 raw_example_triples = kb.get_example_triples(val)
                                 example_triples = []
                                 for i in range(len(raw_example_triples)):
-                                    example_triples.append(Utils.triple_to_nl(raw_example_triples[i][0],
-                                                                              val,
-                                                                              raw_example_triples[i][1]))
+                                    example_triples.append(Utils.triple2nl(raw_example_triples[i][0],
+                                                                           val,
+                                                                           raw_example_triples[i][1]))
                                 result['IO']['values'][idx] = {'label': label,
                                                                'abstract': abstract,
                                                                'description': description,
@@ -241,7 +241,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     logger.info(args)
 
-    sparql2nl_cache = CacheDict(os.path.join(args.base_path, 'caches', 'sparql2nl.cache'))
-    kb = DBpedia(cache_path=os.path.join(args.base_path, "caches/"), use_cache=True)
-
+    cache_path = os.path.join(args.base_path, "caches/")
+    sparql2nl_cache = CacheDict(os.path.join(cache_path, 'sparql2nl.cache'))
+    kb = DBpedia(cache_path=cache_path, use_cache=True)
+    Utils.set_cache_path(cache_path)
     app.run(debug=True, port=args.port)
