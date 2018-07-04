@@ -42,21 +42,18 @@ class InteractionManager:
 
             if answer is not None and self.last_option.type == 'linked':
                 uri = self.last_option.value.uris[0].uri
-                similar_ios = [io for io in self.interaction_options.all_ios if
-                               not io.removed() and io.type == 'linked' and
-                               io.value.surface_form == self.last_option.value.surface_form
-                               and uri[uri.rindex('/'):] in io.value.uris[0].uri
-                               and io != self.last_option]
+                similar_ios = [io for io in self.interaction_options.ios_of_same_id(self.last_option) if
+                               io.type == 'linked' and uri[uri.rindex('/'):] in io.value.uris[0].uri]
                 if uri not in self.target_query.sparql.query:
                     if len(similar_ios) > 0:
                         for io in similar_ios:
                             if io.value.uris[0].uri in self.target_query.sparql.query:
-                                # self.interaction_options.update(self.last_option, None)
                                 self.last_option = io
+                                similar_ios = [io for io in self.interaction_options.ios_of_same_id(self.last_option) if
+                                               io.type == 'linked' and uri[uri.rindex('/'):] in io.value.uris[0].uri]
                                 break
-                else:
-                    if answer:
-                        for io in similar_ios:
-                            self.interaction_options.update(io, False)
+                if answer:
+                    for io in similar_ios:
+                        self.interaction_options.update(io, False)
             self.interaction_options.update(self.last_option, answer)
             return True
