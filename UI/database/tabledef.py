@@ -5,6 +5,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
 from flask_login import UserMixin
 import os, json, pickle as pk
+import numpy as np
 from common.parser.lc_quad_linked import LC_Qaud_Linked
 import argparse
 
@@ -115,8 +116,6 @@ if __name__ == '__main__':
         for user in users:
             engine.execute('INSERT INTO users VALUES({0})'.format(user))
 
-
-
     populate_questions_table = True
     if populate_questions_table:
         dataset = LC_Qaud_Linked(os.path.join(args.base_path, 'data', 'LC-QuAD', 'linked.json'))
@@ -135,20 +134,24 @@ if __name__ == '__main__':
             if question_id in wdaqua_results and ((question_id + '+correct') in iqa_results):
                 engine.execute(
                     'INSERT INTO questions VALUES("{0}",{1})'.format(question_id, question_complexities[question_id]))
+        questions = list(engine.execute('SELECT * FROM questions'))
+        print ('#questions: {}'.format(len(questions)))
+        print (
+            'Dist. per complexity : {}'.format(np.unique([question[1] for question in questions], return_counts=True)))
 
     populate_assigned_question_table = True
     if populate_assigned_question_table:
         strategies = ['IO', 'OG']
         result = engine.execute('SELECT * FROM questions ORDER BY 2')
-        number_of_users = 5
-        number_of_question_per_complexity = 2
+        number_of_users = 15
+        number_of_question_per_complexity = {2: 10, 3: 10, 4: 9, 5: 1}
         question_complexities = {item[0]: item[1] for item in result}
         complexities = set(question_complexities.values())
 
         for user_idx in range(number_of_users):
             qids = []
             for c in complexities:
-                for idx in range(number_of_question_per_complexity):
+                for idx in range(number_of_question_per_complexity[c]):
                     candidate_qids = [item[0] for item in question_complexities.iteritems() if item[1] == c]
                     if len(candidate_qids) > 0:
                         qids.append(candidate_qids[0])
