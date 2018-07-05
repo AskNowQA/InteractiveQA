@@ -119,18 +119,19 @@ def reformat(result):
             result['stats'] = {'progress': (100.0 * result['stats']['answered'] / result['stats']['total'])}
         else:
             result['stats'] = {'progress': 0}
+
+        if 'qid' in result and result['qid'] is not None:
+            session['question_id'] = result['qid']
+        if 'IO' in result:
+            session['current_IO'] = result['IO']
+        if 'query' in result:
+            session['current_query'] = result['query']
+
         if 'command' in result:
             if result['command'] == 'next_question':
-                mark_as_answered()
+                mark_as_answered(session['current_query'])
             pass
         else:
-            if 'qid' in result and result['qid'] is not None:
-                session['question_id'] = result['qid']
-            if 'IO' in result:
-                session['current_IO'] = result['IO']
-            if 'query' in result:
-                session['current_query'] = result['query']
-
             result['sparql2nl'] = Utils.sparql2nl(result['query'])
             if 'IO' in result:
                 if len(result['IO']['values']) == 0:
@@ -165,7 +166,7 @@ def reformat(result):
 @login_required
 def correct():
     log_interaction(data='early_correct')
-    mark_as_answered()
+    mark_as_answered(session['current_query'])
     return redirect('survey')
 
 
@@ -181,9 +182,6 @@ def skip():
     return redirect('survey')
 
 
-
-
-
 def log_interaction(interaction='', answer='', data=''):
     log_record = InteractionLog(current_user.username,
                                 session['question_id'],
@@ -197,14 +195,15 @@ def log_interaction(interaction='', answer='', data=''):
     db.session.commit()
 
 
-def mark_as_answered(data=None):
+def mark_as_answered(data=None, final_query=None):
     now = datetime.datetime.utcnow()
     record = AnsweredQuestion(current_user.username,
                               session['question_id'],
                               '',
                               now,
                               (now - session['start']).total_seconds(),
-                              data)
+                              data,
+                              final_query)
     db.session.add(record)
     db.session.commit()
 

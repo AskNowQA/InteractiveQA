@@ -61,14 +61,16 @@ class AnsweredQuestion(Base):
     time = Column(DateTime)
     duration = Column(Integer)
     data = Column(String)
+    final_query = Column(String)
 
-    def __init__(self, username, question_id, strategy, time, duration, data):
+    def __init__(self, username, question_id, strategy, time, duration, data, final_query):
         self.username = username
         self.question_id = question_id
         self.strategy = strategy
         self.time = time
         self.duration = duration
         self.data = data
+        self.final_query=final_query
 
 
 class InteractionLog(Base):
@@ -161,6 +163,3 @@ if __name__ == '__main__':
                     engine.execute(
                         'INSERT INTO assigned_questions(username, question_id) VALUES("#{0}-{1}","{2}")'.format(
                             str(user_idx), strategy, qid))
-
-    result = engine.execute('SELECT * FROM assigned_questions')
-    print(list(result))
