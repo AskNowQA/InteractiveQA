@@ -239,9 +239,11 @@ class InteractionOptions:
         if value is None:
             return
         elif value and io.type == 'linked':
-            ios_of_same_id = [io for io in self.ios_of_same_id(io) if io.type == 'linked']
+            ios_of_same_id = [tio for tio in self.ios_of_same_id(io) if tio.type == 'linked']
             for io in ios_of_same_id:
-                self.update(io, False)
+                other_ios = self.get_ios_by_uri(io.value.uris[0].uri)
+                if len(set([tio.id for tio in other_ios])) == 1:
+                    self.update(io, False)
         if value:
             for query in queries_not_contain_io:
                 query['removed'] = True
