@@ -33,6 +33,9 @@ class LC_Qaud_Linked:
             print item
             print ''
 
+    def get_by_id(self, id):
+        return [qapair for qapair in self.qapairs if qapair.id == id]
+
 
 class LC_Qaud_LinkedParser():
     def __init__(self):
