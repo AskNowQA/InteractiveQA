@@ -3,7 +3,7 @@ class Oracle:
         pass
 
     def validate_query(self, qapair, query):
-        return qapair.sparql == query
+        return qapair.sparql.equals(query, True)
 
     def answer(self, qapair, io):
         if io.type == 'query':

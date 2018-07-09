@@ -60,7 +60,7 @@ class SPARQL:
                     output.add(feature)
         return output
 
-    def __eq__(self, other):
+    def equals(self, other, ignore_property_ontology_space=False):
         if isinstance(other, SPARQL):
             mapping = {}
             if len(self.where_clause) != len(other.where_clause):
@@ -75,14 +75,17 @@ class SPARQL:
                     mapping_buffer = mapping.copy()
                     if len(line) == len(other_line):
                         for i in range(len(line)):
-                            if line[i] == other_line[i]:
-                                match += 1
-                            elif line[i].startswith("?") and other_line[i].startswith("?"):
+                            if line[i].startswith("?") and other_line[i].startswith("?"):
                                 if line[i] not in mapping_buffer:
                                     mapping_buffer[line[i]] = other_line[i]
                                     match += 1
                                 else:
                                     match += mapping_buffer[line[i]] == other_line[i]
+                            elif line[i] == other_line[i]:
+                                match += 1
+                            elif ignore_property_ontology_space:
+                                if '/' in line[i] and '/' in other_line[i]:
+                                    match += line[i][line[i].rindex('/'):] == other_line[i][other_line[i].rindex('/'):]
                     if match == len(line):
                         found = True
                         mapping = mapping_buffer
@@ -92,6 +95,9 @@ class SPARQL:
             return True
         else:
             return False
+
+    def __eq__(self, other):
+        return self.equals(other)
 
     def __ne__(self, other):
         return not self == other
