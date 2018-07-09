@@ -12,11 +12,10 @@ class InteractionOptions:
     def __init__(self, complete_interpretation_space, uri_parser=None, sparql_parser=None, kb=DBpedia(), c2=True,
                  c3=True, c4=True):
         self.dic = dict()
+        self.used_group_id = set()
         self.sparql_parser = sparql_parser
         self.kb = kb
-        # self.complete_interpretation_space = complete_interpretation_space
         self.all_queries = UniqueList()
-        self.all_ios = UniqueList()
         for output in complete_interpretation_space:
             for linked_item_type in ['entities', 'relations']:
                 if linked_item_type in output:
@@ -39,9 +38,9 @@ class InteractionOptions:
                         uris = [uri[:-1] if uri.endswith('s') else uri for uri in uris]
                         diff = len(uris) - len(set(uris))
                         if diff > 1:
-                            query['complete_confidence'] = query['complete_confidence'] * 1 / 100
+                            query['complete_confidence'] = query['complete_confidence'] * 1 / 200
                         elif diff == 1:
-                            query['complete_confidence'] = query['complete_confidence'] * 1 / 3
+                            query['complete_confidence'] = query['complete_confidence'] * 1 / 100
 
                     self.all_queries.add_or_update(query, eq_func=lambda x, y: x['query'] == y['query'],
                                                    opt_func=lambda x, y: x if x['complete_confidence'] > y[
@@ -70,10 +69,6 @@ class InteractionOptions:
         # there are cases where an entity is used in one query and not in others, thus can't simply remove it.
         # self.__remove_single_options()
 
-        for item in self.dic:
-            for io in self.dic[item]:
-                self.all_ios.add_if_not_exists(io)
-
     def __related_queries(self, uri):
         for query in self.all_queries:
             if uri.raw_uri in query['query']:
@@ -101,17 +96,77 @@ class InteractionOptions:
         except:
             pass
 
+    def is_id_equal(self, id1, id2):
+        if id1 == '[0, 0]' or id2 == '[0, 0]':
+            return None
+        if id1 == id2:
+            return id1
+        if ',' in id1 and ',' in id2:
+            s1, e1 = map(int, id1[1:-1].split(','))
+            s2, e2 = map(int, id2[1:-1].split(','))
+            r1 = set(range(s1, s1 + e1))
+            r2 = set(range(s2, s2 + e2))
+            if r1.issubset(r2):
+                return str([s2, e2])
+            elif r2.issubset(r1):
+                return str([s1, e1])
+            else:
+                intersection_len = len(r1.intersection(r2))
+                max_len = max([len(r1), len(r2)])
+                if intersection_len > 0.7 * max_len:
+                    union = r1.union(r2)
+                    start_idx = min(union)
+                    len_ = max(union) - start_idx
+                    return str([start_idx, len_])
+        return None
+
     def add(self, interactionOption):
-        if interactionOption.id in self.dic:
-            result = self.dic[interactionOption.id].add_if_not_exists(interactionOption)
+        best_matching_id = None
+        org_group_id = None
+        for group_id in self.dic.keys():
+            merge_id = self.is_id_equal(group_id, interactionOption.id)
+            if merge_id is not None:
+                if group_id == merge_id:
+                    best_matching_id = group_id
+                    org_group_id = group_id
+                else:
+                    if best_matching_id is None:
+                        best_matching_id = merge_id
+                        org_group_id = group_id
+                    else:
+                        tmp = self.is_id_equal(merge_id, best_matching_id)
+                        if tmp is not None:
+                            best_matching_id = tmp
+                            org_group_id = group_id
+
+        if best_matching_id is None:
+            self.dic[interactionOption.id] = UniqueList([interactionOption])
+        else:
+            if org_group_id is None:
+                print 'error'
+                pass
+            else:
+                if org_group_id == best_matching_id:
+                    pass
+                else:
+                    self.dic[best_matching_id] = self.dic[org_group_id]
+                    del self.dic[org_group_id]
+
+            # if interactionOption.id != best_matching_id:
+            #     if interactionOption.id in self.dic:
+            #         self.dic[best_matching_id] = self.dic[interactionOption.id]
+            #         del self.dic[interactionOption.id]
+            #     else:
+            #         if best_matching_id not in self.dic:
+            #             self.dic[best_matching_id] = UniqueList()
+
+            result = self.dic[best_matching_id].add_if_not_exists(interactionOption)
             if result != interactionOption:
                 if isinstance(interactionOption, InteractionOption):
                     result.addQuery(interactionOption.related_queries)
                     if isinstance(result.value, dict) and isinstance(interactionOption.value, dict):
                         result.value['confidence'] = max(result.value['confidence'],
                                                          interactionOption.value['confidence'])
-        else:
-            self.dic[interactionOption.id] = UniqueList([interactionOption])
 
     def __all_active_queries(self, io=None):
         if io is None:
@@ -120,8 +175,15 @@ class InteractionOptions:
             queries = io.related_queries
         return [query for query in queries if not query['removed']]
 
+    def __all_ios_with_group_id(self):
+        return [(g_id, io) for g_id in self.dic for io in self.dic[g_id]]
+
+    def __all_active_ios_with_group_id(self):
+        return [(g_id, io) for g_id, io in self.__all_ios_with_group_id() if
+                g_id not in self.used_group_id and not io.removed()]
+
     def __all_active_ios(self):
-        return [io for io in self.all_ios if not io.removed()]
+        return [io for g_id, io in self.__all_active_ios_with_group_id()]
 
     def __filter_interpretation_space(self, interaction_option):
         # positive = [query for query in interaction_option.related_queries if not query['removed']]
@@ -231,6 +293,12 @@ class InteractionOptions:
         return False
 
     def update(self, io, value):
+        if value:
+            g_id = self.get_group_id(io.id)
+            if len(g_id) > 0:
+                g_id = g_id[0]
+                self.used_group_id.add(g_id)
+
         queries_contain_io, queries_not_contain_io = self.__filter_interpretation_space(io)
 
         # Remove current IO
@@ -239,7 +307,7 @@ class InteractionOptions:
         if value is None:
             return
         elif value and io.type == 'linked':
-            ios_of_same_id = [tio for tio in self.ios_of_same_id(io) if tio.type == 'linked']
+            ios_of_same_id = [tio for tio in self.ios_of_same_group(io) if tio.type == 'linked']
             for io in ios_of_same_id:
                 other_ios = self.get_ios_by_uri(io.value.uris[0].uri)
                 if len(set([tio.id for tio in other_ios])) == 1:
@@ -256,11 +324,18 @@ class InteractionOptions:
             if not io.removed():
                 io.set_removed(all([query['removed'] for query in io.related_queries]))
 
-    def ios_of_same_id(self, io_val):
-        return [io for io in self.__all_active_ios() if io.id == io_val.id and io != io_val]
+    def get_group_id(self, id):
+        return list(set([g_id for g_id, io in self.__all_ios_with_group_id() if id == io.id]))
+
+    def ios_of_same_group(self, io_val):
+        group_id = self.get_group_id(io_val.id)
+        if len(group_id) > 0:
+            group_id = group_id[0]
+            return [io for g_id, io in self.__all_active_ios_with_group_id() if g_id == group_id and io != io_val]
+        return []
 
     def get_ios_by_uri(self, uri):
-        return [io for io in [io for io in self.all_ios if not io.removed()] if
+        return [io for io in self.__all_active_ios() if
                 io.type == 'linked' and io.value.uris[0].uri == uri]
 
     def __iter__(self):
