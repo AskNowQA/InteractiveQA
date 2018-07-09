@@ -42,14 +42,14 @@ class InteractionManager:
 
             if answer is not None and self.last_option.type == 'linked':
                 uri = self.last_option.value.uris[0].uri
-                similar_ios = [io for io in self.interaction_options.ios_of_same_id(self.last_option) if
+                similar_ios = [io for io in self.interaction_options.ios_of_same_group(self.last_option) if
                                io.type == 'linked' and uri[uri.rindex('/'):] in io.value.uris[0].uri]
                 if uri not in self.target_query.sparql.query:
                     if len(similar_ios) > 0:
                         for io in similar_ios:
                             if io.value.uris[0].uri in self.target_query.sparql.query:
                                 self.last_option = io
-                                similar_ios = [io for io in self.interaction_options.ios_of_same_id(self.last_option) if
+                                similar_ios = [io for io in self.interaction_options.ios_of_same_group(self.last_option) if
                                                io.type == 'linked' and uri[uri.rindex('/'):] in io.value.uris[0].uri]
                                 break
                 if answer:
