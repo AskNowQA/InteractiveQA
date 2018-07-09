@@ -74,8 +74,7 @@ def start():
         interaction_data[userid] = InteractionManager(pk.load(file_handler), kb=kb,
                                                       sparql_parser=dataset.parser.parse_sparql,
                                                       interaction_type=interaction_types, strategy=strategy,
-                                                      target_query=[qapair for qapair in dataset.qapairs if
-                                                                    qapair.id == question_id][0])
+                                                      target_query=dataset.get_by_id(question_id)[0])
 
     question = interaction_data[userid].pipeline_results[-1][0]
     io, query = interaction_data[userid].get_interaction_option()
