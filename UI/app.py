@@ -129,7 +129,7 @@ def reformat(result):
 
         if 'command' in result:
             if result['command'] == 'next_question':
-                mark_as_answered(session['current_query'])
+                mark_as_answered(final_query=session['current_query'])
             pass
         else:
             result['sparql2nl'] = Utils.sparql2nl(result['query'])
@@ -166,7 +166,7 @@ def reformat(result):
 @login_required
 def correct():
     log_interaction(data='early_correct')
-    mark_as_answered(session['current_query'])
+    mark_as_answered(final_query=session['current_query'])
     return redirect('survey')
 
 
