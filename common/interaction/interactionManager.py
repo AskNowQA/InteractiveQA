@@ -41,21 +41,28 @@ class InteractionManager:
                 return False
 
             if answer is not None and self.last_option.type == 'linked':
+                # in case the current IO is linked and there are other IOs in the same label,
+                # we look into the benchmark to see which of is used to construct the target query
                 uri = self.last_option.value.uris[0].uri
                 similar_ios = [io for io in self.interaction_options.ios_of_same_group(self.last_option) if
-                               io.type == 'linked' and uri[uri.rindex('/'):] in io.value.uris[0].uri]
+                               io.type == 'linked' and uri[uri.rindex('/'):] == io.value.uris[0].uri[
+                                                                                io.value.uris[0].uri.rindex('/'):]]
                 if uri not in self.target_query.sparql.query:
                     if len(similar_ios) > 0:
                         for io in similar_ios:
                             if io.value.uris[0].uri in self.target_query.sparql.query:
                                 self.last_option = io
-                                similar_ios = [io for io in self.interaction_options.ios_of_same_group(self.last_option) if
-                                               io.type == 'linked' and uri[uri.rindex('/'):] in io.value.uris[0].uri]
+                                similar_ios = [io for io in self.interaction_options.ios_of_same_group(self.last_option)
+                                               if io.type == 'linked' and uri[uri.rindex('/'):] == io.value.uris[0].uri[
+                                                                                                   io.value.uris[
+                                                                                                       0].uri.rindex(
+                                                                                                       '/'):]]
                                 break
-                if answer:
-                    for io in similar_ios:
+                # remove the IOs with same label, if they their URI isn't used by other IO's
+                for io in similar_ios:
+                    if io != self.last_option and io.value.uris[0].uri != self.last_option.value.uris[0].uri:
                         other_ios = self.interaction_options.get_ios_by_uri(uri)
-                        if len(set([tio.id for tio in other_ios])) == 1:
+                        if len(set([g_id for g_id, tio in other_ios])) == 1:
                             self.interaction_options.update(io, False)
             self.interaction_options.update(self.last_option, answer)
             return True

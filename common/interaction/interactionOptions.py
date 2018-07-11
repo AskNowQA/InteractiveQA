@@ -51,7 +51,7 @@ class InteractionOptions:
         for item in self.dic:
             for io in self.dic[item]:
                 if io.type == 'linked':
-                    io.addQuery(self.__related_queries(io.value.uris[0]))
+                    io.addQuery(self.related_queries(io.value.uris[0]))
 
         if c2:
             for item in self.dic:
@@ -65,20 +65,20 @@ class InteractionOptions:
             for query in self.all_queries:
                 self.add(InteractionOption('query', SPARQL(query['query'], self.sparql_parser), query, 'query'))
 
-        self.__remove_items_contained_in_others()
+        self.remove_items_contained_in_others()
         # there are cases where an entity is used in one query and not in others, thus can't simply remove it.
-        # self.__remove_single_options()
+        # self.remove_single_options()
 
-    def __related_queries(self, uri):
+    def related_queries(self, uri):
         for query in self.all_queries:
             if uri.raw_uri in query['query']:
                 yield query
 
-    def __remove_single_options(self):
+    def remove_single_options(self):
         # Remove items that have no alternatives
         self.dic = {item: self.dic[item] for item in self.dic if len(self.dic[item]) > 1}
 
-    def __remove_items_contained_in_others(self):
+    def remove_items_contained_in_others(self):
         try:
             # Remove items with surface contained in other items
             idxs = [map(int, item.strip('[]').split(', ')) for item in self.dic if item != 'type']
@@ -168,32 +168,32 @@ class InteractionOptions:
                         result.value['confidence'] = max(result.value['confidence'],
                                                          interactionOption.value['confidence'])
 
-    def __all_active_queries(self, io=None):
+    def all_active_queries(self, io=None):
         if io is None:
             queries = self.all_queries
         else:
             queries = io.related_queries
         return [query for query in queries if not query['removed']]
 
-    def __all_ios_with_group_id(self):
+    def all_ios_with_group_id(self):
         return [(g_id, io) for g_id in self.dic for io in self.dic[g_id]]
 
-    def __all_active_ios_with_group_id(self):
-        return [(g_id, io) for g_id, io in self.__all_ios_with_group_id() if
+    def all_active_ios_with_group_id(self):
+        return [(g_id, io) for g_id, io in self.all_ios_with_group_id() if
                 g_id not in self.used_group_id and not io.removed()]
 
-    def __all_active_ios(self):
-        return [io for g_id, io in self.__all_active_ios_with_group_id()]
+    def all_active_ios(self):
+        return [io for g_id, io in self.all_active_ios_with_group_id()]
 
-    def __filter_interpretation_space(self, interaction_option):
+    def filter_interpretation_space(self, interaction_option):
         # positive = [query for query in interaction_option.related_queries if not query['removed']]
-        positive = [query for query in self.__all_active_queries() if
+        positive = [query for query in self.all_active_queries() if
                     not query['removed'] and query in interaction_option.related_queries]
-        negative = [query for query in self.__all_active_queries() if query not in positive]
+        negative = [query for query in self.all_active_queries() if query not in positive]
 
         return positive, negative
 
-    def __entropy(self, interpretation_space, s=None):
+    def entropy(self, interpretation_space, s=None):
         if s is None:
             s = sum([q['complete_confidence'] for q in interpretation_space])
         plogs = []
@@ -209,11 +209,11 @@ class InteractionOptions:
                 plogs.append(p * math.log(p, 2))
         return -sum(plogs)
 
-    def __average_entropy(self, interaction_option):
-        S_sum = sum([q['complete_confidence'] for q in self.__all_active_queries()])
-        queries_contain_io, queries_not_contain_io = self.__filter_interpretation_space(interaction_option)
-        entropy_positive = self.__entropy(queries_contain_io, S_sum)
-        entropy_negative = self.__entropy(queries_not_contain_io, S_sum)
+    def average_entropy(self, interaction_option):
+        S_sum = sum([q['complete_confidence'] for q in self.all_active_queries()])
+        queries_contain_io, queries_not_contain_io = self.filter_interpretation_space(interaction_option)
+        entropy_positive = self.entropy(queries_contain_io, S_sum)
+        entropy_negative = self.entropy(queries_not_contain_io, S_sum)
         if S_sum == 0:
             p_entropy_positive = 0
             p_entropy_negative = 0
@@ -223,27 +223,27 @@ class InteractionOptions:
 
         return p_entropy_positive * entropy_positive + p_entropy_negative * entropy_negative
 
-    def __information_gain(self):
-        entropy = self.__entropy(self.__all_active_queries())
+    def information_gain(self):
+        entropy = self.entropy(self.all_active_queries())
         information_gains = []
 
-        for io in self.__all_active_ios():
-            information_gains.append([io, entropy - self.__average_entropy(io)])
+        for io in self.all_active_ios():
+            information_gains.append([io, entropy - self.average_entropy(io)])
 
         return information_gains
 
     def interaction_with_max_information_gain(self):
-        return self.pick_interaction(self.__information_gain())
+        return self.pick_interaction(self.information_gain())
 
     def interaction_with_max_option_gain(self, w):
-        information_gains = self.__information_gain()
+        information_gains = self.information_gain()
         option_gains = [(item[0], math.pow(item[0].usability(), w) * item[1]) for item in information_gains]
         return self.pick_interaction(option_gains)
 
     def interaction_with_max_probability(self):
-        S_sum = sum([q['complete_confidence'] for q in self.__all_active_queries()])
+        S_sum = sum([q['complete_confidence'] for q in self.all_active_queries()])
         probabilities = []
-        for io in self.__all_active_ios():
+        for io in self.all_active_ios():
             p = 0
             for query in io.related_queries:
                 if S_sum == 0:
@@ -274,7 +274,7 @@ class InteractionOptions:
         return active_ios[idx]
 
     def ranked_queries(self, io=None):
-        return sorted(self.__all_active_queries(io), key=lambda x: x['complete_confidence'], reverse=True)
+        return sorted(self.all_active_queries(io), key=lambda x: x['complete_confidence'], reverse=True)
 
     def query_with_max_probability(self, io=None):
         queries = self.ranked_queries(io)
@@ -283,10 +283,10 @@ class InteractionOptions:
         return SPARQL(queries[0]['query'], self.sparql_parser)
 
     def has_interaction(self):
-        if len(self.__all_active_queries()) > 1 and len(
-                set([item['query'] for item in self.__all_active_queries()])) > 1:
-            if len(self.__all_active_ios()) > 0:
-                information_gains = [item[1] for item in self.__information_gain()]
+        if len(self.all_active_queries()) > 1 and len(
+                set([item['query'] for item in self.all_active_queries()])) > 1:
+            if len(self.all_active_ios()) > 0:
+                information_gains = [item[1] for item in self.information_gain()]
                 return sum(information_gains) > 0
             else:
                 return False
@@ -294,24 +294,28 @@ class InteractionOptions:
 
     def update(self, io, value):
         if value:
+            # if answer is True, mark this group as used to avoid providing IOs os same gropup to the user
             g_id = self.get_group_id(io.id)
             if len(g_id) > 0:
                 g_id = g_id[0]
                 self.used_group_id.add(g_id)
 
-        queries_contain_io, queries_not_contain_io = self.__filter_interpretation_space(io)
+        queries_contain_io, queries_not_contain_io = self.filter_interpretation_space(io)
 
         # Remove current IO
         io.set_removed(True)
 
         if value is None:
             return
-        elif value and io.type == 'linked':
+        elif io.type == 'linked' and value and io.id != '[0, 0]':
+            # if current IO truly represents the group, linked IOs from the same group should be removed
+            # if they their URI isn't used by other IO's
             ios_of_same_id = [tio for tio in self.ios_of_same_group(io) if tio.type == 'linked']
             for io in ios_of_same_id:
                 other_ios = self.get_ios_by_uri(io.value.uris[0].uri)
-                if len(set([tio.id for tio in other_ios])) == 1:
+                if len(set([g_id for g_id, tio in other_ios])) == 1:
                     self.update(io, False)
+
         if value:
             for query in queries_not_contain_io:
                 query['removed'] = True
@@ -319,23 +323,25 @@ class InteractionOptions:
             for query in queries_contain_io:
                 query['removed'] = True
 
-        # remove IOs which have no active query
-        for io in self.__all_active_ios():
-            if not io.removed():
-                io.set_removed(all([query['removed'] for query in io.related_queries]))
+        # remove IOs which have IG of zero
+        for io, ig in self.information_gain():
+            io.set_removed(ig == 0)
+        # for io in self.all_active_ios():
+        #     if not io.removed():
+        #         io.set_removed(all([query['removed'] for query in io.related_queries]))
 
     def get_group_id(self, id):
-        return list(set([g_id for g_id, io in self.__all_ios_with_group_id() if id == io.id]))
+        return list(set([g_id for g_id, io in self.all_ios_with_group_id() if id == io.id]))
 
     def ios_of_same_group(self, io_val):
         group_id = self.get_group_id(io_val.id)
         if len(group_id) > 0:
             group_id = group_id[0]
-            return [io for g_id, io in self.__all_active_ios_with_group_id() if g_id == group_id and io != io_val]
+            return [io for g_id, io in self.all_active_ios_with_group_id() if g_id == group_id and io != io_val]
         return []
 
     def get_ios_by_uri(self, uri):
-        return [io for io in self.__all_active_ios() if
+        return [(g_id, io) for g_id, io in self.all_active_ios_with_group_id() if
                 io.type == 'linked' and io.value.uris[0].uri == uri]
 
     def __iter__(self):
