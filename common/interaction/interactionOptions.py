@@ -20,7 +20,9 @@ class InteractionOptions:
             for linked_item_type in ['entities', 'relations']:
                 if linked_item_type in output:
                     for item in output[linked_item_type]:
-                        self.add(InteractionOption(item.surface_form, item, [], 'linked'))
+                        # hack: ignore the one that are not from dbpedia
+                        if 'dbpedia' in item.uris[0].raw_uri:
+                            self.add(InteractionOption(item.surface_form, item, [], 'linked'))
 
             if 'queries' in output:
 
