@@ -124,6 +124,13 @@ def reformat(result):
             session['question_id'] = result['qid']
         if 'IO' in result:
             session['current_IO'] = result['IO']
+            if 'surface' in result['IO'] and result['IO']['surface'] == 'question_type':
+                if result['IO']['values'][0] == 'list':
+                    result['IO']['values'][0] = 'Single or multiple item(s)'
+                elif result['IO']['values'][0] == 'list':
+                    result['IO']['values'][0] = 'Number of some items'
+                elif result['IO']['values'][0] == 'boolean':
+                    result['IO']['values'][0] = 'Yes or No'
         if 'query' in result:
             session['current_query'] = result['query']
 
@@ -139,7 +146,7 @@ def reformat(result):
                     result['IO']['values'] = [{'label': result['sparql2nl'], 'abstract': ''}]
                 else:
                     if result['IO']['surface'] == 'question_type':
-                        result['IO']['surface'] = 'Is the type of question ...?'
+                        result['IO']['surface'] = 'Is the expected answer(s) ...?'
                         result['IO']['values'][0] = {'label': result['IO']['values'][0], 'abstract': ''}
                     else:
                         result['IO']['surface'] = 'Does "{0}" refers to ...?'.format(result['IO']['surface'])
