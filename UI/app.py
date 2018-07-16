@@ -97,7 +97,8 @@ def survey():
     # Log the record
     session['session_id'] = Utils.rand_id()
     session['start'] = datetime.datetime.utcnow()
-    log_interaction()
+    if 'command' not in result or result['command'] != 'end_survey':
+        log_interaction()
 
     return render_template('survey.html', data=result)
 
@@ -133,6 +134,7 @@ def reformat(result):
                     result['IO']['values'][0] = 'Yes or No'
         if 'query' in result:
             session['current_query'] = result['query']
+            result['query'] = result['query'].replace('{', '{\n').replace('}', '\n}').replace(' .', ' .\n')
 
         if 'command' in result:
             if result['command'] == 'next_question':
