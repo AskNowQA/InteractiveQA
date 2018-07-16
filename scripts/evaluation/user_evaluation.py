@@ -10,8 +10,9 @@ from common.utility.stats import Stats
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run pipeline')
     parser.add_argument("--base_path", help="base path", default="../../", dest="base_path")
-    parser.add_argument("--database", help="input database", default="IQA.db", dest="database")
+    parser.add_argument("--database", help="input database", default="UI/database/IQA.db", dest="database")
     parser.add_argument("--input", help="input file of Q/A dataset", default="data/LC-QuAD/linked.json", dest="input")
+    parser.add_argument("--username", help="username", default="hamid", dest="username")
     args = parser.parse_args()
 
     dataset = LC_Qaud_Linked(os.path.join(args.base_path, 'data', 'LC-QuAD', 'linked.json'))
@@ -36,9 +37,7 @@ if __name__ == "__main__":
     #     else:
     #         print 'error'
 
-    username = 'fathoni'
-    # username = 'debayan'
-    answered_questions = list(engine.execute('SELECT * FROM answered_questions WHERE username = "{}"'.format(username)))
+    answered_questions = list(engine.execute('SELECT * FROM answered_questions WHERE username = "{}"'.format(args.username)))
     print(len(answered_questions))
     for answered_question in answered_questions:
         qapair = dataset.get_by_id(answered_question[2])
