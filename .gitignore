@@ -12,3 +12,4 @@ output/
 *.pyc
 *.log
 /tools/
+*.png
