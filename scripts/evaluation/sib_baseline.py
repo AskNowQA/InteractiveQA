@@ -95,7 +95,6 @@ if __name__ == "__main__":
         stats.inc("total")
         if qapair.id not in wdaqua_results:
             continue
-
         output_path = os.path.join(pipeline_path, ('{0}.pickle'.format(qapair.id)))
         if os.path.exists(output_path):
             with open(os.path.join(pipeline_path, ('{0}.pickle'.format(qapair.id))), 'r') as file_handler:
@@ -108,7 +107,7 @@ if __name__ == "__main__":
 
             chunk_costs = [chunk_cost(gold_chunks, chunks['chunks']) for chunks in outputs[0]]
             chunk_min_idx = min(xrange(len(chunk_costs)), key=chunk_costs.__getitem__)
-            overall_cost += chunk_min_idx
+            overall_cost += chunk_min_idx + 1
 
             entities_cost, found_entities = linked_cost(outputs[1], outputs[0][chunk_min_idx]['chunks'], 'entities',
                                                         target_entities)
@@ -126,16 +125,25 @@ if __name__ == "__main__":
 
             queries = sorted(queries, key=lambda t: t['complete_confidence'], reverse=True)
             query_cost = 0
+            found = False
             for query in queries:
                 query_cost += 1
                 if oracle.validate_query(qapair, SPARQL(query['query'], parse_sparql)):
+                    found = True
                     break
             overall_cost += query_cost
 
-            stats[qapair.id] = overall_cost
-            stats['{}-chunk'.format(qapair.id)] = chunk_min_idx
-            stats['{}-entities'.format(qapair.id)] = entities_cost
-            stats['{}-relations'.format(qapair.id)] = relations_cost
-            stats['{}-queries'.format(qapair.id)] = query_cost
+            if found:
+                stats['{}+correct'.format(qapair.id)] = 1
+            else:
+                stats['{}-incorrect'.format(qapair.id)] = 1
 
-    stats.save(os.path.join(args.base_path, 'output', 'sib_stats.json'))
+            stats[qapair.id] = overall_cost
+            stats['{}_chunk'.format(qapair.id)] = chunk_min_idx
+            stats['{}_entities'.format(qapair.id)] = entities_cost
+            stats['{}_relations'.format(qapair.id)] = relations_cost
+            stats['{}_queries'.format(qapair.id)] = query_cost
+        # if stats["total"] > 100:
+        #     break
+
+    stats.save(os.path.join(args.base_path, 'output', 'stats-SIB.json'))
