@@ -5,6 +5,10 @@ import numpy as np
 import pickle as pk
 import matplotlib
 
+labels = {'SO-RQ': 'NIB-IQA', 'SO-IG': 'IQA-IG', 'SO-OG': 'IQA-OG', '': 'SIB'}
+colors = {'NIB-IQA': 'green', 'IQA-IG': 'blue', 'IQA-OG': 'orange', 'SIB': 'red', 'NIB-WDAqua': 'yellow',
+          'NIB-IQA-Top1': 'blue'}
+
 
 def extract_id(val):
     if '-' in val:
@@ -31,17 +35,17 @@ def a_r1_wd(correct_dist, complexity_dist, correct_dist_top_k, wd_perf):
     ax = fig.add_subplot(111)
 
     y_ratio = 100 * (correct_dist / np.array(complexity_dist[1], dtype=float))
-    ax.bar(complexity_dist[0] - 0.2, y_ratio, color='green', width=0.2, label='NIB-IQA')
+    ax.bar(complexity_dist[0] - 0.2, y_ratio, color=colors['NIB-IQA'], width=0.2, label='NIB-IQA')
     for i, v in enumerate(y_ratio):
         ax.text(i + 1.7, v + 1, str(int(v)) + '%', color='black')
 
     y_ratio = 100 * (correct_dist_top_k[0] / np.array(complexity_dist[1], dtype=float))
-    ax.bar(complexity_dist[0], y_ratio, color='blue', width=0.2, label='NIB-IQA-Top1')
+    ax.bar(complexity_dist[0], y_ratio, color=colors['NIB-IQA-Top1'], width=0.2, label='NIB-IQA-Top1')
     for i, v in enumerate(y_ratio):
         ax.text(i + 1.9, v + 1, str(int(v)) + '%', color='black')
 
     wd_f1 = [wd_perf[str(item)][2] * 100 for item in complexity_dist[0]]
-    ax.bar(complexity_dist[0] + 0.2, wd_f1, color='orange', width=0.2, label='NIB-WDAqua')
+    ax.bar(complexity_dist[0] + 0.2, wd_f1, color=colors['NIB-WDAqua'], width=0.2, label='NIB-WDAqua')
     for i, v in enumerate(wd_f1):
         ax.text(i + 2.1, v + 1, str(int(v)) + '%', color='black')
 
@@ -51,13 +55,14 @@ def a_r1_wd(correct_dist, complexity_dist, correct_dist_top_k, wd_perf):
     plt.savefig('a-r1-wd.png')
 
 
-def inter_inc_f1(complexity_dist, correct_dist_top_k, complexity_index, wd_perf, labels):
+def inter_inc_f1(complexity_dist, correct_dist_top_k, complexity_index, wd_perf):
     fig = plt.figure()
     ax = fig.add_subplot(111)
     for file in correct_dist_top_k.keys():
         ax.plot(100.0 * correct_dist_top_k[file][:, complexity_index] / complexity_dist[1][complexity_index],
-                label=labels[file])
-    ax.plot([wd_perf[str(complexity_index + 2)][2] * 100] * len(correct_dist_top_k['']), label='NIB-WDAqua')
+                label=labels[file], color=colors[labels[file]])
+    ax.plot([wd_perf[str(complexity_index + 2)][2] * 100] * len(correct_dist_top_k['']), label='NIB-WDAqua',
+            color=colors['NIB-WDAqua'])
     plt.yticks(np.arange(0, 101, 10))
     ax.set_xscale("log", nonposy='clip')
     ax.xaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
@@ -67,7 +72,7 @@ def inter_inc_f1(complexity_dist, correct_dist_top_k, complexity_index, wd_perf,
     plt.savefig('inter_inc_f1_{}.png'.format(complexity_index + 2))
 
 
-def succ_rate(files, json_data, comp_range, question_complexities, labels):
+def succ_rate(files, json_data, comp_range, question_complexities):
     fig = plt.figure()
     ax = fig.add_subplot(111)
     counter = 0
@@ -81,7 +86,8 @@ def succ_rate(files, json_data, comp_range, question_complexities, labels):
         all_complexities = np.unique(all_complexities, return_counts=True)
 
         y_ratios = correct_complexities[1] * 100 / np.array(all_complexities[1], dtype=float)
-        ax.bar(correct_complexities[0] + (counter * 0.1) - 0.2, y_ratios, width=0.1, label=labels[file_id])
+        ax.bar(correct_complexities[0] + (counter * 0.1) - 0.2, y_ratios, width=0.1, label=labels[file_id],
+               color=colors[labels[file_id]])
 
         for i, v in enumerate(y_ratios):
             ax.text(i + 1.8 + (counter * 0.1), v + 5, str(int(v)), color='black', rotation='vertical')
@@ -94,7 +100,7 @@ def succ_rate(files, json_data, comp_range, question_complexities, labels):
     plt.savefig('succ_rate.png')
 
 
-def inter_cost(files, json_data, comp_range, question_complexities, labels):
+def inter_cost(files, json_data, comp_range, question_complexities):
     fig = plt.figure()
     ax = fig.add_subplot(111)
     counter = 0
@@ -110,8 +116,10 @@ def inter_cost(files, json_data, comp_range, question_complexities, labels):
             interaction_dist = correct_questions[question_of_current_comp][:, 1]
             res.append([np.nanmean(interaction_dist), np.nanstd(interaction_dist)])
         res = np.array(res)
-        ax.bar(comp_range + (counter * 0.1) - 0.2, res[:, 0], width=0.1, label=labels[file_id])
-        ax.errorbar(comp_range + (counter * 0.1) - 0.2, res[:, 0], res[:, 1], linestyle='None', marker='^')
+        ax.bar(comp_range + (counter * 0.1) - 0.2, res[:, 0], width=0.1, label=labels[file_id],
+               color=colors[labels[file_id]])
+        ax.errorbar(comp_range + (counter * 0.1) - 0.2, res[:, 0], res[:, 1], linestyle='None', marker='^',
+                    color=colors[labels[file_id]])
         counter += 1
 
     ax.set_yscale("log", nonposy='clip')
@@ -158,7 +166,6 @@ if __name__ == '__main__':
         # 'AO-P', 'SO-P',
         'SO-RQ',
         '']
-    labels = {'SO-RQ': 'NIB-IQA', 'SO-IG': 'IQA-IG', 'SO-OG': 'IQA-OG', '': 'SIB'}
     x = range(len(files))
     y_values = [[key, len([v for v in value if '+correct' in v])] for key, value in json_data.iteritems()]
     print '# corrects in strategies', y_values
@@ -196,6 +203,6 @@ if __name__ == '__main__':
     comp_dist(complexity_dist, number_of_corrects[1])
     a_r1_wd(correct_dist[number_of_corrects[0]], complexity_dist, correct_dist_top_k[number_of_corrects[0]], wd_perf)
     for i in range(4):
-        inter_inc_f1(complexity_dist, correct_dist_top_k, i, wd_perf, labels)
-    succ_rate(files, json_data, comp_range, question_complexities, labels)
-    inter_cost(files, json_data, comp_range, question_complexities, labels)
+        inter_inc_f1(complexity_dist, correct_dist_top_k, i, wd_perf)
+    succ_rate(files, json_data, comp_range, question_complexities)
+    inter_cost(files, json_data, comp_range, question_complexities)
