@@ -194,11 +194,13 @@ if __name__ == '__main__':
                     # except Exception as expt:
                     #     print expt
 
+            final_stats = Stats()
             for i in range(1, 10):
                 stats_id = '#{}-'.format(i)
                 if stats_results[stats_id + 'total'] > 0:
-                    print i, sum(stats_results[stats_id + 'p']) / stats_results[stats_id + 'total'], \
-                        sum(stats_results[stats_id + 'r']) / stats_results[stats_id + 'total'], \
-                        sum(stats_results[stats_id + 'f1']) / stats_results[stats_id + 'total'], \
-                        stats_results[stats_id + 'total']
-            print stats_results
+                    p = sum(stats_results[stats_id + 'p']) / stats_results[stats_id + 'total']
+                    r = sum(stats_results[stats_id + 'r']) / stats_results[stats_id + 'total']
+                    f1 = sum(stats_results[stats_id + 'f1']) / stats_results[stats_id + 'total']
+                    final_stats[i] = [p, r, f1, stats_results[stats_id + 'total']]
+                    print i, final_stats[i]
+            final_stats.save(os.path.join(args.base_path, 'output/wd_perf.json'))
