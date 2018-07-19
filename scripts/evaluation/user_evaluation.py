@@ -54,8 +54,8 @@ if __name__ == "__main__":
                 user_query = SPARQL(query, parse_sparql)
                 result = oracle.validate_query(qapair, user_query)
                 stats.inc('correct' if result else 'incorrect')
-            print query
-            print qapair.sparql.query
-            print result
+            print query.encode("ascii", "ignore")
+            print qapair.sparql.query.encode("ascii", "ignore")
+            print result.encode("ascii", "ignore")
 
     print stats
