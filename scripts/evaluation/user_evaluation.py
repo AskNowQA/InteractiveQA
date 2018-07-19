@@ -56,6 +56,6 @@ if __name__ == "__main__":
                 stats.inc('correct' if result else 'incorrect')
             print query.encode("ascii", "ignore")
             print qapair.sparql.query.encode("ascii", "ignore")
-            print result.encode("ascii", "ignore")
+            print result
 
     print stats
