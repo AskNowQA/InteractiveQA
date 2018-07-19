@@ -3,6 +3,7 @@ import argparse, os, json
 import matplotlib.pyplot as plt
 import numpy as np
 import pickle as pk
+import matplotlib
 
 
 def extract_id(val):
@@ -13,91 +14,60 @@ def extract_id(val):
     return val[:idx]
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Plot evaluation qa_results')
-    parser.add_argument("--base_path", help="base path", default="../../", dest="base_path")
-    parser.add_argument("--dataset", help="input Q/A dataset", default="data/LC-QuAD/linked.json", dest="dataset")
-    args = parser.parse_args()
-
-    max_k = 200
-
-    dataset = LC_Qaud_Linked(os.path.join(args.base_path, args.dataset))
-    with open(os.path.join(args.base_path, 'output', 'wdaqua_core1.pk'), "r") as data_file:
-        wdaqua_results = pk.load(data_file)
-
-    question_complexities = {
-        qapair.id: len([uri for uri in qapair.sparql.uris if not (uri.is_generic() or uri.is_type())]) for
-        qapair in dataset.qapairs if qapair.id in wdaqua_results}
-
-    output_path = os.path.join(args.base_path, 'output')
-    json_data = dict()
-    for item in os.listdir(output_path):
-        file_name = os.path.join(output_path, item)
-        if item.startswith('stats') and file_name.endswith(".json") and 'general' not in item:
-            with open(file_name, "r") as data_file:
-                json_data[''.join([c for c in item[10:-5] if not c.islower()])] = json.load(data_file)
-
-    with open(os.path.join(output_path, 'stats-general.json'), "r") as data_file:
-        # total = json.load(data_file)['total']
-        total = len(question_complexities)
-
-    files = [  # 'AO-IG',
-        'SO-IG',
-        # 'AO-OG',
-        'SO-OG',
-        # 'AO-P', 'SO-P',
-        'SO-RQ',
-        '']
-    labels = {'SO-RQ': 'NIB', 'SO-IG': 'IQA-IG', 'SO-OG': 'IQA-OG', '': 'SIB'}
-    x = range(len(files))
-    y_values = [[key, len([v for v in value if '+correct' in v])] for key, value in json_data.iteritems()]
-    print '# corrects in strategies', y_values
-
-    number_of_corrects = max(y_values)
-    correct_dist = []
-    correct_dist_top_k = [[] for k in range(max_k)]
-
-    y_values = np.array([[extract_id(k), '+correct' in k, v] for k, v in json_data[number_of_corrects[0]].iteritems() if
-                         'cor' in k], dtype=object)
-    question_complexities = {k: v for k, v in question_complexities.iteritems() if k in y_values[:, 0]}
-    complexity_dist = np.unique(question_complexities.values(), return_counts=True)
-    comp_range = np.arange(2, 6, 1)
-
-    y_values = np.array([[k, m, json_data[number_of_corrects[0]][k], question_complexities[k]] for k, m, v in y_values],
-                        dtype=object)
-
-    number_of_corrects = number_of_corrects[1]
-    for idx in range(2, 6):
-        correct_items_in_current_complexity = [item for item in y_values if item[1] and item[3] == idx]
-
-        correct_dist.append(len(correct_items_in_current_complexity))
-        for k in range(max_k):
-            number_of_tries_in_current_complexity = np.array([item[2] for item in correct_items_in_current_complexity])
-            correct_dist_top_k[k].append(np.sum((number_of_tries_in_current_complexity <= k)))
-
-    print 'correct_dist', correct_dist, sum(correct_dist)
+def comp_dist(complexity_dist, number_of_corrects):
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    ax.bar(complexity_dist[0] - 0.1, complexity_dist[1], color='red', width=0.2, label='NQ-T')
-    ax.bar(complexity_dist[0] + 0.1, correct_dist, color='green', width=0.2, label='NQ-A')
-    ax.bar(complexity_dist[0] + 0.3, correct_dist_top_k[0], color='blue', width=0.2, label='NQ-R1')
-    plt.xticks(complexity_dist[0], np.arange(2, 7, 1))
+    ax.bar(complexity_dist[0], complexity_dist[1], color='gray')
+    for i, v in enumerate(complexity_dist[1]):
+        ax.text(i + 1.9, v + 10, str(v), color='black')
+
+    plt.xticks(complexity_dist[0], complexity_dist[0])
     plt.yticks(np.arange(0, number_of_corrects * 2 / 2, 100))
-    # ax.title.set_text('Comp. Dist. of: {}/{}\n'.format(number_of_corrects, total))
-    ax.legend(loc='upper right')
     plt.savefig('comp_dist.png')
 
+
+def a_r1_wd(correct_dist, complexity_dist, correct_dist_top_k, wd_perf):
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    for k in range(7):
-        ax.bar(complexity_dist[0] * 1 + 0.1 * k - 0.5, correct_dist_top_k[k], width=0.1,
-               label='#{} of interactions'.format(k))
-    plt.xticks(complexity_dist[0] * 1, np.arange(2, 7, 1))
-    plt.yticks(np.arange(0, number_of_corrects * 2 / 5, 50))
-    ax.title.set_text('IQA-Ranking Model'.format(number_of_corrects, total))
-    # ax.legend(loc='upper')
-    plt.savefig('f1_inter_cost.png')
 
+    y_ratio = 100 * (correct_dist / np.array(complexity_dist[1], dtype=float))
+    ax.bar(complexity_dist[0] - 0.2, y_ratio, color='green', width=0.2, label='NIB-IQA')
+    for i, v in enumerate(y_ratio):
+        ax.text(i + 1.7, v + 1, str(int(v)) + '%', color='black')
+
+    y_ratio = 100 * (correct_dist_top_k[0] / np.array(complexity_dist[1], dtype=float))
+    ax.bar(complexity_dist[0], y_ratio, color='blue', width=0.2, label='NIB-IQA-Top1')
+    for i, v in enumerate(y_ratio):
+        ax.text(i + 1.9, v + 1, str(int(v)) + '%', color='black')
+
+    wd_f1 = [wd_perf[str(item)][2] * 100 for item in complexity_dist[0]]
+    ax.bar(complexity_dist[0] + 0.2, wd_f1, color='orange', width=0.2, label='NIB-WDAqua')
+    for i, v in enumerate(wd_f1):
+        ax.text(i + 2.1, v + 1, str(int(v)) + '%', color='black')
+
+    plt.xticks(complexity_dist[0], complexity_dist[0])
+    plt.yticks(np.arange(0, 101, 10))
+    ax.legend(loc='upper right')
+    plt.savefig('a-r1-wd.png')
+
+
+def inter_inc_f1(complexity_dist, correct_dist_top_k, complexity_index, wd_perf, labels):
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    for file in correct_dist_top_k.keys():
+        ax.plot(100.0 * correct_dist_top_k[file][:, complexity_index] / complexity_dist[1][complexity_index],
+                label=labels[file])
+    ax.plot([wd_perf[str(complexity_index + 2)][2] * 100] * len(correct_dist_top_k['']), label='NIB-WDAqua')
+    plt.yticks(np.arange(0, 101, 10))
+    ax.set_xscale("log", nonposy='clip')
+    ax.xaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
+    ax.xaxis.set_minor_formatter(matplotlib.ticker.ScalarFormatter())
+    ax.xaxis.set_minor_locator(matplotlib.ticker.LogLocator(subs=[50, 200]))
+    ax.legend(loc='lower right')
+    plt.savefig('inter_inc_f1_{}.png'.format(complexity_index + 2))
+
+
+def succ_rate(files, json_data, comp_range, question_complexities, labels):
     fig = plt.figure()
     ax = fig.add_subplot(111)
     counter = 0
@@ -110,9 +80,12 @@ if __name__ == '__main__':
         correct_complexities = np.unique(correct_complexities, return_counts=True)
         all_complexities = np.unique(all_complexities, return_counts=True)
 
-        ax.bar(correct_complexities[0] + (counter * 0.1) - 0.2,
-               correct_complexities[1] * 100 / np.array(all_complexities[1], dtype=float), width=0.1,
-               label=labels[file_id])
+        y_ratios = correct_complexities[1] * 100 / np.array(all_complexities[1], dtype=float)
+        ax.bar(correct_complexities[0] + (counter * 0.1) - 0.2, y_ratios, width=0.1, label=labels[file_id])
+
+        for i, v in enumerate(y_ratios):
+            ax.text(i + 1.8 + (counter * 0.1), v + 5, str(int(v)), color='black', rotation='vertical')
+
         counter += 1
 
     plt.xticks(comp_range, comp_range)
@@ -120,6 +93,8 @@ if __name__ == '__main__':
     ax.legend(loc='upper right')
     plt.savefig('succ_rate.png')
 
+
+def inter_cost(files, json_data, comp_range, question_complexities, labels):
     fig = plt.figure()
     ax = fig.add_subplot(111)
     counter = 0
@@ -142,35 +117,85 @@ if __name__ == '__main__':
     ax.set_yscale("log", nonposy='clip')
     plt.xticks(comp_range, comp_range)
     ax.legend(loc='upper right')
-    # plt.savefig('inter_cost.png')
-    fig.show()
+    plt.savefig('inter_cost.png')
 
-    # X-Axis: query complexity, different method
-    # Y-Axis is the susses rate
 
-    # # Ignore correct/incorrect items
-    # y_values = [[[k, v] for k, v in json_data[key].iteritems() if 'c' not in k] for key in files]
-    # y_values = [[items[1] for items in line] for line in y_values]
-    # y_values = np.array(y_values, dtype=object)
-    # corrects_in_complexity = []
-    # for idx in range(2, 6):
-    #     current_y_values = y_values[:, np.where(question_complexities[:total] == idx)].reshape(len(files), -1)
-    #
-    #     current_y_values[current_y_values == 0] = np.nan
-    #
-    #     ax = fig.add_subplot(231 + idx)
-    #     ax.errorbar(x, np.nanmean(current_y_values, axis=1), np.nanstd(y_values, axis=1), linestyle='None', marker='^')
-    #     plt.xticks(x, files, rotation='vertical')
-    #     ax.title.set_text('Q. Comp.: {}'.format(idx))
-    #     plt.yticks(np.arange(0, 56, step=10))
-    #     print np.nanmean(current_y_values, axis=1)
-    #
-    # print "diff"
-    # for item in set([key for __name in files for key in json_data[__name].keys()]):
-    #     try:
-    #         if len(set([json_data[file_name][item] for file_name in files])) > 1:
-    #             # print item, [json_data[file_name][item] for file_name in files]
-    #             pass
-    #     except:
-    #         print item
-    # plt.show()
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Plot evaluation qa_results')
+    parser.add_argument("--base_path", help="base path", default="../../", dest="base_path")
+    parser.add_argument("--dataset", help="input Q/A dataset", default="data/LC-QuAD/linked.json", dest="dataset")
+    args = parser.parse_args()
+
+    max_k = 200
+
+    dataset = LC_Qaud_Linked(os.path.join(args.base_path, args.dataset))
+    with open(os.path.join(args.base_path, 'output', 'wdaqua_core1.pk'), "r") as data_file:
+        wdaqua_results = pk.load(data_file)
+
+    with open(os.path.join(args.base_path, 'output', 'wd_perf.json'), "r") as data_file:
+        wd_perf = json.load(data_file)
+
+    question_complexities = {
+        qapair.id: len([uri for uri in qapair.sparql.uris if not (uri.is_generic() or uri.is_type())]) for
+        qapair in dataset.qapairs if qapair.id in wdaqua_results}
+
+    output_path = os.path.join(args.base_path, 'output')
+    json_data = dict()
+    for item in os.listdir(output_path):
+        file_name = os.path.join(output_path, item)
+        if item.startswith('stats') and file_name.endswith(".json") and 'general' not in item:
+            with open(file_name, "r") as data_file:
+                json_data[''.join([c for c in item[10:-5] if not c.islower()])] = json.load(data_file)
+
+    # with open(os.path.join(output_path, 'stats-general.json'), "r") as data_file:
+    #     total = json.load(data_file)['total']
+    total = len(question_complexities)
+
+    files = [  # 'AO-IG',
+        'SO-IG',
+        # 'AO-OG',
+        'SO-OG',
+        # 'AO-P', 'SO-P',
+        'SO-RQ',
+        '']
+    labels = {'SO-RQ': 'NIB-IQA', 'SO-IG': 'IQA-IG', 'SO-OG': 'IQA-OG', '': 'SIB'}
+    x = range(len(files))
+    y_values = [[key, len([v for v in value if '+correct' in v])] for key, value in json_data.iteritems()]
+    print '# corrects in strategies', y_values
+
+    number_of_corrects = max(y_values)
+    comp_range = np.arange(2, 6, 1)
+
+    # question_complexities = {k: v for k, v in question_complexities.iteritems() if k in y_values[:, 0]}
+    complexity_dist = np.unique(question_complexities.values(), return_counts=True)
+    correct_dist_top_k = {}
+    correct_dist = {}
+    for f_id in files:
+        correct_dist_top_k[f_id] = [[] for k in range(max_k)]
+        y_values = np.array([[extract_id(k), '+correct' in k, v] for k, v in json_data[f_id].iteritems() if
+                             'cor' in k], dtype=object)
+        y_values = np.array([[k, m, json_data[f_id][k], question_complexities[k]] for k, m, v in y_values],
+                            dtype=object)
+
+        correct_dist[f_id] = []
+        for idx in range(2, 6):
+            correct_items_in_current_complexity = [item for item in y_values if item[1] and item[3] == idx]
+
+            correct_dist[f_id].append(len(correct_items_in_current_complexity))
+            for k in range(max_k):
+                number_of_tries_in_current_complexity = np.array(
+                    [item[2] for item in correct_items_in_current_complexity])
+                correct_dist_top_k[f_id][k].append(np.sum((number_of_tries_in_current_complexity <= k)))
+        correct_dist_top_k[f_id] = np.array(correct_dist_top_k[f_id])
+
+    print 'correct_dist', correct_dist, {k: sum(v) for k, v in correct_dist.iteritems()}
+
+    for k, v in correct_dist.iteritems():
+        correct_dist[k] = np.array(correct_dist[k])
+
+    comp_dist(complexity_dist, number_of_corrects[1])
+    a_r1_wd(correct_dist[number_of_corrects[0]], complexity_dist, correct_dist_top_k[number_of_corrects[0]], wd_perf)
+    for i in range(4):
+        inter_inc_f1(complexity_dist, correct_dist_top_k, i, wd_perf, labels)
+    succ_rate(files, json_data, comp_range, question_complexities, labels)
+    inter_cost(files, json_data, comp_range, question_complexities, labels)
