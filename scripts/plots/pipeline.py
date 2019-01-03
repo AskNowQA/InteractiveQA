@@ -6,8 +6,11 @@ import pickle as pk
 import matplotlib
 
 labels = {'SO-RQ': 'NIB-IQA', 'SO-IG': 'IQA-IG', 'SO-OG': 'IQA-OG', '': 'SIB'}
-colors = {'NIB-IQA': 'green', 'IQA-IG': 'blue', 'IQA-OG': 'orange', 'SIB': 'red', 'NIB-WDAqua': 'yellow',
+colors = {'NIB-IQA': 'green', 'IQA-IG': 'blue', 'IQA-OG': 'orange', 'SIB': 'red', 'NIB-WDAqua': 'brown',
           'NIB-IQA-Top1': 'blue'}
+
+font = {'size': 14}
+matplotlib.rc('font', **font)
 
 
 def extract_id(val):
@@ -27,6 +30,7 @@ def comp_dist(complexity_dist, number_of_corrects):
 
     plt.xticks(complexity_dist[0], complexity_dist[0])
     plt.yticks(np.arange(0, number_of_corrects * 2 / 2, 100))
+    fig.tight_layout()
     plt.savefig('comp_dist.png')
 
 
@@ -51,7 +55,8 @@ def a_r1_wd(correct_dist, complexity_dist, correct_dist_top_k, wd_perf):
 
     plt.xticks(complexity_dist[0], complexity_dist[0])
     plt.yticks(np.arange(0, 101, 10))
-    ax.legend(loc='upper right')
+    ax.legend(loc='upper center')
+    fig.tight_layout()
     plt.savefig('a-r1-wd.png')
 
 
@@ -68,7 +73,9 @@ def inter_inc_f1(complexity_dist, correct_dist_top_k, complexity_index, wd_perf)
     ax.xaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
     ax.xaxis.set_minor_formatter(matplotlib.ticker.ScalarFormatter())
     ax.xaxis.set_minor_locator(matplotlib.ticker.LogLocator(subs=[50, 200]))
-    ax.legend(loc='lower right')
+    if complexity_index == 1:
+        ax.legend(loc='upper right')
+    fig.tight_layout()
     plt.savefig('inter_inc_f1_{}.png'.format(complexity_index + 2))
 
 
@@ -97,6 +104,7 @@ def succ_rate(files, json_data, comp_range, question_complexities):
     plt.xticks(comp_range, comp_range)
     plt.yticks(np.arange(0, 101, 10))
     ax.legend(loc='upper right')
+    fig.tight_layout()
     plt.savefig('succ_rate.png')
 
 
@@ -120,11 +128,13 @@ def inter_cost(files, json_data, comp_range, question_complexities):
                color=colors[labels[file_id]])
         ax.errorbar(comp_range + (counter * 0.1) - 0.2, res[:, 0], res[:, 1], linestyle='None', marker='^',
                     color=colors[labels[file_id]])
+        print labels[file_id], res[:, 0]
         counter += 1
 
     ax.set_yscale("log", nonposy='clip')
     plt.xticks(comp_range, comp_range)
-    ax.legend(loc='upper right')
+    ax.legend(loc='upper right', ncol=2)
+    fig.tight_layout()
     plt.savefig('inter_cost.png')
 
 
