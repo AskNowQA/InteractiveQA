@@ -13,8 +13,11 @@ from common.utility.utils import Utils
 
 import pickle as pk
 import os
+import threading
 import itertools
 import copy
+from threading import Thread
+import Queue
 
 
 class IQAPipeline:
@@ -25,9 +28,10 @@ class IQAPipeline:
         # Init chunkers
         classifier_chunker = ClassifierChunkParser([], os.path.join(args.base_path, args.model))
         SENNA_chunker = SENNAChunker()
-        with open(os.path.join(args.base_path, args.gold_chunk)) as data_file:
-            gold_chunk_dataset = pk.load(data_file)
-        gold_Chunker = GoldChunker({item[0]: item[1:] for item in gold_chunk_dataset})
+        if hasattr(args, 'gold_chunk'):
+            with open(os.path.join(args.base_path, args.gold_chunk)) as data_file:
+                gold_chunk_dataset = pk.load(data_file)
+            gold_Chunker = GoldChunker({item[0]: item[1:] for item in gold_chunk_dataset})
         self.__chunkers = []
         self.__chunkers.append(SENNA_chunker)
         self.__chunkers.append(classifier_chunker)
@@ -38,18 +42,15 @@ class IQAPipeline:
         entity_linkers = []
         relation_linkers = []
 
-        earl = EARL(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True)
-        entity_linkers.append(earl)
-        relation_linkers.append(earl)
+        # earl = EARL(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True)
+        # entity_linkers.append(earl)
+        # relation_linkers.append(earl)
 
-        entity_linkers.append(
-            LuceneLinker(index_path=os.path.join(args.base_path, 'output/idx_ent_ngram/'), use_ngram=True))
-        relation_linkers.append(
-            LuceneLinker(index_path=os.path.join(args.base_path, 'output/idx_rel_ngram/'), use_ngram=True))
-        relation_linkers.append(
-            LuceneLinker(index_path=os.path.join(args.base_path, 'output/idx_rel_stemmer/'), use_stemmer=True))
+        entity_linkers.append(LuceneLinker(index='idx_ent_ngram', use_ngram=True))
+        relation_linkers.append(LuceneLinker(index='idx_rel_ngram', use_ngram=True))
+        relation_linkers.append(LuceneLinker(index='idx_rel_stemmer', use_stemmer=True))
 
-        if args.dataset == 'lcquad':
+        if hasattr(args, 'dataset') and args.dataset == 'lcquad':
             relation_linkers.append(RNLIWOD(os.path.join(args.base_path, 'data/LC-QuAD/relnliodLogs'),
                                             dataset_path=os.path.join(args.base_path, 'data/LC-QuAD/linked_3200.json')))
             entity_linkers.append(TagMe(os.path.join(args.base_path, 'data/LC-QuAD/tagmeNEDLogs'),
@@ -63,29 +64,34 @@ class IQAPipeline:
         sqg = SQG()
         self.__query_builders = [sqg]
 
+        self.pipelines = []
+        for chunker in self.__chunkers:
+            for linker in self.__linkers:
+                for qb in self.__query_builders:
+                    self.pipelines.append((chunker, linker, qb))
         self.components = [self.__chunk, self.__link, self.__build_query]
         self.q__qapair = None
 
     def __check_linkers(self, entities=[], relations=[]):
-        if self.q__qapair is not None:
-            wrong_ent = True
-            wrong_rel = True
-            if len(entities) == len([uri_o for uri_o in self.q__qapair.sparql.uris if uri_o.is_entity()]):
-                wrong_ent = len(
-                    [uri_o for uri_o in self.q__qapair.sparql.uris if
-                     uri_o.is_entity() and uri_o.uri not in [uri['uri'] for item in entities for uri in
-                                                             item['uris']]]) > 0
-            # if len(relations) == len([uri_o for uri_o in self.q__qapair.sparql.uris if uri_o.is_ontology()]):
-            wrong_rel = len(
-                [uri_o for uri_o in self.q__qapair.sparql.uris if
-                 uri_o.is_ontology() and uri_o.uri not in [uri['uri'] for item in relations for uri in
-                                                           item['uris']]]) > 0
-            return not (wrong_ent or wrong_rel)
+        # if self.q__qapair is not None:
+        #     wrong_ent = True
+        #     wrong_rel = True
+        #     if len(entities) == len([uri_o for uri_o in self.q__qapair.sparql.uris if uri_o.is_entity()]):
+        #         wrong_ent = len(
+        #             [uri_o for uri_o in self.q__qapair.sparql.uris if
+        #              uri_o.is_entity() and uri_o.uri not in [uri['uri'] for item in entities for uri in
+        #                                                      item['uris']]]) > 0
+        #     # if len(relations) == len([uri_o for uri_o in self.q__qapair.sparql.uris if uri_o.is_ontology()]):
+        #     wrong_rel = len(
+        #         [uri_o for uri_o in self.q__qapair.sparql.uris if
+        #          uri_o.is_ontology() and uri_o.uri not in [uri['uri'] for item in relations for uri in
+        #                                                    item['uris']]]) > 0
+        #     return not (wrong_ent or wrong_rel)
         return True
 
-    def __build_query(self, prev_output):
+    def __build_query(self, prev_output, __query_builders):
         outputs = [qb.build_query(prev_output['question'], prev_output['entities'], prev_output['relations']) for qb in
-                   self.__query_builders if self.__check_linkers(prev_output['entities'], prev_output['relations'])]
+                   __query_builders if self.__check_linkers(prev_output['entities'], prev_output['relations'])]
         outputs = [item for item in outputs if len(item['queries']) > 0]
         for output in outputs:
             # Keep only the entity/relation that have been used in the query
@@ -118,12 +124,12 @@ class IQAPipeline:
                 query['complete_confidence'] = linked_items_confidence * query['confidence'] * query['type_confidence']
         return outputs
 
-    def __link(self, prev_output):
+    def __link(self, prev_output, __linkers):
         chunks = prev_output['chunks']
 
         # outputs = Utils.run_in_parallel([prev_output['question'], chunks],
         #                                 *[item.link_entities_relations for item in self.__linkers])
-        outputs = [item.link_entities_relations(prev_output['question'], chunks) for item in self.__linkers]
+        outputs = [item.link_entities_relations(prev_output['question'], chunks) for item in __linkers]
 
         for item in outputs:
             if len(item['entities']) > 2:
@@ -192,9 +198,9 @@ class IQAPipeline:
                             outputs.append(new_output)
         return outputs
 
-    def __chunk(self, question):
+    def __chunk(self, question, __chunkers):
         # chunkers_output = Utils.run_in_parallel([question], *[item.get_phrases for item in self.__chunkers])
-        chunkers_output = [chunker.get_phrases(question) for chunker in self.__chunkers]
+        chunkers_output = [chunker.get_phrases(question) for chunker in __chunkers]
 
         # According to LC-QuAD specs, there is no query with more than two entities or three relations
         # for chunks in chunkers_output:
@@ -214,10 +220,28 @@ class IQAPipeline:
             if uri.is_entity():
                 uri.types = self.kb.get_types(uri.uri)
 
-        outputs = {-1: [qapair.question.text]}
-        for cmpnt_idx, component in enumerate(self.components):
-            outputs[cmpnt_idx] = []
-            for prev_output in outputs[cmpnt_idx - 1]:
-                outputs[cmpnt_idx].extend(component(prev_output))
+        threads = []
+        outputs = Queue.Queue()
+        done = Queue.Queue()
 
-        return outputs
+        def run_pipeline(pipeline):
+            # print('start pipeline')
+            output = {-1: [qapair.question.text]}
+            for cmpnt_idx, component in enumerate(self.components):
+                output[cmpnt_idx] = []
+                for prev_output in output[cmpnt_idx - 1]:
+                    output[cmpnt_idx].extend(component(prev_output, [pipeline[cmpnt_idx]]))
+            if len(output[2]) > 0:
+                outputs.put(output)
+            done.put(0)
+
+        for pipeline in self.pipelines:
+            run_pipeline(pipeline)
+            # t = threading.Thread(target=run_pipeline, args=(pipeline,))
+            # t.start()
+            # threads.append(t)
+
+        # for t in threads:
+        #     t.join()
+
+        return outputs, done, len(self.pipelines)

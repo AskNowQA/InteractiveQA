@@ -15,7 +15,6 @@ class SQG:
                  'timeout': self.timeout,
                  'use_cache': config.config['SQG']['use_sqg_cache'],
                  'force_list': True}
-
         result_list = Utils.call_web_api(self.endpoint, input)
         result_bool = None
         result_count = None

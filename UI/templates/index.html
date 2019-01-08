@@ -12,7 +12,9 @@ Star the survey
     natural language question. <br/>
     Please click the below button to start the survey.
     <hr/>
-    <a href="{{ url_for('survey') }}">Star IQA Survey</a>
+    <a href="{{ url_for('SurveyView:index') }}">Star IQA Survey</a><br />
+    <a href="{{ url_for('FreeQuestionSurveyView:index') }}">Star IQA Survey (Free Question)</a>
+
 </div> <!-- /container -->
 {{ super() }}
 {% endblock %}

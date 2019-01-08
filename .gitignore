@@ -1,9 +1,11 @@
+venv/
+docker/
 /data/
 **/*.db
 caches/
 models/
-output/
-**/tmp.py
+output**/
+**/tmp.*
 .idea/
 .classpath
 .project

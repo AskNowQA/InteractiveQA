@@ -9,7 +9,7 @@ class InteractionManager:
         self.kb = kb
         self.strategy = strategy
         self.w = 1
-        self.interaction_options = InteractionOptions(self.pipeline_results[2], kb.parse_uri, sparql_parser, kb,
+        self.interaction_options = InteractionOptions(self.pipeline_results, kb.parse_uri, sparql_parser, kb,
                                                       *interaction_type)
         self.last_option = None
 
@@ -32,27 +32,30 @@ class InteractionManager:
                 self.last_option = 'query'
         return io, query
 
-    def interact(self, answer):
-        if isinstance(self.last_option, basestring) and self.last_option == 'query':
+    def interact(self, answer, last_option=None):
+        if last_option is None:
+            last_option = self.last_option
+
+        if isinstance(last_option, basestring) and last_option == 'query':
             # TODO: do some bookkeeping
             return False
         else:
-            if self.last_option.type == 'query' and answer:
+            if last_option.type == 'query' and answer:
                 return False
 
-            if answer is not None and self.last_option.type == 'linked':
+            if answer is not None and last_option.type == 'linked':
                 # in case the current IO is linked and there are other IOs in the same label,
                 # we look into the benchmark to see which of is used to construct the target query
-                uri = self.last_option.value.uris[0].uri
-                similar_ios = [io for io in self.interaction_options.ios_of_same_group(self.last_option) if
+                uri = last_option.value.uris[0].uri
+                similar_ios = [io for io in self.interaction_options.ios_of_same_group(last_option) if
                                io.type == 'linked' and uri[uri.rindex('/'):] == io.value.uris[0].uri[
                                                                                 io.value.uris[0].uri.rindex('/'):]]
                 if uri not in self.target_query.sparql.query:
                     if len(similar_ios) > 0:
                         for io in similar_ios:
                             if io.value.uris[0].uri in self.target_query.sparql.query:
-                                self.last_option = io
-                                similar_ios = [io for io in self.interaction_options.ios_of_same_group(self.last_option)
+                                last_option = io
+                                similar_ios = [io for io in self.interaction_options.ios_of_same_group(last_option)
                                                if io.type == 'linked' and uri[uri.rindex('/'):] == io.value.uris[0].uri[
                                                                                                    io.value.uris[
                                                                                                        0].uri.rindex(
@@ -60,9 +63,10 @@ class InteractionManager:
                                 break
                 # remove the IOs with same label, if they their URI isn't used by other IO's
                 for io in similar_ios:
-                    if io != self.last_option and io.value.uris[0].uri != self.last_option.value.uris[0].uri:
+                    if io != last_option and io.value.uris[0].uri != last_option.value.uris[0].uri:
                         other_ios = self.interaction_options.get_ios_by_uri(uri)
                         if len(set([g_id for g_id, tio in other_ios])) == 1:
                             self.interaction_options.update(io, False)
-            self.interaction_options.update(self.last_option, answer)
+            self.interaction_options.update(last_option, answer)
+            self.last_option = last_option
             return True

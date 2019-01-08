@@ -10,11 +10,14 @@ import argparse
 import logging
 import pickle as pk
 import json
+import time
 from common.utility.utils import Utils
 from common.kb.dbpedia import DBpedia
 from common.parser.lc_quad_linked import LC_Qaud_Linked
 from common.interaction.interactionManager import InteractionManager
 from common.interaction.bookKeeper import BookKeeper
+from common.pipeline import IQAPipeline
+from common.container.qapair import QApair
 
 global pipeline_path
 global kb
@@ -26,6 +29,7 @@ global book_keeper
 app = flask.Flask(__name__)
 app.secret_key = 'sec key'
 interaction_data = dict()
+pipeline_data = dict()
 
 
 def handle_IO(question, qid, query, io):
@@ -84,6 +88,39 @@ def start():
     return json.dumps(output)
 
 
+@app.route('/iqa/ui/v1.0/start_free_question', methods=['POST'])
+def start_free_question():
+    global strategy, book_keeper
+    if not flask.request.json:
+        flask.abort(400)
+
+    userid = flask.request.json['userid']
+    if 'strategy' in flask.request.json:
+        if flask.request.json['strategy'] in ['InformationGain', 'OptionGain', 'Probability']:
+            strategy = flask.request.json['strategy']
+    question = flask.request.json['question']
+
+    qa_pair = QApair(question, '', '', 'id', dataset.parser)
+    outputs, done, num_pipelines = pipeline.run(qa_pair)
+    pipeline_data[userid] = (outputs, done, num_pipelines)
+    if num_pipelines > 0:
+        while len(outputs.queue) == 0 and len(done.queue) < num_pipelines:
+            time.sleep(1)
+
+    pipeline_output = [item for output in outputs.queue for item in output[2]]
+    interaction_types = [[False, True], [True, True]]
+
+    interaction_data[userid] = InteractionManager(pipeline_output, kb=kb,
+                                                  sparql_parser=dataset.parser.parse_sparql,
+                                                  interaction_type=interaction_types, strategy=strategy)
+
+    io, query = interaction_data[userid].get_interaction_option()
+
+    output = handle_IO(question, None, query, io)
+    output['stats'] = {'total': 1, 'answered': 0}
+    return json.dumps(output)
+
+
 @app.route('/iqa/ui/v1.0/interact', methods=['POST'])
 def interact():
     if not flask.request.json:
@@ -118,6 +155,8 @@ if __name__ == '__main__':
     Utils.setup_logging()
     parser = argparse.ArgumentParser(description='UI Backend')
     parser.add_argument("--base_path", help="base path", default="../../", dest="base_path")
+    parser.add_argument("--model", help="path to model", default="models/ClassifierChunkParser.tagger.model",
+                        dest="model")
     parser.add_argument("--port", help="port", default=5002, type=int, dest="port")
     args = parser.parse_args()
     logger.info(args)
@@ -125,6 +164,7 @@ if __name__ == '__main__':
     pipeline_path = os.path.join(args.base_path, 'output', 'pipeline')
     kb = DBpedia(cache_path=os.path.join(args.base_path, "caches/"), use_cache=True)
     dataset = LC_Qaud_Linked(os.path.join(args.base_path, 'data', 'LC-QuAD', 'linked.json'))
+    pipeline = IQAPipeline(args, kb, dataset.parser.parse_sparql)
     interaction_types = [[False, True], [True, True]]
     strategy = 'InformationGain'
     book_keeper = BookKeeper(os.path.join(args.base_path, 'UI', 'database', 'IQA.db'))
