@@ -21,7 +21,7 @@ class FreeQuestionSurveyView(FlaskView):
                 data['strategy'] = flask.request.values['strategy']
             data['question'] = form.question.data
 
-            result = Utils.call_web_api(config['IQA']['backend'] + '/start_free_question', data)
+            result = Utils.call_web_api(config['IQA']['backend'] + '/freequestionsurvey/index', data)
             # Log the record
             # session['session_id'] = Utils.rand_id()
             # session['start'] = datetime.datetime.utcnow()

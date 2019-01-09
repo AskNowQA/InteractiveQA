@@ -8,147 +8,19 @@ if module_path not in sys.path:
 import flask
 import argparse
 import logging
-import pickle as pk
-import json
-import time
 from common.utility.utils import Utils
 from common.kb.dbpedia import DBpedia
 from common.parser.lc_quad_linked import LC_Qaud_Linked
-from common.interaction.interactionManager import InteractionManager
-from common.interaction.bookKeeper import BookKeeper
-from common.pipeline import IQAPipeline
-from common.container.qapair import QApair
 
-global pipeline_path
-global kb
-global dataset
-global interaction_types
-global strategy
-global book_keeper
+from common.interaction.bookKeeper import BookKeeper
+from UI.backend.models.survey import Survey
+from UI.backend.models.freeQuestionSurvey import FreeQuestionSurvey
 
 app = flask.Flask(__name__)
 app.secret_key = 'sec key'
-interaction_data = dict()
-pipeline_data = dict()
 
-
-def handle_IO(question, qid, query, io):
-    result = {'question': question, 'query': query, 'qid': qid}
-    if io is None:
-        # there is no IO, but there is one valid query
-        if query is not None:
-            result['IO'] = {'surface': query, 'values': []}
-    elif io.type == 'linked' or io.type == 'linked_type':
-        start, length = map(int, [item.strip('[]') for item in io.value.surface_form.split(',')])
-        surface = question[start:start + length]
-        if io.type == 'linked_type':
-            surface = 'type of "{}"'.format(surface)
-        result['IO'] = {'surface': surface,
-                        'values': [io.value.uris[0].uri]}
-    elif io.type == 'type':
-        result['IO'] = {'surface': 'question_type', 'values': [io.value]}
-    elif io.type == 'query':
-        result['IO'] = {'surface': io.value.query, 'values': []}
-    return result
-
-
-@app.errorhandler(404)
-def not_found(error):
-    return flask.make_response(flask.jsonify({'error': 'Command Not found'}), 404)
-
-
-@app.route('/iqa/ui/v1.0/start', methods=['POST'])
-def start():
-    global strategy, book_keeper
-    if not flask.request.json:
-        flask.abort(400)
-
-    userid = flask.request.json['userid']
-    qid = None
-    if 'qid' in flask.request.json:
-        qid = flask.request.json['qid']
-    if 'strategy' in flask.request.json:
-        if flask.request.json['strategy'] in ['InformationGain', 'OptionGain', 'Probability']:
-            strategy = flask.request.json['strategy']
-
-    question_id, total, answered = book_keeper.new_question(userid, qid)
-    if question_id is None:
-        return json.dumps({'command': 'end_survey'})
-    with open(os.path.join(pipeline_path, ('{0}.pickle'.format(question_id))), 'r') as file_handler:
-        interaction_data[userid] = InteractionManager(pk.load(file_handler), kb=kb,
-                                                      sparql_parser=dataset.parser.parse_sparql,
-                                                      interaction_type=interaction_types, strategy=strategy,
-                                                      target_query=dataset.get_by_id(question_id)[0])
-
-    question = interaction_data[userid].pipeline_results[-1][0]
-    io, query = interaction_data[userid].get_interaction_option()
-
-    output = handle_IO(question, question_id, query, io)
-    output['stats'] = {'total': total, 'answered': answered}
-    return json.dumps(output)
-
-
-@app.route('/iqa/ui/v1.0/start_free_question', methods=['POST'])
-def start_free_question():
-    global strategy, book_keeper
-    if not flask.request.json:
-        flask.abort(400)
-
-    userid = flask.request.json['userid']
-    if 'strategy' in flask.request.json:
-        if flask.request.json['strategy'] in ['InformationGain', 'OptionGain', 'Probability']:
-            strategy = flask.request.json['strategy']
-    question = flask.request.json['question']
-
-    qa_pair = QApair(question, '', '', 'id', dataset.parser)
-    outputs, done, num_pipelines = pipeline.run(qa_pair)
-    pipeline_data[userid] = (outputs, done, num_pipelines)
-    if num_pipelines > 0:
-        while len(outputs.queue) == 0 and len(done.queue) < num_pipelines:
-            time.sleep(1)
-
-    pipeline_output = [item for output in outputs.queue for item in output[2]]
-    interaction_types = [[False, True], [True, True]]
-
-    interaction_data[userid] = InteractionManager(pipeline_output, kb=kb,
-                                                  sparql_parser=dataset.parser.parse_sparql,
-                                                  interaction_type=interaction_types, strategy=strategy)
-
-    io, query = interaction_data[userid].get_interaction_option()
-
-    output = handle_IO(question, None, query, io)
-    output['stats'] = {'total': 1, 'answered': 0}
-    return json.dumps(output)
-
-
-@app.route('/iqa/ui/v1.0/interact', methods=['POST'])
-def interact():
-    if not flask.request.json:
-        flask.abort(400)
-    userid = flask.request.json['userid']
-
-    if flask.request.json['answer'] == 'uncertain':
-        answer = None
-    else:
-        answer = flask.request.json['answer'] == 'True'
-    if interaction_data[userid].interact(answer):
-        io, query = interaction_data[userid].get_interaction_option()
-        question = interaction_data[userid].pipeline_results[-1][0]
-
-        return json.dumps(handle_IO(question, None, query, io))
-    else:
-        return json.dumps({'command': 'next_question'})
-
-
-@app.route('/iqa/ui/v1.0/correct', methods=['POST'])
-def correct():
-    if not flask.request.json:
-        flask.abort(400)
-
-    userid = flask.request.json['userid']
-    # TODO: Mark current query as selected query by the user
-    return flask.make_response(flask.jsonify({}), 200)
-
+Survey.register(app)
+FreeQuestionSurvey.register(app)
 
 if __name__ == '__main__':
     logger = logging.getLogger(__name__)
@@ -164,9 +36,19 @@ if __name__ == '__main__':
     pipeline_path = os.path.join(args.base_path, 'output', 'pipeline')
     kb = DBpedia(cache_path=os.path.join(args.base_path, "caches/"), use_cache=True)
     dataset = LC_Qaud_Linked(os.path.join(args.base_path, 'data', 'LC-QuAD', 'linked.json'))
-    pipeline = IQAPipeline(args, kb, dataset.parser.parse_sparql)
     interaction_types = [[False, True], [True, True]]
     strategy = 'InformationGain'
     book_keeper = BookKeeper(os.path.join(args.base_path, 'UI', 'database', 'IQA.db'))
+
+    Survey.dataset = dataset
+    Survey.kb = kb
+    Survey.strategy = strategy
+    Survey.pipeline_path = pipeline_path
+    Survey.book_keeper = book_keeper
+
+    FreeQuestionSurvey.parser = dataset.parser
+    FreeQuestionSurvey.strategy = strategy
+    FreeQuestionSurvey.kb = kb
+    FreeQuestionSurvey.args = args
 
     app.run(debug=False, port=args.port)

@@ -1,6 +1,6 @@
 config = {
     'IQA': {
-        'backend': 'http://127.0.0.1:5002/iqa/ui/v1.0'
+        'backend': 'http://127.0.0.1:5002'
     },
     'general': {
         'http': {
