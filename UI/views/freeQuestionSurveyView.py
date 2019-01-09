@@ -38,7 +38,7 @@ class FreeQuestionSurveyView(FlaskView):
 
         # log_interaction(interaction=flask.jsonify(session['current_IO']).data, answer=data['answer'])
 
-        result = Utils.call_web_api(config['IQA']['backend'] + '/interact', data)
+        result = Utils.call_web_api(config['IQA']['backend'] + '/freequestionsurvey/interact', data)
         return flask.jsonify(self.reformat(result))
 
     def correct(self):

@@ -50,7 +50,7 @@ class InteractionManager:
                 similar_ios = [io for io in self.interaction_options.ios_of_same_group(last_option) if
                                io.type == 'linked' and uri[uri.rindex('/'):] == io.value.uris[0].uri[
                                                                                 io.value.uris[0].uri.rindex('/'):]]
-                if uri not in self.target_query.sparql.query:
+                if self.target_query is not None and uri not in self.target_query.sparql.query:
                     if len(similar_ios) > 0:
                         for io in similar_ios:
                             if io.value.uris[0].uri in self.target_query.sparql.query:
