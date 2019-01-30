@@ -1,9 +1,9 @@
 from common.utility.utils import Utils
 from common.utility.cacheDict import CacheDict
 import config
-import requests
 import urllib
 import os
+import json
 
 
 class DBpedia:
@@ -26,15 +26,18 @@ class DBpedia:
             self.example_triples_cache = CacheDict(os.path.join(cache_path, 'example_triples.cache'))
 
     def query(self, q):
-        payload = (
-            ('query', q),
-            ('format', 'application/json'))
+        payload = {
+            'query': q,
+            'format': 'application/json'}
         try:
-            r = requests.get(self.endpoint, params=payload, timeout=60)
+            query_string = urllib.parse.urlencode(payload)
+            url = self.endpoint + '?' + query_string
+            r = urllib.request.urlopen(url, timeout=60)
+            result = r.read()
         except:
             return 0, None
 
-        return r.status_code, r.json() if r.status_code == 200 else None
+        return r.status, json.loads(result) if r.status == 200 else None
 
     def get_types(self, uri):
         if not self.use_cache or uri not in self.type_cache:
@@ -43,7 +46,7 @@ class DBpedia:
             FILTER ( strstarts(str(?t), "http://dbpedia.org/ontology/"))}}'''.format(
                 uri.encode("ascii", "ignore"))
             payload = {'query': query, 'format': 'application/json'}
-            results = Utils.call_web_api(self.endpoint + '?' + urllib.urlencode(payload), None)
+            results = Utils.call_web_api(self.endpoint + '?' + urllib.parse.urlencode(payload), None)
             if results is None:
                 return []
             self.type_cache[uri] = list(set(
@@ -58,7 +61,8 @@ class DBpedia:
 OPTIONAL {{ <{0}> <http://dbpedia.org/ontology/abstract> ?abstract FILTER (lang(?abstract) = 'en')}}
 FILTER (lang(?label) = 'en')  }}'''.format(uri.encode("ascii", "ignore"))
             payload = {'query': query, 'format': 'application/json'}
-            results = Utils.call_web_api(self.endpoint + '?' + urllib.urlencode(payload), None)
+
+            results = Utils.call_web_api(self.endpoint + '?' + urllib.parse.urlencode(payload), None)
 
             label = uri[uri.rindex('/') + 1:]
             try:
@@ -86,7 +90,7 @@ FILTER (lang(?label) = 'en')  }}'''.format(uri.encode("ascii", "ignore"))
             query = '''SELECT DISTINCT * WHERE {{ <{0}> <http://www.w3.org/2002/07/owl#{1}> ?a 
             FILTER regex(?a,'wikidata.org','i') }} LIMIT 1'''.format(uri.encode("ascii", "ignore"), owl_str)
             payload = {'query': query, 'format': 'application/json'}
-            results = Utils.call_web_api(self.endpoint + '?' + urllib.urlencode(payload), None)
+            results = Utils.call_web_api(self.endpoint + '?' + urllib.parse.urlencode(payload), None)
 
             if len(results['results']['bindings']) == 0:
                 self.wikidata_cache[uri] = ''
@@ -95,7 +99,7 @@ FILTER (lang(?label) = 'en')  }}'''.format(uri.encode("ascii", "ignore"))
                 query = '''SELECT * WHERE {{ <{0}> <http://schema.org/description> ?b FILTER(lang(?b) = 'en' )}}'''.format(
                     wikidata_id)
                 payload = {'query': query, 'format': 'json'}
-                results = Utils.call_web_api(self.wikidata_endpoint + '?' + urllib.urlencode(payload),
+                results = Utils.call_web_api(self.wikidata_endpoint + '?' + urllib.parse.urlencode(payload),
                                              None)
                 description = ''
                 try:
@@ -115,7 +119,7 @@ FILTER (lang(?label) = 'en')  }}'''.format(uri.encode("ascii", "ignore"))
                 }} LIMIT 2'''.format(
                     uri.encode("ascii", "ignore"))
                 payload = {'query': query, 'format': 'application/json'}
-                results = Utils.call_web_api(self.endpoint + '?' + urllib.urlencode(payload), None)
+                results = Utils.call_web_api(self.endpoint + '?' + urllib.parse.urlencode(payload), None)
 
                 if len(results['results']['bindings']) == 0:
                     self.example_triples_cache[uri] = []

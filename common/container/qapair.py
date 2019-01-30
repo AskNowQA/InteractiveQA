@@ -1,5 +1,5 @@
-from question import Question
-from sparql import SPARQL
+from common.container.question import Question
+from common.container.sparql import SPARQL
 
 
 class QApair:

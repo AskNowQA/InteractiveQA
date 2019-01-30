@@ -2,7 +2,7 @@ import os
 import nltk
 from collections import Iterable
 import sklearn
-from chunker import Chunker
+from common.component.chunker.chunker import Chunker
 
 
 def features(tokens, index, history):

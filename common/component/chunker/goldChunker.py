@@ -1,4 +1,4 @@
-from chunker import Chunker
+from common.component.chunker.chunker import Chunker
 import nltk
 
 

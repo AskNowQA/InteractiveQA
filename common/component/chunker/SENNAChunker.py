@@ -1,12 +1,12 @@
 # Taken from here: https://github.com/AskNowQA/EARL/blob/master/scripts/ShallowParser.py
 from practnlptools.tools import Annotator
-from chunker import Chunker
+from common.component.chunker.chunker import Chunker
 import nltk
 
 
 class SENNAChunker(Chunker):
     def __init__(self):
-        print "Shallow Parser Initializing"
+        print("Shallow Parser Initializing")
         self.annotator = Annotator()
         self.stop_words = ["a", "as", "able", "about", "above", "according", "accordingly", "across", "actually",
                            "after", "afterwards", "again", "against", "aint", "all", "allow", "allows", "almost",
@@ -66,7 +66,7 @@ class SENNAChunker(Chunker):
                            "will", "willing", "wish", "with", "within", "without", "wont", "wonder", "would", "would",
                            "wouldnt", "yes", "yet", "you", "youd", "youll", "youre", "youve", "your", "yours",
                            "yourself", "yourselves", "zero", "whose", "which", "is", ", ", "\\\\", "?", "\\"]
-        print "Shallow Parser Initialized"
+        print("Shallow Parser Initialized")
 
     def parse(self, tagged_sent):
         str = " ".join([item[0] for item in tagged_sent]).encode("ascii", "ignore")

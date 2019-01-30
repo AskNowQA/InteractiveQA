@@ -36,7 +36,7 @@ class InteractionManager:
         if last_option is None:
             last_option = self.last_option
 
-        if isinstance(last_option, basestring) and last_option == 'query':
+        if isinstance(last_option, str) and last_option == 'query':
             # TODO: do some bookkeeping
             return False
         else:

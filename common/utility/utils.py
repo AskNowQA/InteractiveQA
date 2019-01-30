@@ -3,12 +3,11 @@ from __future__ import print_function
 import os
 import logging.config
 import json
-import urllib, urllib2
+import urllib
 import config
 from multiprocessing.dummy import Pool as ThreadPool
 import random, string, re
-import requests
-from cacheDict import CacheDict
+from common.utility.cacheDict import CacheDict
 
 
 class Struct(object): pass
@@ -108,17 +107,18 @@ class Utils:
 
     @staticmethod
     def call_web_api(endpoint, raw_input=None, use_json=True, use_url_encode=False, parse_response_json=True):
-        proxy_handler = urllib2.ProxyHandler({})
+        proxy_handler = urllib.request.ProxyHandler({})
         if 'sda-srv' in endpoint or '127.0.0.1' in endpoint:
-            opener = urllib2.build_opener(proxy_handler)
+            opener = urllib.request.build_opener(proxy_handler)  # urllib2.build_opener(proxy_handler)
         else:
-            opener = urllib2.build_opener()
-        req = urllib2.Request(endpoint)
+            opener = urllib.request.build_opener()
+        req = urllib.request.Request(endpoint)
         if use_json:
             input = json.dumps(raw_input)
+            input = input.encode('utf-8')
             req.add_header('Content-Type', 'application/json')
         elif use_url_encode:
-            input = urllib.urlencode(raw_input)
+            input = urllib.parse.urlencode(raw_input)
         else:
             input = raw_input
         try:

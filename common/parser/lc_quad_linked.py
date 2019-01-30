@@ -30,8 +30,8 @@ class LC_Qaud_Linked:
 
     def print_pairs(self, n=-1):
         for item in self.qapairs[0:n]:
-            print item
-            print ''
+            print(item)
+            print('')
 
     def get_by_id(self, id):
         return [qapair for qapair in self.qapairs if qapair.id == id]

@@ -145,7 +145,7 @@ class InteractionOptions:
             self.dic[interactionOption.id] = UniqueList([interactionOption])
         else:
             if org_group_id is None:
-                print 'error'
+                print('error')
                 pass
             else:
                 if org_group_id == best_matching_id:
@@ -271,7 +271,7 @@ class InteractionOptions:
                     if active_ios[item].value.uris[0].raw_uri in top_query.query:
                         in_top_query[item] += 1
             tmp_max = max(in_top_query.values())
-            idx = [k for k, v in in_top_query.iteritems() if v == tmp_max][0]
+            idx = [k for k, v in in_top_query.items() if v == tmp_max][0]
 
         return active_ios[idx]
 

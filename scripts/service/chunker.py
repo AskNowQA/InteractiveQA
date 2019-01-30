@@ -35,9 +35,9 @@ def chunk():
     for chunker in chunkers:
         result.append({"name": type(chunker).__name__, "result": chunker.get_phrases(question)})
 
-    print question
-    print result
-    print
+    print(question)
+    print(result)
+    print()
 
     return json.dumps(result)
 
