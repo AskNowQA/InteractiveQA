@@ -2,7 +2,7 @@ import datetime
 
 import flask
 from flask_login import login_required, current_user
-from flask.ext.classy import FlaskView, route
+from flask_classful import FlaskView, route
 
 from UI.database.tabledef import InteractionLog, AnsweredQuestion
 from common.utility.utils import Utils

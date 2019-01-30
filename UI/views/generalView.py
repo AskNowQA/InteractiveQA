@@ -1,6 +1,6 @@
 import flask
 from flask_login import login_user, login_required, logout_user
-from flask.ext.classy import FlaskView, route
+from flask_classful import FlaskView, route
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from UI.forms.loginForm import LoginForm
