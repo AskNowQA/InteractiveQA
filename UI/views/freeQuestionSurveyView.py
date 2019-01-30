@@ -1,7 +1,8 @@
 import flask
 from flask_login import login_required, current_user
-from flask.ext.classy import FlaskView, route
+from flask_classful import FlaskView, route
 
+from UI.database.tabledef import InteractionLog, AnsweredQuestion
 from UI.forms.submitQuestionForm import SubmitQuestionForm
 from common.utility.utils import Utils
 from config import config
@@ -14,21 +15,21 @@ class FreeQuestionSurveyView(FlaskView):
     @route('index', methods=['GET', 'POST'])
     def index(self):
         result = {'content_visibility': 'hidden'}
+        data = {'userid': current_user.username}
         form = SubmitQuestionForm()
         if form.validate_on_submit():
-            data = {'userid': current_user.username}
             if 'strategy' in flask.request.values:
                 data['strategy'] = flask.request.values['strategy']
             data['question'] = form.question.data
 
-            result = Utils.call_web_api(config['IQA']['backend'] + '/freequestionsurvey/index', data)
-            # Log the record
-            # session['session_id'] = Utils.rand_id()
-            # session['start'] = datetime.datetime.utcnow()
-            # if 'command' not in result or result['command'] != 'end_survey':
-            #     log_interaction()
+        result = Utils.call_web_api(config['IQA']['backend'] + '/freequestionsurvey/index', data)
+        # Log the record
+        # session['session_id'] = Utils.rand_id()
+        # session['start'] = datetime.datetime.utcnow()
+        # if 'command' not in result or result['command'] != 'end_survey':
+        #     log_interaction()
 
-            result['content_visibility'] = 'visible'
+        result['content_visibility'] = 'visible'
         result = self.reformat(result)
         return flask.render_template('surveyFreeQuestion.html', data=result, form=form)
 
@@ -41,10 +42,20 @@ class FreeQuestionSurveyView(FlaskView):
         result = Utils.call_web_api(config['IQA']['backend'] + '/freequestionsurvey/interact', data)
         return flask.jsonify(self.reformat(result))
 
+    @route('score', methods=['POST'])
+    def score(self):
+        # flask.request.values['score']
+        # data = {'userid': current_user.username, 'answer': flask.request.values['answer']}
+
+        # log_interaction(interaction=flask.jsonify(session['current_IO']).data, answer=data['answer'])
+
+        result = {}
+        return flask.jsonify(self.reformat(result))
+
     def correct(self):
         # log_interaction(data='early_correct')
         # mark_as_answered(final_query=flask.session['current_query'])
-        return flask.redirect('survey')
+        return flask.redirect('./free-question-survey/index')
 
     def skip(self):
         reason = 'skip'
@@ -54,6 +65,31 @@ class FreeQuestionSurveyView(FlaskView):
         # log_interaction(data='skip:' + reason)
         # mark_as_answered(data='skip:' + reason)
         return flask.redirect('survey')
+
+    def mark_as_answered(self, data=None, final_query=None):
+        # now = datetime.datetime.utcnow()
+        # record = AnsweredQuestion(current_user.username,
+        #                           flask.session['question_id'],
+        #                           '',
+        #                           now,
+        #                           (now - flask.session['start']).total_seconds(),
+        #                           data,
+        #                           final_query)
+        # self.db.session.add(record)
+        # self.db.session.commit()
+        pass
+
+    def log_interaction(self, interaction='', answer='', data=''):
+        log_record = InteractionLog(current_user.username,
+                                    flask.session['question_id'],
+                                    flask.session['session_id'],
+                                    interaction,
+                                    answer,
+                                    flask.session['current_query'],
+                                    datetime.datetime.utcnow(),
+                                    data)
+        self.db.session.add(log_record)
+        self.db.session.commit()
 
     def reformat(self, result):
         if result is not None:
@@ -73,7 +109,7 @@ class FreeQuestionSurveyView(FlaskView):
                         result['IO']['values'][0] = 'Number of some items'
                     elif result['IO']['values'][0] == 'boolean':
                         result['IO']['values'][0] = 'Yes or No'
-            if 'query' in result:
+            if 'query' in result and result['query'] is not None:
                 flask.session['current_query'] = result['query']
                 result['query'] = result['query'].replace('{', '{\n').replace('}', '\n}').replace(' .', ' .\n')
 

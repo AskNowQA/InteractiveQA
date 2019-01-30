@@ -9,6 +9,7 @@ Interactive Question Answering (SDA Research)
      style="position: absolute;width: 100%;height: 100%;background-color: #fff;opacity: 0.9;display: none;z-index: 100;text-align: center;">
 </div>
 <div id="question" style="margin-left: 10px">
+    <h3>Task:  {{data['task']}} </h3>
     <form method="POST" action="">
         {{ form.hidden_tag() }}
         <table style="width: 100%">
@@ -28,6 +29,7 @@ Interactive Question Answering (SDA Research)
             <div id="sparql2nl">
                 <h4>{{ data['sparql2nl'] }}</h4>
             </div>
+            <h5>Answer: {{ data['answer'] }}</h5>
             <hr/>
             <div id="sparql-query">
                 <div>
@@ -38,7 +40,7 @@ Interactive Question Answering (SDA Research)
                 </div>
             </div>
             <hr/>
-            <a href="{{ url_for('FreeQuestionSurveyView:correct') }}">If this interpretation of the question is correct, please click here</a>
+            <a id="correct-link">If this interpretation of the question is correct, please click here</a>
             <hr/>
             <span>Skip the question because: </span>
             <select id="skip_reason">
@@ -67,6 +69,25 @@ Interactive Question Answering (SDA Research)
 
 <script>
 
+    judgment_form = function() {
+        var html_content = '<h1>Well done! How do you assess the interaction?</h1>'+
+                '<fieldset id="g1" name="g1" style="font-size: 18pt">';
+        for (var i=1; i<=5; i++)
+            html_content += '<br /><input type="radio" value="'+i+'" name="g1">'+i
+        $message.html(html_content + '</fieldset><br/><input id="judgment-submit" type="submit">');
+        $("#judgment-submit").click(function () {
+            selected_option = $('input[name=g1]:checked').val();
+            if (selected_option != undefined) {
+                $.post("score", {'score': selected_option}, function (data, status) {
+                    window.location.replace("correct");
+                });
+            }
+        });
+        $message.show();
+    };
+
+    $('#correct-link').click(judgment_form);
+
     click_handler = function () {
     };
 
@@ -80,12 +101,7 @@ Interactive Question Answering (SDA Research)
             return false;
         }
         if (data['command'] == 'next_question') {
-            setTimeout(function () {
-                window.location.replace("survey");
-            }, 2000);
-            $message.html('<h1>Well done! Let\'s go for the next question</h1>');
-            $message.show();
-
+            judgment_form();
             return false;
         }
 
