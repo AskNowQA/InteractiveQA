@@ -1,8 +1,9 @@
+import datetime
 import flask
 from flask_login import login_required, current_user
 from flask_classful import FlaskView, route
 
-from UI.database.tabledef import InteractionLog, AnsweredQuestion
+from UI.database.tabledef import TaskInteractionLog, AnsweredTask
 from UI.forms.submitQuestionForm import SubmitQuestionForm
 from common.utility.utils import Utils
 from config import config
@@ -14,47 +15,48 @@ class FreeQuestionSurveyView(FlaskView):
 
     @route('index', methods=['GET', 'POST'])
     def index(self):
-        result = {'content_visibility': 'hidden'}
         data = {'userid': current_user.username}
         form = SubmitQuestionForm()
         if form.validate_on_submit():
             if 'strategy' in flask.request.values:
                 data['strategy'] = flask.request.values['strategy']
             data['question'] = form.question.data
+            data['task'] = form.task.data
+            result = Utils.call_web_api(config['IQA']['backend'] + '/freequestionsurvey/start_task', data)
+            result['content_visibility'] = 'visible'
+            self.log_interaction('start_task', data=flask.jsonify(result).data)
 
-        result = Utils.call_web_api(config['IQA']['backend'] + '/freequestionsurvey/index', data)
-        # Log the record
-        # session['session_id'] = Utils.rand_id()
-        # session['start'] = datetime.datetime.utcnow()
-        # if 'command' not in result or result['command'] != 'end_survey':
-        #     log_interaction()
+        else:
+            result = Utils.call_web_api(config['IQA']['backend'] + '/freequestionsurvey/new_task', data)
+            result['content_visibility'] = 'hidden'
+            flask.session['session_id'] = Utils.rand_id()
+            flask.session['start'] = datetime.datetime.utcnow()
+            flask.session['question_id'] = result['qid']
+            self.log_interaction('new_task', data=flask.jsonify(result).data)
 
-        result['content_visibility'] = 'visible'
         result = self.reformat(result)
+        form.task.data = result['task']
         return flask.render_template('surveyFreeQuestion.html', data=result, form=form)
 
     @route('interact', methods=['POST'])
     def interact(self):
         data = {'userid': current_user.username, 'answer': flask.request.values['answer']}
 
-        # log_interaction(interaction=flask.jsonify(session['current_IO']).data, answer=data['answer'])
+        self.log_interaction(interaction=flask.jsonify(flask.session['current_IO']).data, answer=data['answer'])
 
         result = Utils.call_web_api(config['IQA']['backend'] + '/freequestionsurvey/interact', data)
         return flask.jsonify(self.reformat(result))
 
     @route('score', methods=['POST'])
     def score(self):
-        # flask.request.values['score']
-        # data = {'userid': current_user.username, 'answer': flask.request.values['answer']}
-
-        # log_interaction(interaction=flask.jsonify(session['current_IO']).data, answer=data['answer'])
+        self.log_interaction(interaction='score', answer=flask.request.values['score'])
 
         result = {}
         return flask.jsonify(self.reformat(result))
 
     def correct(self):
-        # log_interaction(data='early_correct')
-        # mark_as_answered(final_query=flask.session['current_query'])
+        self.log_interaction(data='early_correct')
+        self.mark_as_answered(final_query=flask.session['current_query'])
         return flask.redirect('./free-question-survey/index')
 
     def skip(self):
@@ -62,32 +64,32 @@ class FreeQuestionSurveyView(FlaskView):
         if 'reason' in flask.request.values:
             reason = flask.request.values['reason']
 
-        # log_interaction(data='skip:' + reason)
-        # mark_as_answered(data='skip:' + reason)
+        self.log_interaction(data='skip:' + reason)
+        self.mark_as_answered(data='skip:' + reason)
         return flask.redirect('survey')
 
     def mark_as_answered(self, data=None, final_query=None):
-        # now = datetime.datetime.utcnow()
-        # record = AnsweredQuestion(current_user.username,
-        #                           flask.session['question_id'],
-        #                           '',
-        #                           now,
-        #                           (now - flask.session['start']).total_seconds(),
-        #                           data,
-        #                           final_query)
-        # self.db.session.add(record)
-        # self.db.session.commit()
+        now = datetime.datetime.utcnow()
+        record = AnsweredTask(current_user.username,
+                              flask.session['question_id'],
+                              '',
+                              now,
+                              (now - flask.session['start']).total_seconds(),
+                              data,
+                              final_query)
+        self.db.session.add(record)
+        self.db.session.commit()
         pass
 
     def log_interaction(self, interaction='', answer='', data=''):
-        log_record = InteractionLog(current_user.username,
-                                    flask.session['question_id'],
-                                    flask.session['session_id'],
-                                    interaction,
-                                    answer,
-                                    flask.session['current_query'],
-                                    datetime.datetime.utcnow(),
-                                    data)
+        log_record = TaskInteractionLog(current_user.username,
+                                        flask.session['question_id'],
+                                        flask.session['session_id'],
+                                        interaction,
+                                        answer,
+                                        flask.session['current_query'],
+                                        datetime.datetime.utcnow(),
+                                        data)
         self.db.session.add(log_record)
         self.db.session.commit()
 
