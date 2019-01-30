@@ -12,7 +12,6 @@ import logging
 import json
 from common.utility.utils import Utils
 from common.utility.luceneSearch import LuceneSearch
-import pickle as pk
 
 app = flask.Flask(__name__)
 linker = None
@@ -28,11 +27,11 @@ def link():
     if not flask.request.json:
         flask.abort(400)
 
-    result = linker[flask.request.json['index']].search(flask.request.json['chunk'],
-                           use_ngram=flask.request.json['use_ngram'],
-                           use_stemmer=flask.request.json['use_stemmer'])
+    result = list(linker[flask.request.json['index']].search(flask.request.json['chunk'],
+                                                             use_ngram=flask.request.json['use_ngram'],
+                                                             use_stemmer=flask.request.json['use_stemmer']))
 
-    return json.dumps(list(result))
+    return json.dumps(result)
 
 
 if __name__ == '__main__':
@@ -43,7 +42,8 @@ if __name__ == '__main__':
     parser.add_argument("--port", help="port", default=5005, type=int, dest="port")
     parser.add_argument("--base_path", help="base path", default="../../", dest="base_path")
     parser.add_argument("--index", help="index path ",
-                        default="output/idx_ent_ngram/;output/idx_rel_ngram/;output/idx_rel_stemmer/", dest="index")
+                        default="output/idx_ent_ngram/;output/idx_ent/;output/idx_rel_ngram/;output/idx_rel_stemmer/",
+                        dest="index")
 
     args = parser.parse_args()
     logger.info(args)
