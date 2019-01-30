@@ -33,3 +33,30 @@ class BookKeeper:
                 self.engine.execute(
                     'UPDATE assigned_questions SET username = "{0}" WHERE username = "{1}"'.format(userid, result[0]))
             return self.new_question(userid)
+
+    def new_task(self, userid):
+        result = list(self.engine.execute('SELECT * FROM assigned_tasks WHERE username = "{}"'.format(userid)))
+        total_task = len(result)
+        if len(result) > 0:
+            tasks = [item[2] for item in result]
+
+            answered_tasks = list(
+                self.engine.execute('SELECT * FROM answered_tasks WHERE username = "{}"'.format(userid)))
+            for row in answered_tasks:
+                qid = row[2]
+                if qid in tasks:
+                    tasks.remove(qid)
+            if len(tasks) == 0:
+                return None, 0, 0
+            qid = tasks[randint(0, len(tasks) - 1)]
+            selected_task = list(
+                self.engine.execute('SELECT * FROM tasks WHERE id = "{}"'.format(qid)))[0][2]
+            return qid, selected_task, total_task, len(answered_tasks)
+        else:
+            result = list(
+                self.engine.execute('SELECT min(username) FROM assigned_tasks WHERE substr(username,1,1)="#"'))
+            if len(result) > 0:
+                result = result[0]
+                self.engine.execute(
+                    'UPDATE assigned_tasks SET username = "{0}" WHERE username = "{1}"'.format(userid, result[0]))
+            return self.new_task(userid)

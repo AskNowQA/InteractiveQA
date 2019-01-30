@@ -50,5 +50,6 @@ if __name__ == '__main__':
     FreeQuestionSurvey.strategy = strategy
     FreeQuestionSurvey.kb = kb
     FreeQuestionSurvey.args = args
+    FreeQuestionSurvey.book_keeper = book_keeper
 
     app.run(debug=False, port=args.port)
