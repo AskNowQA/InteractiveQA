@@ -70,11 +70,84 @@ class AnsweredQuestion(Base):
         self.time = time
         self.duration = duration
         self.data = data
-        self.final_query=final_query
+        self.final_query = final_query
 
 
 class InteractionLog(Base):
     __tablename__ = "interaction_log"
+
+    id = Column(Integer, primary_key=True)
+    username = Column(String, nullable=False)
+    question_id = Column(String)
+    session_id = Column(String)
+    interaction = Column(String)
+    answer = Column(String)
+    query = Column(String)
+    time = Column(DateTime)
+    data = Column(String)
+
+    def __init__(self, username, question_id, session_id, interaction, answer, query, time, data=''):
+        self.username = username
+        self.question_id = question_id
+        self.session_id = session_id
+        self.answer = answer
+        self.interaction = interaction
+        self.query = query
+        self.time = time
+        self.data = data
+
+
+class Task(Base):
+    __tablename__ = "tasks"
+
+    id = Column(String, primary_key=True)
+    complexity = Column(Integer)
+    text = Column(String)
+
+    def __init__(self, id, complexity, text):
+        self.id = id
+        self.complexity = complexity
+        self.text
+
+
+class AssignedTask(Base):
+    __tablename__ = "assigned_tasks"
+
+    id = Column(Integer, primary_key=True)
+    username = Column(String)
+    question_id = Column(String)
+    strategy = Column(String)
+
+    def __init__(self, username, question_id, strategy):
+        self.username = username
+        self.question_id = question_id
+        self.strategy = strategy
+
+
+class AnsweredTask(Base):
+    __tablename__ = "answered_tasks"
+
+    id = Column(Integer, primary_key=True)
+    username = Column(String, nullable=False)
+    question_id = Column(String)
+    strategy = Column(String)
+    time = Column(DateTime)
+    duration = Column(Integer)
+    data = Column(String)
+    final_query = Column(String)
+
+    def __init__(self, username, question_id, strategy, time, duration, data, final_query):
+        self.username = username
+        self.question_id = question_id
+        self.strategy = strategy
+        self.time = time
+        self.duration = duration
+        self.data = data
+        self.final_query = final_query
+
+
+class TaskInteractionLog(Base):
+    __tablename__ = "task_interaction_log"
 
     id = Column(Integer, primary_key=True)
     username = Column(String, nullable=False)
@@ -118,13 +191,13 @@ if __name__ == '__main__':
         for user in users:
             engine.execute('INSERT INTO users VALUES({0})'.format(user))
 
-    populate_questions_table = True
-    if populate_questions_table:
-        dataset = LC_Qaud_Linked(os.path.join(args.base_path, 'data', 'LC-QuAD', 'linked.json'))
-        question_complexities = {
-            qapair.id: len([uri for uri in qapair.sparql.uris if not (uri.is_generic() or uri.is_type())]) for qapair in
-            dataset.qapairs}
+    dataset = LC_Qaud_Linked(os.path.join(args.base_path, 'data', 'LC-QuAD', 'linked.json'))
+    question_complexities = {
+        qapair.id: len([uri for uri in qapair.sparql.uris if not (uri.is_generic() or uri.is_type())]) for qapair in
+        dataset.qapairs}
 
+    populate_questions_table = False
+    if populate_questions_table:
         with open(os.path.join(args.base_path, 'output', 'wdaqua_core1.pk'), "r") as data_file:
             wdaqua_results = pk.load(data_file)
         with open(os.path.join(args.base_path, 'output', 'stats-IQA-SO-RQ.json'), "r") as data_file:
@@ -137,11 +210,11 @@ if __name__ == '__main__':
                 engine.execute(
                     'INSERT INTO questions VALUES("{0}",{1})'.format(question_id, question_complexities[question_id]))
         questions = list(engine.execute('SELECT * FROM questions'))
-        print ('#questions: {}'.format(len(questions)))
-        print (
+        print('#questions: {}'.format(len(questions)))
+        print(
             'Dist. per complexity : {}'.format(np.unique([question[1] for question in questions], return_counts=True)))
 
-    populate_assigned_question_table = True
+    populate_assigned_question_table = False
     if populate_assigned_question_table:
         strategies = ['IO', 'OG']
         result = engine.execute('SELECT * FROM questions ORDER BY 2')
@@ -162,4 +235,42 @@ if __name__ == '__main__':
                 for qid in qids:
                     engine.execute(
                         'INSERT INTO assigned_questions(username, question_id) VALUES("#{0}-{1}","{2}")'.format(
+                            str(user_idx), strategy, qid))
+
+    populate_tasks_table = True
+    if populate_tasks_table:
+        with open(os.path.join(args.base_path, 'output', 'random_50.json'), "r") as data_file:
+            tasks = json.load(data_file)
+        for task in tasks:
+            question_id = task[0]
+            engine.execute(
+                'INSERT INTO tasks VALUES("{0}",{1}, "{2}")'.format(question_id,
+                                                                    question_complexities[question_id],
+                                                                    task[1]))
+        tasks = list(engine.execute('SELECT * FROM tasks'))
+        print('#tasks: {}'.format(len(tasks)))
+        print(
+            'Dist. per complexity : {}'.format(np.unique([task[1] for task in tasks], return_counts=True)))
+
+    populate_assigned_task_table = True
+    if populate_assigned_task_table:
+        strategies = ['IO']
+        result = engine.execute('SELECT * FROM tasks ORDER BY 2')
+        number_of_users = 10
+        number_of_question_per_complexity = {2: 2, 3: 2, 4: 1, 5: 1}
+        question_complexities = {item[0]: item[1] for item in result}
+        complexities = set(question_complexities.values())
+
+        for user_idx in range(number_of_users):
+            qids = []
+            for c in complexities:
+                for idx in range(number_of_question_per_complexity[c]):
+                    candidate_qids = [item[0] for item in question_complexities.items() if item[1] == c]
+                    if len(candidate_qids) > 0:
+                        qids.append(candidate_qids[0])
+                        del question_complexities[candidate_qids[0]]
+            for strategy in strategies:
+                for qid in qids:
+                    engine.execute(
+                        'INSERT INTO assigned_tasks(username, question_id) VALUES("#{0}-{1}","{2}")'.format(
                             str(user_idx), strategy, qid))
