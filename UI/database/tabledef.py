@@ -107,7 +107,7 @@ class Task(Base):
     def __init__(self, id, complexity, text):
         self.id = id
         self.complexity = complexity
-        self.text
+        self.text = text
 
 
 class AssignedTask(Base):
