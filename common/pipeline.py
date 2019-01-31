@@ -16,8 +16,8 @@ import os
 import threading
 import itertools
 import copy
-from threading import Thread
-import Queue
+import datetime
+import queue as Queue
 
 
 class IQAPipeline:
@@ -47,6 +47,7 @@ class IQAPipeline:
         # relation_linkers.append(earl)
 
         entity_linkers.append(LuceneLinker(index='idx_ent_ngram', use_ngram=True))
+        entity_linkers.append(LuceneLinker(index='idx_ent'))
         relation_linkers.append(LuceneLinker(index='idx_rel_ngram', use_ngram=True))
         relation_linkers.append(LuceneLinker(index='idx_rel_stemmer', use_stemmer=True))
 
@@ -234,6 +235,7 @@ class IQAPipeline:
             if len(output[2]) > 0:
                 outputs.put(output)
             done.put(0)
+            print(datetime.datetime.now(), len(output[2]) > 0)
 
         for pipeline in self.pipelines:
             run_pipeline(pipeline)
