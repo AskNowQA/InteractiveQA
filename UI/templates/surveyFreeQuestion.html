@@ -74,10 +74,13 @@ Interactive Question Answering (SDA Research)
 
     judgment_form = function () {
         var html_content = '<h1>Well done! How do you assess the interaction?</h1>' +
-            '<fieldset id="g1" name="g1" style="font-size: 18pt">';
+            '<table id="g1" name="g1" style="font-size: 18pt;display: inline;"><tr>';
         for (var i = 1; i <= 5; i++)
-            html_content += '<br /><input type="radio" value="' + i + '" name="g1">' + i
-        $message.html(html_content + '</fieldset><br/><input id="judgment-submit" type="submit">');
+            html_content += '<td style="width: 50px;"><input type="radio" value="' + i + '" name="g1"></td>';
+        html_content += '</tr><tr>';
+        for (var i = 1; i <= 5; i++)
+            html_content += '<td>' + i + '</td>'
+        $message.html(html_content + '</tr></table><br/><input id="judgment-submit" type="submit">');
         $("#judgment-submit").click(function () {
             selected_option = $('input[name=g1]:checked').val();
             if (selected_option != undefined) {
