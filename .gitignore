@@ -3,7 +3,7 @@ docker/
 /data/
 **/*.db
 caches/
-models/
+/models/
 output**/
 **/tmp.*
 .idea/
