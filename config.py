@@ -8,7 +8,7 @@ config = {
         },
         'dbpedia': {
             # 'endpoint': 'http://dbpedia.org/sparql'
-            'endpoint': 'http://sda-srv01.iai.uni-bonn.de:8164/sparql'
+            'endpoint': 'http://131.220.9.219:8164/sparql'
         },
         'wikidata': {
             'endpoint': 'https://query.wikidata.org/sparql'
