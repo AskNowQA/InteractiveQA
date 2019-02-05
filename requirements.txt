@@ -10,7 +10,7 @@ Flask-WTF==0.14.2
 gunicorn==19.9.0
 itsdangerous==1.1.0
 Jinja2==2.10
-lupyne==2.1
+lupyne==2.2
 MarkupSafe==1.1.0
 nltk==3.4
 numpy==1.15.4
