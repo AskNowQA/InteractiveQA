@@ -4,6 +4,7 @@ import config
 import urllib
 import os
 import json
+import requests
 
 
 class DBpedia:
@@ -32,12 +33,12 @@ class DBpedia:
         try:
             query_string = urllib.parse.urlencode(payload)
             url = self.endpoint + '?' + query_string
-            r = urllib.request.urlopen(url, timeout=60)
-            result = r.read()
+            r = requests.get(url, timeout=60)
+
         except:
             return 0, None
 
-        return r.status, json.loads(result) if r.status == 200 else None
+        return r.status_code, r.json() if r.status_code == 200 else None
 
     def get_types(self, uri):
         if not self.use_cache or uri not in self.type_cache:
@@ -45,8 +46,7 @@ class DBpedia:
             ?t <http://www.w3.org/2000/01/rdf-schema#subClassOf>* ?t2. 
             FILTER ( strstarts(str(?t), "http://dbpedia.org/ontology/"))}}'''.format(
                 uri.encode("ascii", "ignore"))
-            payload = {'query': query, 'format': 'application/json'}
-            results = Utils.call_web_api(self.endpoint + '?' + urllib.parse.urlencode(payload), None)
+            _, results = self.query(query)
             if results is None:
                 return []
             self.type_cache[uri] = list(set(
@@ -60,9 +60,7 @@ class DBpedia:
 <{0}> <http://www.w3.org/2000/01/rdf-schema#label> ?label.
 OPTIONAL {{ <{0}> <http://dbpedia.org/ontology/abstract> ?abstract FILTER (lang(?abstract) = 'en')}}
 FILTER (lang(?label) = 'en')  }}'''.format(uri.encode("ascii", "ignore"))
-            payload = {'query': query, 'format': 'application/json'}
-
-            results = Utils.call_web_api(self.endpoint + '?' + urllib.parse.urlencode(payload), None)
+            _, results = self.query(query)
 
             label = uri[uri.rindex('/') + 1:]
             try:
@@ -89,8 +87,7 @@ FILTER (lang(?label) = 'en')  }}'''.format(uri.encode("ascii", "ignore"))
                 owl_str = 'sameAs'
             query = '''SELECT DISTINCT * WHERE {{ <{0}> <http://www.w3.org/2002/07/owl#{1}> ?a 
             FILTER regex(?a,'wikidata.org','i') }} LIMIT 1'''.format(uri.encode("ascii", "ignore"), owl_str)
-            payload = {'query': query, 'format': 'application/json'}
-            results = Utils.call_web_api(self.endpoint + '?' + urllib.parse.urlencode(payload), None)
+            _, results = self.query(query)
 
             if len(results['results']['bindings']) == 0:
                 self.wikidata_cache[uri] = ''
@@ -118,8 +115,7 @@ FILTER (lang(?label) = 'en')  }}'''.format(uri.encode("ascii", "ignore"))
                 FILTER strstarts(str(?b), "http://dbpedia.org/") 
                 }} LIMIT 2'''.format(
                     uri.encode("ascii", "ignore"))
-                payload = {'query': query, 'format': 'application/json'}
-                results = Utils.call_web_api(self.endpoint + '?' + urllib.parse.urlencode(payload), None)
+                _, results = self.query(query)
 
                 if len(results['results']['bindings']) == 0:
                     self.example_triples_cache[uri] = []

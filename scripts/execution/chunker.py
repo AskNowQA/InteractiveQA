@@ -28,4 +28,4 @@ if __name__ == "__main__":
         sys.exit(0)
 
     classifier_chunker = ClassifierChunkParser([], args.model)
-    print classifier_chunker.get_phrases(test_sentence)
+    print(classifier_chunker.get_phrases(test_sentence))

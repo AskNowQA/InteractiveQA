@@ -15,6 +15,7 @@ class FreeQuestionSurveyView(FlaskView):
 
     @route('index', methods=['GET', 'POST'])
     def index(self):
+        flask.session['current_query'] = None
         data = {'userid': current_user.username}
         form = SubmitQuestionForm()
         if form.validate_on_submit():
