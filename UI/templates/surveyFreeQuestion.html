@@ -32,7 +32,7 @@ Interactive Question Answering (SDA Research)
             <div id="sparql2nl">
                 <h4>{{ data['sparql2nl'] }}</h4>
             </div>
-            <h5>Answer: {{ data['answer'] }}</h5>
+            <h5 id="answer">Answer: {{ data['answer'] }}</h5>
             <hr/>
             <div id="sparql-query">
                 <div>
@@ -112,6 +112,7 @@ Interactive Question Answering (SDA Research)
         }
 
         $('#sparql2nl').html('<h4>' + data['sparql2nl'] + '</h4>');
+        $('#answer').html('<h4> Answer: ' + data['answer'] + '</h4>');
         $('#query').html($('<pre style="white-space: pre-wrap;"></pre>').text(data['query']));
         if (data['IO'] != undefined) {
 

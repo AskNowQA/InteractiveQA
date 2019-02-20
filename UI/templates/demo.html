@@ -30,7 +30,7 @@ Interactive Question Answering (SDA Research)
             <div id="sparql2nl">
                 <h4>{{ data['sparql2nl'] }}</h4>
             </div>
-            <h5>Answer: {{ data['answer'] }}</h5>
+            <h5 id="answer">Answer: {{ data['answer'] }}</h5>
             <hr/>
             <div id="sparql-query">
                 <div>
@@ -40,23 +40,6 @@ Interactive Question Answering (SDA Research)
                     </div>
                 </div>
             </div>
-            <hr/>
-            <a id="correct-link">If this interpretation of the question is correct, please click here</a>
-            <hr/>
-            <span>Skip the question because: </span>
-            <select id="skip_reason">
-                <option value="">please select the reason ...</option>
-                <option value="question_not_understandable">I don't understand the question</option>
-                <option value="IO_not_understandable">I don't understand the options</option>
-                <option value="other">Other</option>
-            </select>
-            <input type="text" style="width: 150px" id="skip_reason_other"/>
-            <button id="skip_button">Skip</button>
-        </div>
-    </div>
-    <div style="position: absolute; bottom: 40px;margin: 0 auto;text-align: center;width: 100%;">
-        <div id="progressbar">
-            <div id="progress-label" style="position: absolute; left:48%;">Loading...</div>
         </div>
     </div>
 </div>
@@ -110,6 +93,7 @@ Interactive Question Answering (SDA Research)
         }
 
         $('#sparql2nl').html('<h4>' + data['sparql2nl'] + '</h4>');
+        $('#answer').html('<h4> Answer: ' + data['answer'] + '</h4>');
         $('#query').html($('<pre style="white-space: pre-wrap;"></pre>').text(data['query']));
         if (data['IO'] != undefined) {
 
@@ -193,43 +177,8 @@ Interactive Question Answering (SDA Research)
     $('#io-1-submit').click(click_handler);
 
     $(function () {
-        var $skip_reason_other = $('#skip_reason_other'),
-            $skip_reason = $('#skip_reason');
-        $skip_reason_other.hide();
-        $skip_reason.change(function () {
-            if ($skip_reason.val() == 'other')
-                $skip_reason_other.show();
-            else
-                $skip_reason_other.hide();
-        })
-        $('#skip_button').click(function () {
-            if ($skip_reason.val() == '') {
-                alert('Please select the reason');
-                return false;
-            } else if (($skip_reason.val() == 'other') && ($skip_reason_other.val() == '')) {
-                alert('Please fill the reason');
-                return false;
-            }
-            var reason = $skip_reason.val();
-            if (reason == 'other')
-                reason = $skip_reason_other.val()
-            window.location.href = "{{ url_for('FreeQuestionSurveyView:skip') }}?reason=" + reason;
-        });
-        first_interaction_data = {{ data | tojson }}
-        ;
+        first_interaction_data = {{ data | tojson }};
         handle_IO(first_interaction_data, 'io-1');
-        var progressbar = $("#progressbar"), progressLabel = $("#progress-label");
-
-        progressbar.progressbar({
-            value: false,
-            change: function () {
-                progressLabel.text(progressbar.progressbar("value") + "%");
-            },
-            complete: function () {
-                progressLabel.text("Complete!");
-            }
-        });
-        progressbar.progressbar("value", {{data['stats']['progress'] }} );
     });
 </script>
 {%- endblock scripts %}
