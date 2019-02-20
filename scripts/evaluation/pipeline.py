@@ -156,4 +156,4 @@ if __name__ == "__main__":
         for k, v in stats.iteritems():
             v.save(os.path.join(args.base_path, 'output', 'stats-{0}.json'.format(k)))
 
-    print stats
+    print(stats)
