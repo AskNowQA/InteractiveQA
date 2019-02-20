@@ -1,0 +1,235 @@
+{% extends "layout.html" %}
+
+{% block title %}
+Interactive Question Answering (SDA Research)
+{% endblock %}
+
+{% block content %}
+<div id="message"
+     style="position: absolute;width: 100%;height: 100%;background-color: #fff;opacity: 0.9;display: none;z-index: 100;text-align: center;">
+</div>
+<div id="question"
+     style="margin-left: 10px;">
+    <form method="POST" action="">
+        {{ form.hidden_tag() }}
+        <table style="width: 100%">
+            <tr>
+                <td style="width: 70%">{{ wtf.form_field(form.question) }}
+                </td>
+                <td style="padding-left: 10px;"><input type="submit" value="Submit"/></td>
+            </tr>
+        </table>
+    </form>
+</div>
+<div style="visibility: {{ data['content_visibility'] }}">
+    <div style="margin: 0 10px">
+        <div id="interactions" style="width: 45%; float:left">
+        </div>
+        <div id="sparql" style="width: 50%; float: right;">
+            <h5>Interpretation of the input question:</h5>
+            <div id="sparql2nl">
+                <h4>{{ data['sparql2nl'] }}</h4>
+            </div>
+            <h5>Answer: {{ data['answer'] }}</h5>
+            <hr/>
+            <div id="sparql-query">
+                <div>
+                    <h5>SPARQL</h5>
+                    <div id="query">
+                        <pre style='white-space: pre-wrap;'>{{ data['query'] }}</pre>
+                    </div>
+                </div>
+            </div>
+            <hr/>
+            <a id="correct-link">If this interpretation of the question is correct, please click here</a>
+            <hr/>
+            <span>Skip the question because: </span>
+            <select id="skip_reason">
+                <option value="">please select the reason ...</option>
+                <option value="question_not_understandable">I don't understand the question</option>
+                <option value="IO_not_understandable">I don't understand the options</option>
+                <option value="other">Other</option>
+            </select>
+            <input type="text" style="width: 150px" id="skip_reason_other"/>
+            <button id="skip_button">Skip</button>
+        </div>
+    </div>
+    <div style="position: absolute; bottom: 40px;margin: 0 auto;text-align: center;width: 100%;">
+        <div id="progressbar">
+            <div id="progress-label" style="position: absolute; left:48%;">Loading...</div>
+        </div>
+    </div>
+</div>
+{{ super() }}
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="http://code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
+<link href="http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css" rel="Stylesheet"/>
+
+<script>
+
+    judgment_form = function () {
+        var html_content = '<h1>Well done! How do you assess the interaction?</h1>' +
+            '<table id="g1" name="g1" style="font-size: 18pt;display: inline;"><tr>';
+        for (var i = 1; i <= 5; i++)
+            html_content += '<td style="width: 50px;"><input type="radio" value="' + i + '" name="g1"></td>';
+        html_content += '</tr><tr>';
+        for (var i = 1; i <= 5; i++)
+            html_content += '<td>' + i + '</td>'
+        $message.html(html_content + '</tr></table><br/><input id="judgment-submit" type="submit">');
+        $("#judgment-submit").click(function () {
+            selected_option = $('input[name=g1]:checked').val();
+            if (selected_option != undefined) {
+                $.post("score", {'score': selected_option}, function (data, status) {
+                    window.location.replace("correct");
+                });
+            }
+        });
+        $message.show();
+    };
+
+    $('#correct-link').click(judgment_form);
+
+    click_handler = function () {
+    };
+
+    function handle_IO(data, new_id) {
+        $message = $('#message');
+        $message.hide();
+        if (data['command'] == 'end_survey') {
+            $message.html('<h1>Thanks for your participation!<br/> We really apperciate your help.</h1>');
+            $message.show();
+
+            return false;
+        }
+        if (data['command'] == 'next_question') {
+            judgment_form();
+            return false;
+        }
+
+        $('#sparql2nl').html('<h4>' + data['sparql2nl'] + '</h4>');
+        $('#query').html($('<pre style="white-space: pre-wrap;"></pre>').text(data['query']));
+        if (data['IO'] != undefined) {
+
+            var $content = $('<div>');
+            var example_triples = data['IO']['values'][0]['example_triples'];
+            var $label_desc_abst;
+            if ((typeof example_triples == "undefined") || (example_triples.length == 0))
+                $label_desc_abst = $('<div style="width:90%; float: left;">');
+            else
+                $label_desc_abst = $('<div style="width:50%; float: left;">');
+
+            $label_desc_abst.append(
+                $('<pre style="white-space: pre-wrap;background-color:white;border:none;padding:unset;"></pre>').text(data['IO']['values'][0]['label']));
+            if ((typeof data['IO']['values'][0]['description'] != "undefined") &&
+                (data['IO']['values'][0]['description'] != ''))
+                $label_desc_abst.append($('<span>').html('<b>description: </b>' + data['IO']['values'][0]['description']));
+            if ((typeof data['IO']['values'][0]['description'] != "undefined") &&
+                (data['IO']['values'][0]['abstract'] != ''))
+                $label_desc_abst.append($('<span>').html('<b>abstract: </b>' + data['IO']['values'][0]['abstract']));
+
+            $content.append($label_desc_abst);
+            var $example_div = $('<div style="border: solid; width:50%; float: right;">').append($('<p style="font-weight: bold;">').text('Examples using same predicate'));
+            if (typeof example_triples != "undefined") {
+                for (var idx = 0; idx < example_triples.length; idx++)
+                    $example_div.append($('<p>').text(example_triples[idx]));
+                if (example_triples.length > 0)
+                    $content.append($example_div);
+            }
+            $content.append('<div style="clear: both;padding-top:10px;">' +
+                "<label><input type=\"radio\" name=\"" + new_id + "\" value=\"True\">Yes</label>\n" +
+                "<label><input type=\"radio\" name=\"" + new_id + "\" value=\"False\">No</label>\n" +
+                "<label><input type=\"radio\" name=\"" + new_id + "\" value=\"uncertain\">I don't know</label>\n" +
+                "<button id=\"" + new_id + "-submit\">Submit answer</button>\n" +
+                "</div>\n");
+            var $newDiv = $('<div>').append($('<h4>' + data['IO']['surface'] + '</h4>')).append($content);
+
+            $('#interactions').prepend($newDiv);
+            $('#interactions').accordion("refresh");
+            $("#" + new_id + "-submit").click(click_handler);
+            manual = true;
+            $interactions_accordion.accordion({active: 0})
+            manual = false;
+        }
+        return false;
+    }
+
+    var $interactions_accordion = $("#interactions").accordion({
+        header: "> div > h4",
+        collapsible: true,
+        active: 0,
+        autoHeight: false,
+        autoActivate: true,
+        beforeActivate: function (event, ui) {
+            if (!manual)
+                event.preventDefault();
+        }
+    });
+
+    $("#sparql-query").accordion({
+        header: "> div > h5",
+        collapsible: true,
+        autoHeight: false,
+        autoActivate: false,
+        active: null
+    });
+
+
+    click_handler = function () {
+        clicked_id = this.id.substring(0, this.id.indexOf('-', 3))
+        selected_option = $('input[name=' + clicked_id + ']:checked').val();
+        if (selected_option != undefined) {
+            $message = $('#message')
+            $message.html('<h1>Loading. Please wait...</h1>');
+            $message.show();
+            $.post("interact", {'answer': selected_option}, function (data, status) {
+                var new_id = 'io-' + (parseInt(clicked_id.substring(clicked_id.indexOf('-') + 1)) + 1);
+                return handle_IO(data, new_id);
+            });
+        }
+    };
+    $('#io-1-submit').click(click_handler);
+
+    $(function () {
+        var $skip_reason_other = $('#skip_reason_other'),
+            $skip_reason = $('#skip_reason');
+        $skip_reason_other.hide();
+        $skip_reason.change(function () {
+            if ($skip_reason.val() == 'other')
+                $skip_reason_other.show();
+            else
+                $skip_reason_other.hide();
+        })
+        $('#skip_button').click(function () {
+            if ($skip_reason.val() == '') {
+                alert('Please select the reason');
+                return false;
+            } else if (($skip_reason.val() == 'other') && ($skip_reason_other.val() == '')) {
+                alert('Please fill the reason');
+                return false;
+            }
+            var reason = $skip_reason.val();
+            if (reason == 'other')
+                reason = $skip_reason_other.val()
+            window.location.href = "{{ url_for('FreeQuestionSurveyView:skip') }}?reason=" + reason;
+        });
+        first_interaction_data = {{ data | tojson }}
+        ;
+        handle_IO(first_interaction_data, 'io-1');
+        var progressbar = $("#progressbar"), progressLabel = $("#progress-label");
+
+        progressbar.progressbar({
+            value: false,
+            change: function () {
+                progressLabel.text(progressbar.progressbar("value") + "%");
+            },
+            complete: function () {
+                progressLabel.text("Complete!");
+            }
+        });
+        progressbar.progressbar("value", {{data['stats']['progress'] }} );
+    });
+</script>
+{%- endblock scripts %}

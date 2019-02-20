@@ -16,6 +16,7 @@ from UI.database.tabledef import User
 from UI.views.generalView import GeneralView
 from UI.views.surveyView import SurveyView
 from UI.views.freeQuestionSurveyView import FreeQuestionSurveyView
+from UI.views.demoView import DemoView
 
 app = flask.Flask(__name__)
 app.wsgi_app = ReverseProxied(app.wsgi_app)
@@ -34,10 +35,12 @@ global kb
 GeneralView.db = db
 SurveyView.db = db
 FreeQuestionSurveyView.db = db
+DemoView.db = db
 
 GeneralView.register(app)
 SurveyView.register(app)
 FreeQuestionSurveyView.register(app)
+DemoView.register(app)
 
 
 @login_manager.user_loader
@@ -59,6 +62,7 @@ if __name__ == '__main__':
     kb = DBpedia(cache_path=cache_path, use_cache=True)
     SurveyView.kb = kb
     FreeQuestionSurveyView.kb = kb
+    DemoView.kb = kb
 
     Utils.set_cache_path(cache_path)
     app.run(debug=True, host='0.0.0.0', port=args.port)
