@@ -34,14 +34,23 @@ class EARL:
         id = question
         input = {'nlquery': question}
         if chunks is not None and isinstance(chunks, list) and len(chunks) > 0:
-            input['chunks'] = chunks
+            input['chunks'] = [[[chunk, "", 0, 0]] for chunk in chunks]
             id += "".join(chunks)
 
         if id not in self.cache or not self.use_cache:
             result = Utils.call_web_api(self.endpoint, input)
+            output = {'entities': [], 'relations': []}
             if result is None:
-                return {'entities': [], 'relations': []}
-            self.cache[id] = result
+                return output
+            for idx, predicated_type in enumerate(result['ertypes']):
+                link_items = [{'confidence': item[0], 'uri': item[1]} for item in result['rerankedlists'][str(idx)]]
+                tmp = {'surface': [0, 0], 'uris': link_items}
+                if predicated_type == 'entity':
+                    output['entities'].append(tmp)
+                elif predicated_type == 'relation':
+                    output['relations'].append(tmp)
+
+            self.cache[id] = output
             self.__save_cache()
         if self.cache[id] is None:
             return {'entities': [], 'relations': []}
