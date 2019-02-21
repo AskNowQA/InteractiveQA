@@ -42,9 +42,9 @@ class IQAPipeline:
         entity_linkers = []
         relation_linkers = []
 
-        # earl = EARL(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True)
-        # entity_linkers.append(earl)
-        # relation_linkers.append(earl)
+        earl = EARL(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True)
+        entity_linkers.append(earl)
+        relation_linkers.append(earl)
 
         entity_linkers.append(LuceneLinker(index='idx_ent_ngram', use_ngram=True))
         entity_linkers.append(LuceneLinker(index='idx_ent'))
