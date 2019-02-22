@@ -12,6 +12,10 @@ class DemoView(FlaskView):
     decorators = []
     kb = None
 
+    @route('help')
+    def help(self):
+        return flask.render_template('demo_help.html')
+
     @route('index', methods=['GET', 'POST'])
     def index(self):
         flask.session['current_query'] = None

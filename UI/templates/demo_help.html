@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+
+{% block title %}
+Interactive Question Answering (SDA Research)
+{% endblock %}
+
+{% block content %}
+<div style="margin:0 auto; width: 80%;">
+    <h1>Welcome to IQA - an Interactive Question Answering system</h1>
+
+    <p>IQA is an interactive Semantic Question Answering (QA) system. IQA interprets users' questions expressed in a natural language in terms of SPARQL queries for the DBpedia knowledge graph. The aim of IQA is to guide the users towards the intended SPARQL query by means of interaction.
+    </p>
+    IQA demo is available at: <a href="http://iqademo.sda.tech/demo/index" target="_blank">http://iqademo.sda.tech/demo/index</a>
+
+    <h2>Step 1:</h2>
+    <p>To start an interactive question answering process of IQA, please enter a question in English in the text box and press “submit” button.
+    </p>
+    Example questions include:
+    Who is the leader of Germany?
+
+    TODO: list some questions that perform well
+    <h2>Step 2:</h2>
+
+    <ul>
+        <li>IQA asks questions to clarify the user intent (shown on the left). These questions are called “interaction options”.</li>
+        <li>The user can select “yes”, “no” or “i don’t know” to indicate if the interaction option proposed by IQA is correct.</li>
+        <li>IQA also suggests a SPARQL query that is the most likely interpretation of the user question (shown on the right).</li>
+        <li>After each user interaction, IQA updates the interaction option and the SPARQL query according to the user feedback.</li>
+    </ul>
+
+    <img style="width: 100%" src="/static/demo_help.png" />
+
+</div>
+
+{{ super() }}
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="http://code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
+<link href="http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css" rel="Stylesheet"/>
+
+{%- endblock scripts %}
