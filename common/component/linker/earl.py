@@ -34,7 +34,7 @@ class EARL:
         id = question
         input = {'nlquery': question}
         if chunks is not None and isinstance(chunks, list) and len(chunks) > 0:
-            input['chunks'] = [[[chunk, "", 0, 0]] for chunk in chunks]
+            input['chunks'] = [[[chunk, "", question.index(chunk) if chunk in question else 0, len(chunk)]] for chunk in chunks]
             id += "".join(chunks)
 
         if id not in self.cache or not self.use_cache:
