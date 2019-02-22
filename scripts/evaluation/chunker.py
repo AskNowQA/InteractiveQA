@@ -23,21 +23,21 @@ if __name__ == "__main__":
     test_sents_tree = [nltk.chunk.conlltags2tree(item) for item in test_sents]
 
     gold_chunker = GoldChunker({item[0]: item[1:] for item in orginal_dataset})
-    print "\nGold Chunker"
-    print gold_chunker.evaluate(test_sents_tree)
+    print("\nGold Chunker")
+    print(gold_chunker.evaluate(test_sents_tree))
 
     SENNA_chunker = SENNAChunker()
-    print "SENNA Chunker"
-    print SENNA_chunker.evaluate(test_sents_tree)
+    print("SENNA Chunker")
+    print(SENNA_chunker.evaluate(test_sents_tree))
 
     tagger_filename = os.path.join(model_dir, "ClassifierChunkParser.tagger.model")
     # if os.path.exists(tagger_filename):
     #     os.remove(tagger_filename)
 
     classifier_chunker = ClassifierChunkParser(train_sents, tagger_filename)
-    print "\nClassifier Chunker"
-    print classifier_chunker.evaluate(test_sents_tree)
+    print("\nClassifier Chunker")
+    print(classifier_chunker.evaluate(test_sents_tree))
 
-    print gold_chunker.get_phrases(test_sentence)
-    print SENNA_chunker.get_phrases(test_sentence)
-    print classifier_chunker.get_phrases(test_sentence)
+    print(gold_chunker.get_phrases(test_sentence))
+    print(SENNA_chunker.get_phrases(test_sentence))
+    print(classifier_chunker.get_phrases(test_sentence))
