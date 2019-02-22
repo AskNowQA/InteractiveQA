@@ -1,10 +1,4 @@
-{% extends "bootstrap/base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}
-
-{% block styles %}
-{{super()}}
-<link rel="stylesheet" href="{{url_for('.static', filename='main.css')}}">
-{% endblock %}
+{% extends "main.html" %}
 
 {% block navbar %}
 <nav class="navbar navbar-inverse navbar-fixed-top">
@@ -39,31 +33,4 @@
         {% endif %}
     </div>
 </nav>
-{% endblock %}
-
-{% block content %}
-<div style="position: absolute; margin: 0 auto;text-align: center;width: 100%;">
-    <a target="_blank" href="https://github.com/AskNowQA/InteractiveQA/issues">Report bug/issue</a>
-</div>
-
-
-<br>
-{% with messages = get_flashed_messages(with_categories=true) %}
-{% if messages %}
-
-{% for message in messages %}
-{% if "Error" not in message[1]: %}
-<div class="alert alert-info">
-    {{ message[1] }}
-</div>
-{% endif %}
-
-{% if "Error" in message[1]: %}
-<div class="alert alert-warning">
-    {{ message[1] }}
-</div>
-{% endif %}
-{% endfor %}
-{% endif %}
-{% endwith %}
 {% endblock %}

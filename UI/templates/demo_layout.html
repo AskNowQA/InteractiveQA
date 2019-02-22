@@ -1,0 +1,16 @@
+{% extends "main.html" %}
+
+{% block navbar %}
+<nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">Interactive QA </a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="{{ url_for('DemoView:index') }}">Home</a></li>
+                <li><a href="{{ url_for('DemoView:help') }}">Help</a></li>
+            </ul>
+    </div>
+</nav>
+{% endblock %}
