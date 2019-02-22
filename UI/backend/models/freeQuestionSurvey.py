@@ -126,7 +126,7 @@ class FreeQuestionSurvey(FlaskView):
 
         if query is not None:
             if FreeQuestionSurvey.pipeline is not None:
-                query_results = FreeQuestionSurvey.pipeline.kb.query(query)
+                query_results = FreeQuestionSurvey.pipeline.kb.query(query + ' LIMIT 10')
                 head_var = query_results[1]['head']['vars'][0]
                 result['answer'] = [item[head_var]['value'].replace('http://dbpedia.org/resource/', '') for item in
                                     query_results[1]['results']['bindings']]
