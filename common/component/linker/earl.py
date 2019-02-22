@@ -34,7 +34,8 @@ class EARL:
         id = question
         input = {'nlquery': question}
         if chunks is not None and isinstance(chunks, list) and len(chunks) > 0:
-            input['chunks'] = [[[chunk, "", question.index(chunk) if chunk in question else 0, len(chunk)]] for chunk in chunks]
+            input['chunks'] = [[[chunk, "", question.index(chunk) if chunk in question else 0, len(chunk)]] for chunk in
+                               chunks]
             id += "".join(chunks)
 
         if id not in self.cache or not self.use_cache:
@@ -44,7 +45,9 @@ class EARL:
                 return output
             for idx, predicated_type in enumerate(result['ertypes']):
                 link_items = [{'confidence': item[0], 'uri': item[1]} for item in result['rerankedlists'][str(idx)]]
-                tmp = {'surface': [0, 0], 'uris': link_items}
+                tmp = {'surface': [result['chunktext'][idx]['surfacestart'],
+                                   result['chunktext'][idx]['surfacelength']],
+                       'uris': link_items}
                 if predicated_type == 'entity':
                     output['entities'].append(tmp)
                 elif predicated_type == 'relation':
