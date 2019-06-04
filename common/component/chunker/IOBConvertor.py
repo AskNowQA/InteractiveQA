@@ -71,7 +71,7 @@ if __name__ == "__main__":
     parser.add_argument("--output", help="Path of output file", default="../../../data/LC-QUAD/linked_IOB.pk",
                         dest="output_path")
     args = parser.parse_args()
-    print args
+    print(args)
 
     iob = IOBConvertor(args.input_path)
     output = iob.convert()

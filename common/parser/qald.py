@@ -99,8 +99,8 @@ class Qald:
 
     def print_pairs(self, n=-1):
         for item in self.qapairs[0:n]:
-            print item
-            print ""
+            print(item)
+            print("")
 
 
 class QaldParser():
