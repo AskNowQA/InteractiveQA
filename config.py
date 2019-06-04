@@ -18,11 +18,17 @@ config = {
         'endpoint': 'http://127.0.0.1:8680/semweb2nl/'
     },
     'EARL': {
-        'endpoint': 'http://sda-srv02.iai.uni-bonn.de:4999/processQuery'
+        'endpoint': 'http://sda.tech/earl/api/processQuery'
+    },
+    'Falcon': {
+        'endpoint': 'https://labs.tib.eu/falcon/api?mode=long'
+    },
+    'MDP': {
+        'endpoint': 'http://localhost:5000/link'
     },
     'SQG': {
-        # 'endpoint': 'http://sda-srv02.iai.uni-bonn.de:5000/qg/api/v1.0/query',
-        'endpoint': 'http://localhost:5010/qg/api/v1.0/query',
+        'endpoint': 'http://solide-qa.cs.upb.de:9200/qg/api/v1.0/query',
+        # 'endpoint': 'http://localhost:5010/qg/api/v1.0/query',
         'timeout': 120,
         'use_sqg_cache': True
     }
