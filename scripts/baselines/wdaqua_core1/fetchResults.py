@@ -60,10 +60,10 @@ if __name__ == '__main__':
                 else:
                     stats.inc('-incorrect')
             except:
-                print "error"
-                print result
+                print("error")
+                print(result)
                 break
-        print stats
+        print(stats)
         stats['correct_quries'] = correct_quries
         stats.save(os.path.join(args.base_path, 'output/correct_queries.json'))
 
@@ -180,7 +180,7 @@ if __name__ == '__main__':
                                 stats_results.inc('-incorrect')
                         else:
                             if query_equal:
-                                print "qqq"
+                                print("qqq")
                             stats_results.inc('-incorrect')
 
                         stats_results[stats_id + 'p'].append(p)
@@ -192,7 +192,7 @@ if __name__ == '__main__':
                     stats_results.inc('total')
                     stats_results.inc(stats_id + 'total')
                     # except Exception as expt:
-                    #     print expt
+                    #     print(expt)
 
             final_stats = Stats()
             for i in range(1, 10):
@@ -202,5 +202,6 @@ if __name__ == '__main__':
                     r = sum(stats_results[stats_id + 'r']) / stats_results[stats_id + 'total']
                     f1 = sum(stats_results[stats_id + 'f1']) / stats_results[stats_id + 'total']
                     final_stats[i] = [p, r, f1, stats_results[stats_id + 'total']]
-                    print i, final_stats[i]
+                    print(i, final_stats[i])
+
             final_stats.save(os.path.join(args.base_path, 'output/wd_perf.json'))
