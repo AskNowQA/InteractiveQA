@@ -78,7 +78,7 @@ class LuceneSearch:
         except Exception as err:
             print(err)
             self.q += 1
-            return
+            return []
 
     def create_index(self, input_file_path):
         directory = store.FSDirectory.open(File(self.index_path).toPath())

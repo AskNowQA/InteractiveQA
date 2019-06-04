@@ -50,11 +50,11 @@ def error_analysis(engine, dataset):
                 result = oracle.validate_query(qapair, user_query)
                 if not result:
                     count += 1
-                    print qapair.id
-                    print query.encode("ascii", "ignore")
-                    print qapair.sparql.query.encode("ascii", "ignore")
-                    print ("")
-                    print ("")
+                    print(qapair.id)
+                    print(query.encode("ascii", "ignore"))
+                    print(qapair.sparql.query.encode("ascii", "ignore"))
+                    print("")
+                    print("")
     print(len(answered_questions)), count
     # 423 147
     # structure 55 0.37
@@ -123,7 +123,7 @@ def user_vs_benchmark(engine, dataset, username):
                            u_skip_option,
                            b_correct]
     for strategy in ['IG', 'OG']:
-        print strategy
+        print(strategy)
         tmp = df.loc[df['strategy'] == strategy][
             ['complexity', 'u_correct', 'u_skip_question', 'u_skip_option', 'b_correct']].groupby(['complexity']).agg(
             ['count', 'sum'])
@@ -131,7 +131,7 @@ def user_vs_benchmark(engine, dataset, username):
         tmp['b_correct_avg'] = tmp.b_correct['sum'] / tmp.b_correct['count'] * 100.0
         tmp['u_skip_question_avg'] = tmp.u_skip_question['sum'] / tmp.u_skip_question['count'] * 100.0
         tmp['u_skip_option_avg'] = tmp.u_skip_option['sum'] / tmp.u_skip_option['count'] * 100.0
-        print tmp
+        print(tmp)
 
         fig = plt.figure()
         ax = fig.add_subplot(111)
@@ -190,7 +190,7 @@ def ig_vs_og(engine):
     fig.tight_layout()
     plt.savefig('ig_vs_og.png')
 
-    print results
+    print(results)
 
 
 if __name__ == "__main__":
@@ -224,5 +224,5 @@ if __name__ == "__main__":
     #         print 'error'
 
     # error_analysis(engine, dataset)
-    # user_vs_benchmark(engine, dataset, args.username)
-    ig_vs_og(engine)
+    user_vs_benchmark(engine, dataset, args.username)
+    # ig_vs_og(engine)

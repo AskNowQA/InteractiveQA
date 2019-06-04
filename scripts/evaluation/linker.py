@@ -81,9 +81,9 @@ if __name__ == '__main__':
         if result == "+matched":
             corrects.append(stats['total'])
         stats.inc('total')
-    print
-    print stats
-    print corrects
+    print()
+    print(stats)
+    print(corrects)
     # --path ../../data/LC-QuAD/linked2843.json --linker ../../data/LC-QuAD/lucence_ent_ngram_classifier.json
 
 

@@ -64,7 +64,7 @@ if __name__ == "__main__":
                         dest="gold_chunk")
     args = parser.parse_args()
 
-    with open(os.path.join(args.base_path, args.gold_chunk)) as data_file:
+    with open(os.path.join(args.base_path, args.gold_chunk), 'rb') as data_file:
         gold_chunker = pk.load(data_file)
         gold_chunker = GoldChunker({item[0]: item[1:] for item in gold_chunker})
 
@@ -86,7 +86,7 @@ if __name__ == "__main__":
 
     stats = Stats()
 
-    with open(os.path.join(args.base_path, 'output', 'wdaqua_core1.pk'), "r") as data_file:
+    with open(os.path.join(args.base_path, 'output', 'wdaqua_core1.pk'), "rb") as data_file:
         wdaqua_results = pk.load(data_file)
 
     qid = ''
@@ -97,7 +97,7 @@ if __name__ == "__main__":
             continue
         output_path = os.path.join(pipeline_path, ('{0}.pickle'.format(qapair.id)))
         if os.path.exists(output_path):
-            with open(os.path.join(pipeline_path, ('{0}.pickle'.format(qapair.id))), 'r') as file_handler:
+            with open(os.path.join(pipeline_path, ('{0}.pickle'.format(qapair.id))), 'rb') as file_handler:
                 outputs = pk.load(file_handler)
 
             overall_cost = 0
@@ -106,7 +106,7 @@ if __name__ == "__main__":
             target_relations = [uri.uri for uri in qapair.sparql.uris if uri.is_ontology()]
 
             chunk_costs = [chunk_cost(gold_chunks, chunks['chunks']) for chunks in outputs[0]]
-            chunk_min_idx = min(xrange(len(chunk_costs)), key=chunk_costs.__getitem__)
+            chunk_min_idx = min(range(len(chunk_costs)), key=chunk_costs.__getitem__)
             overall_cost += chunk_min_idx + 1
 
             entities_cost, found_entities = linked_cost(outputs[1], outputs[0][chunk_min_idx]['chunks'], 'entities',
@@ -143,6 +143,8 @@ if __name__ == "__main__":
             stats['{}_entities'.format(qapair.id)] = entities_cost
             stats['{}_relations'.format(qapair.id)] = relations_cost
             stats['{}_queries'.format(qapair.id)] = query_cost
+            stats['{}_candidate_queries'.format(qapair.id)] = len(
+                set([query['query'] for item in outputs[2] for query in item['queries']]))
         # if stats["total"] > 100:
         #     break
 
