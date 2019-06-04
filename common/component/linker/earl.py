@@ -34,9 +34,15 @@ class EARL:
         id = question
         input = {'nlquery': question}
         if chunks is not None and isinstance(chunks, list) and len(chunks) > 0:
-            input['chunks'] = [[[chunk, "", question.index(chunk) if chunk in question else 0, len(chunk)]] for chunk in
-                               chunks]
+            input['chunks'] = [
+                [[chunk, "", question.lower().index(chunk.lower()) if chunk.lower() in question.lower() else 0,
+                  len(chunk)]] for chunk in chunks]
             id += "".join(chunks)
+            for chunk in chunks:
+                if chunk.lower() in question.lower():
+                    chunk_idx = question.lower().index(chunk.lower())
+                    question = question.replace(question[chunk_idx:chunk_idx + len(chunk)], chunk)
+            input['nlquery'] = question
 
         if id not in self.cache or not self.use_cache:
             result = Utils.call_web_api(self.endpoint, input)
@@ -65,12 +71,12 @@ class EARL:
 
     def link_entities(self, question, chunks=None):
         if chunks is not None:
-            chunks = [item['chunk'] for item in chunks]
+            chunks = [item['chunk'] if item['class'] == 'relation' else item['chunk'].title() for item in chunks]
         return self.__hit_endpoint(question, chunks)["entities"]
 
     def link_relations(self, question, chunks=None):
         if chunks is not None:
-            chunks = [item['chunk'] for item in chunks]
+            chunks = [item['chunk'] if item['class'] == 'relation' else item['chunk'].title() for item in chunks]
         return self.__hit_endpoint(question, chunks)["relations"]
 
     def link_entities_relations(self, question, chunks=None):

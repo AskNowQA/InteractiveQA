@@ -8,7 +8,7 @@ class SQG:
         self.endpoint = endpoint
         self.timeout = timeout
 
-    def build_query(self, question, entities=[], relations=[]):
+    def build_query(self, question, entities=[], relations=[], boolean_query=True, count_query=True):
         input = {'question': question,
                  'entities': entities,
                  'relations': relations,
@@ -18,11 +18,13 @@ class SQG:
         result_list = Utils.call_web_api(self.endpoint, input)
         result_bool = None
         result_count = None
-        if result_list is not None:
+
+        if boolean_query:
             input['force_list'] = False
             input['force_bool'] = True
             result_bool = Utils.call_web_api(self.endpoint, input)
 
+        if result_list is not None and count_query:
             input['force_list'] = False
             input['force_bool'] = False
             input['force_count'] = True
@@ -30,7 +32,7 @@ class SQG:
         result = {'queries': []}
         for queries in itertools.chain([result_list, result_bool, result_count]):
             if queries is None:
-                break
+                continue
             for query in queries['queries']:
                 query['type'] = queries['type']
                 query['type_confidence'] = queries['type_confidence']
