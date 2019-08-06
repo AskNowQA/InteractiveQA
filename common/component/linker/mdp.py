@@ -1,7 +1,7 @@
 from common.utility.utils import Utils
 from common.component.chunker.chunker import Chunker
 import config
-import json
+import ujson as json
 import os
 
 
