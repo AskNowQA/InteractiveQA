@@ -60,14 +60,15 @@ class SPARQL:
                     output.add(feature)
         return output
 
-    def equals(self, other, ignore_property_ontology_space=False):
+    def equals(self, other, ignore_property_ontology_space=False, ignore_type=False):
         if isinstance(other, SPARQL):
             mapping = {}
-            if len(self.where_clause) != len(other.where_clause):
+            if (not ignore_type) and len(self.where_clause) != len(other.where_clause):
                 return False
             if (("ask " in self.raw_query.lower()) != ("ask " in other.raw_query.lower())) or (
                     ("count(" in self.raw_query.lower()) != ("count(" in other.raw_query.lower())):
                 return False
+            total_match = 0
             for line in self.where_clause:
                 found = False
                 for other_line in other.where_clause:
@@ -88,11 +89,14 @@ class SPARQL:
                                     match += line[i][line[i].rindex('/'):] == other_line[i][other_line[i].rindex('/'):]
                     if match == len(line):
                         found = True
+                        total_match += 1
                         mapping = mapping_buffer
                         break
-                if not found:
+                if not ignore_type and not found:
                     return False
-            return True
+            if not ignore_type:
+                return True
+            return total_match * 1.0 / len(self.where_clause)
         else:
             return False
 

@@ -3,7 +3,12 @@ class Oracle:
         pass
 
     def validate_query(self, qapair, query):
-        return qapair.sparql.equals(query, True)
+        query_match = qapair.sparql.equals(query, True, True)
+        if query_match > 0.99:
+            return True
+        else:
+            # TODO check output
+            return query_match > 0.6
 
     def answer(self, qapair, io):
         if io.type == 'query':
