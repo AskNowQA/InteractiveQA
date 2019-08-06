@@ -24,7 +24,7 @@ def extract_id(val):
 def comp_dist(complexity_dist, number_of_corrects):
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    ax.bar(complexity_dist[0], complexity_dist[1], color='gray')
+    ax.bar(list(complexity_dist[0]), complexity_dist[1], color='gray')
     for i, v in enumerate(complexity_dist[1]):
         ax.text(i + 1.9, v + 10, str(v), color='black')
 
@@ -39,12 +39,12 @@ def a_r1_wd(correct_dist, complexity_dist, correct_dist_top_k, wd_perf):
     ax = fig.add_subplot(111)
 
     y_ratio = 100 * (correct_dist / np.array(complexity_dist[1], dtype=float))
-    ax.bar(complexity_dist[0] - 0.2, y_ratio, color=colors['NIB-IQA'], width=0.2, label='NIB-IQA')
+    ax.bar(complexity_dist[0] - 0.2, y_ratio, color=colors['NIB-IQA'], label='NIB-IQA', width=0.2)
     for i, v in enumerate(y_ratio):
         ax.text(i + 1.7, v + 1, str(int(v)) + '%', color='black')
 
     y_ratio = 100 * (correct_dist_top_k[0] / np.array(complexity_dist[1], dtype=float))
-    ax.bar(complexity_dist[0], y_ratio, color=colors['NIB-IQA-Top1'], width=0.2, label='NIB-IQA-Top1')
+    ax.bar(complexity_dist[0], y_ratio, color=colors['NIB-IQA-Top1'], label='NIB-IQA-Top1', width=0.2)
     for i, v in enumerate(y_ratio):
         ax.text(i + 1.9, v + 1, str(int(v)) + '%', color='black')
 
@@ -53,9 +53,10 @@ def a_r1_wd(correct_dist, complexity_dist, correct_dist_top_k, wd_perf):
     for i, v in enumerate(wd_f1):
         ax.text(i + 2.1, v + 1, str(int(v)) + '%', color='black')
 
+    # ax.set_xscale('log')
     plt.xticks(complexity_dist[0], complexity_dist[0])
-    plt.yticks(np.arange(0, 101, 10))
-    ax.legend(loc='upper center')
+    plt.yticks(np.arange(0, 101, 5))
+    ax.legend(loc='upper left')
     fig.tight_layout()
     plt.savefig('a-r1-wd.png')
 
@@ -128,7 +129,7 @@ def inter_cost(files, json_data, comp_range, question_complexities):
                color=colors[labels[file_id]])
         ax.errorbar(comp_range + (counter * 0.1) - 0.2, res[:, 0], res[:, 1], linestyle='None', marker='^',
                     color=colors[labels[file_id]])
-        print labels[file_id], res[:, 0]
+        print(labels[file_id], res[:, 0])
         counter += 1
 
     ax.set_yscale("log", nonposy='clip')
@@ -147,11 +148,21 @@ if __name__ == '__main__':
     max_k = 200
 
     dataset = LC_Qaud_Linked(os.path.join(args.base_path, args.dataset))
-    with open(os.path.join(args.base_path, 'output', 'wdaqua_core1.pk'), "r") as data_file:
+    with open(os.path.join(args.base_path, 'output', 'wdaqua_core1.pk'), "rb") as data_file:
         wdaqua_results = pk.load(data_file)
 
     with open(os.path.join(args.base_path, 'output', 'wd_perf.json'), "r") as data_file:
         wd_perf = json.load(data_file)
+
+    with open(os.path.join(args.base_path, 'output', 'stats-SIB.json'), "r") as data_file:
+        question_cadidate_queries = json.load(data_file)
+
+    ranges = np.array(list(map(int, np.logspace(0, 4, num=10))))
+    # ranges = ranges[ranges < 3500]
+
+    # question_complexities = {
+    #     qapair.id: [r for idx, r in enumerate(ranges) if question_cadidate_queries[qapair.id + '_candidate_queries']<r][0] for
+    #     qapair in dataset.qapairs if qapair.id in wdaqua_results}
 
     question_complexities = {
         qapair.id: len([uri for uri in qapair.sparql.uris if not (uri.is_generic() or uri.is_type())]) for
@@ -177,25 +188,26 @@ if __name__ == '__main__':
         'SO-RQ',
         '']
     x = range(len(files))
-    y_values = [[key, len([v for v in value if '+correct' in v])] for key, value in json_data.iteritems()]
-    print '# corrects in strategies', y_values
+    y_values = [[key, len([v for v in value if '+correct' in v])] for key, value in json_data.items()]
+    print('# corrects in strategies', y_values)
 
     number_of_corrects = max(y_values)
-    comp_range = np.arange(2, 6, 1)
+    # comp_range = np.arange(2, 6, 1)
 
     # question_complexities = {k: v for k, v in question_complexities.iteritems() if k in y_values[:, 0]}
-    complexity_dist = np.unique(question_complexities.values(), return_counts=True)
+    complexity_dist = np.unique(list(question_complexities.values()), return_counts=True)
+    comp_range = complexity_dist[0]
     correct_dist_top_k = {}
     correct_dist = {}
     for f_id in files:
         correct_dist_top_k[f_id] = [[] for k in range(max_k)]
-        y_values = np.array([[extract_id(k), '+correct' in k, v] for k, v in json_data[f_id].iteritems() if
+        y_values = np.array([[extract_id(k), '+correct' in k, v] for k, v in json_data[f_id].items() if
                              'cor' in k], dtype=object)
         y_values = np.array([[k, m, json_data[f_id][k], question_complexities[k]] for k, m, v in y_values],
                             dtype=object)
 
         correct_dist[f_id] = []
-        for idx in range(2, 6):
+        for idx in comp_range:
             correct_items_in_current_complexity = [item for item in y_values if item[1] and item[3] == idx]
 
             correct_dist[f_id].append(len(correct_items_in_current_complexity))
@@ -205,14 +217,14 @@ if __name__ == '__main__':
                 correct_dist_top_k[f_id][k].append(np.sum((number_of_tries_in_current_complexity <= k)))
         correct_dist_top_k[f_id] = np.array(correct_dist_top_k[f_id])
 
-    print 'correct_dist', correct_dist, {k: sum(v) for k, v in correct_dist.iteritems()}
+    print('correct_dist', correct_dist, {k: sum(v) for k, v in correct_dist.items()})
 
-    for k, v in correct_dist.iteritems():
+    for k, v in correct_dist.items():
         correct_dist[k] = np.array(correct_dist[k])
 
     comp_dist(complexity_dist, number_of_corrects[1])
     a_r1_wd(correct_dist[number_of_corrects[0]], complexity_dist, correct_dist_top_k[number_of_corrects[0]], wd_perf)
-    for i in range(4):
-        inter_inc_f1(complexity_dist, correct_dist_top_k, i, wd_perf)
-    succ_rate(files, json_data, comp_range, question_complexities)
-    inter_cost(files, json_data, comp_range, question_complexities)
+    # for i in range(4):
+    #     inter_inc_f1(complexity_dist, correct_dist_top_k, i, wd_perf)
+    # succ_rate(files, json_data, comp_range, question_complexities)
+    # inter_cost(files, json_data, comp_range, question_complexities)
