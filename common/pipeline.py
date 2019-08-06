@@ -2,6 +2,8 @@ from common.component.chunker.classifierChunkParser import ClassifierChunkParser
 from common.component.chunker.SENNAChunker import SENNAChunker
 from common.component.chunker.goldChunker import GoldChunker
 from common.component.linker.earl import EARL
+from common.component.linker.falcon import Falcon
+from common.component.linker.mdp import MDP
 from common.component.linker.compositeLinker import CompositeLinker
 from common.component.linker.rnliwod import RNLIWOD
 from common.component.linker.tagme import TagMe
@@ -18,6 +20,7 @@ import itertools
 import copy
 import datetime
 import queue as Queue
+import re
 
 
 class IQAPipeline:
@@ -29,33 +32,44 @@ class IQAPipeline:
         classifier_chunker = ClassifierChunkParser([], os.path.join(args.base_path, args.model))
         SENNA_chunker = SENNAChunker()
         if hasattr(args, 'gold_chunk'):
-            with open(os.path.join(args.base_path, args.gold_chunk)) as data_file:
+            with open(os.path.join(args.base_path, args.gold_chunk), 'rb') as data_file:
                 gold_chunk_dataset = pk.load(data_file)
             gold_Chunker = GoldChunker({item[0]: item[1:] for item in gold_chunk_dataset})
+
+        mdp = MDP(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True)
+
         self.__chunkers = []
-        self.__chunkers.append(SENNA_chunker)
-        self.__chunkers.append(classifier_chunker)
+        # self.__chunkers.append(SENNA_chunker)
+        # self.__chunkers.append(classifier_chunker)
         # self.__chunkers.append(gold_Chunker)
+        self.__chunkers.append(mdp)
 
         # Init linkers
         self.__linkers = []
         entity_linkers = []
         relation_linkers = []
 
-        earl = EARL(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True)
-        entity_linkers.append(earl)
-        relation_linkers.append(earl)
+        # earl = EARL(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True)
+        # entity_linkers.append(earl)
+        # relation_linkers.append(earl)
+        #
+        # falcon = Falcon(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True)
+        # entity_linkers.append(falcon)
+        # relation_linkers.append(falcon)
 
-        entity_linkers.append(LuceneLinker(index='idx_ent_ngram', use_ngram=True))
-        entity_linkers.append(LuceneLinker(index='idx_ent'))
-        relation_linkers.append(LuceneLinker(index='idx_rel_ngram', use_ngram=True))
-        relation_linkers.append(LuceneLinker(index='idx_rel_stemmer', use_stemmer=True))
+        entity_linkers.append(mdp)
+        relation_linkers.append(mdp)
 
-        if hasattr(args, 'dataset') and args.dataset == 'lcquad':
-            relation_linkers.append(RNLIWOD(os.path.join(args.base_path, 'data/LC-QuAD/relnliodLogs'),
-                                            dataset_path=os.path.join(args.base_path, 'data/LC-QuAD/linked_3200.json')))
-            entity_linkers.append(TagMe(os.path.join(args.base_path, 'data/LC-QuAD/tagmeNEDLogs'),
-                                        dataset_path=os.path.join(args.base_path, 'data/LC-QuAD/linked_3200.json')))
+        # entity_linkers.append(LuceneLinker(index='idx_ent_ngram', use_ngram=True))
+        # entity_linkers.append(LuceneLinker(index='idx_ent'))
+        # relation_linkers.append(LuceneLinker(index='idx_rel_ngram', use_ngram=True))
+        # relation_linkers.append(LuceneLinker(index='idx_rel_stemmer', use_stemmer=True))
+
+        # if hasattr(args, 'dataset') and args.dataset == 'lcquad':
+        #     relation_linkers.append(RNLIWOD(os.path.join(args.base_path, 'data/LC-QuAD/relnliodLogs'),
+        #                                     dataset_path=os.path.join(args.base_path, 'data/LC-QuAD/linked_3200.json')))
+        #     entity_linkers.append(TagMe(os.path.join(args.base_path, 'data/LC-QuAD/tagmeNEDLogs'),
+        #                                 dataset_path=os.path.join(args.base_path, 'data/LC-QuAD/linked_3200.json')))
 
         for entity_linker in entity_linkers:
             for relation_linker in relation_linkers:
@@ -71,29 +85,48 @@ class IQAPipeline:
                 for qb in self.__query_builders:
                     self.pipelines.append((chunker, linker, qb))
         self.components = [self.__chunk, self.__link, self.__build_query]
-        self.q__qapair = None
+        self.qapair = None
 
     def __check_linkers(self, entities=[], relations=[]):
-        # if self.q__qapair is not None:
-        #     wrong_ent = True
-        #     wrong_rel = True
-        #     if len(entities) == len([uri_o for uri_o in self.q__qapair.sparql.uris if uri_o.is_entity()]):
-        #         wrong_ent = len(
-        #             [uri_o for uri_o in self.q__qapair.sparql.uris if
-        #              uri_o.is_entity() and uri_o.uri not in [uri['uri'] for item in entities for uri in
-        #                                                      item['uris']]]) > 0
-        #     # if len(relations) == len([uri_o for uri_o in self.q__qapair.sparql.uris if uri_o.is_ontology()]):
-        #     wrong_rel = len(
-        #         [uri_o for uri_o in self.q__qapair.sparql.uris if
-        #          uri_o.is_ontology() and uri_o.uri not in [uri['uri'] for item in relations for uri in
-        #                                                    item['uris']]]) > 0
-        #     return not (wrong_ent or wrong_rel)
+        if self.qapair is not None:
+            wrong_ent = True
+            wrong_rel = True
+            if len(entities) == len([uri_o for uri_o in self.qapair.sparql.uris if uri_o.is_entity()]):
+                wrong_ent = len(
+                    [uri_o for uri_o in self.qapair.sparql.uris if
+                     uri_o.is_entity() and uri_o.uri not in [uri['uri'] for item in entities for uri in
+                                                             item['uris']]]) > 0
+            # if len(relations) == len([uri_o for uri_o in self.qapair.sparql.uris if uri_o.is_ontology()]):
+            #     wrong_rel = len(
+            #         [uri_o for uri_o in self.qapair.sparql.uris if
+            #          uri_o.is_ontology() and uri_o.uri not in [uri['uri'] for item in relations for uri in
+            #                                                    item['uris']]]) > 0
+            if '#type' in self.qapair.sparql.raw_query:
+                type_uri = \
+                    re.findall('(<[^>]*>|\?[^ ]*)',
+                               self.qapair.sparql.raw_query[self.qapair.sparql.raw_query.index('#type'):])[0]
+                target_rels = [uri_o for uri_o in self.qapair.sparql.uris if
+                               uri_o.is_ontology() and uri_o.raw_uri != type_uri]
+            else:
+                target_rels = [uri_o for uri_o in self.qapair.sparql.uris if uri_o.is_ontology()]
+            wrong_rel = len(
+                [uri_o for uri_o in target_rels if uri_o.uri not in [uri['uri'] for item in relations for uri in
+                                                                     item['uris']]]) > 0
+            return not (wrong_ent or wrong_rel)
         return True
 
     def __build_query(self, prev_output, __query_builders):
-        outputs = [qb.build_query(prev_output['question'], prev_output['entities'], prev_output['relations']) for qb in
+        outputs = [qb.build_query(prev_output['question'], prev_output['entities'], prev_output['relations'],
+                                  'boolean' in self.qapair.sparql.query_features(),
+                                  'count' in self.qapair.sparql.query_features()) for qb in
                    __query_builders if self.__check_linkers(prev_output['entities'], prev_output['relations'])]
-        outputs = [item for item in outputs if len(item['queries']) > 0]
+        # outputs = [{'queries': [{
+        #     'query': self.qapair.sparql.raw_query,
+        #     'confidence': 1.0,
+        #     'type_confidence': 1.0,
+        #     'type': 'list'}]} for qb in
+        #     __query_builders if self.__check_linkers(prev_output['entities'], prev_output['relations'])]
+        # outputs = [item for item in outputs if len(item['queries']) > 0]
         for output in outputs:
             # Keep only the entity/relation that have been used in the query
             output['entities'] = UniqueList()
@@ -152,12 +185,12 @@ class IQAPipeline:
         outputs.extend(combinations)
 
         # remove one of the relations
-        for item in outputs:
-            if len(item['relations']) > 1:
-                for idx in range(len(item['relations'])):
-                    new_item = copy.deepcopy(item)
-                    new_item['relations'].pop(idx)
-                    outputs.append(new_item)
+        # for item in outputs:
+        #     if len(item['relations']) > 1:
+        #         for idx in range(len(item['relations'])):
+        #             new_item = copy.deepcopy(item)
+        #             new_item['relations'].pop(idx)
+        #             outputs.append(new_item)
 
         # to_be_deleted = []
         # for idx1 in range(len(outputs)):
@@ -216,7 +249,7 @@ class IQAPipeline:
         return [{'question': question, 'chunks': item} for item in chunkers_output]
 
     def run(self, qapair):
-        self.q__qapair = qapair
+        self.qapair = qapair
         for uri in qapair.sparql.uris:
             if uri.is_entity():
                 uri.types = self.kb.get_types(uri.uri)
@@ -227,15 +260,17 @@ class IQAPipeline:
 
         def run_pipeline(pipeline):
             # print('start pipeline')
-            output = {-1: [qapair.question.text]}
+            question = re.sub(r'[^\w+]', ' ', qapair.question.text).replace('TV', 'television').replace(' tv ',
+                                                                                                        ' television ')
+            output = {-1: [question]}
             for cmpnt_idx, component in enumerate(self.components):
                 output[cmpnt_idx] = []
                 for prev_output in output[cmpnt_idx - 1]:
                     output[cmpnt_idx].extend(component(prev_output, [pipeline[cmpnt_idx]]))
-            if len(output[2]) > 0:
-                outputs.put(output)
+            # if len(output[2]) > 0:
+            outputs.put(output)
             done.put(0)
-            print(datetime.datetime.now(), len(output[2]) > 0)
+            # print(datetime.datetime.now(), len(output[2]) > 0)
 
         for pipeline in self.pipelines:
             run_pipeline(pipeline)
