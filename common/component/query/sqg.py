@@ -39,3 +39,10 @@ class SQG:
             result['queries'].extend(queries['queries'])
 
         return result
+
+if __name__ == '__main__':
+    print('SQG')
+    sqg = SQG('http://sda-srv01:5010/qg/api/v1.0/query', 120)
+    ents = [{'surface': [3, 15], 'uris': [{'confidence': 1.0, 'uri': 'http://dbpedia.org/resource/Bill_Finger'}]}]
+    rels = [{'surface': [30, 5], 'uris': [{'confidence': 1.0, 'uri': 'http://dbpedia.org/ontology/creator'}]}]
+    print(sqg.build_query('Who is the father of Barak Obama?', ents, rels, False, False))
