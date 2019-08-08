@@ -39,26 +39,35 @@ class IQAPipeline:
         mdp = MDP(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True)
 
         self.__chunkers = []
-        # self.__chunkers.append(SENNA_chunker)
-        # self.__chunkers.append(classifier_chunker)
-        # self.__chunkers.append(gold_Chunker)
-        self.__chunkers.append(mdp)
+        if 'senna' in args.chunkers:
+            self.__chunkers.append(SENNA_chunker)
+        if 'classifier' in args.chunkers:
+            self.__chunkers.append(classifier_chunker)
+        if 'gold' in args.chunkers:
+            self.__chunkers.append(gold_Chunker)
+        if 'mdp' in args.chunkers:
+            self.__chunkers.append(mdp)
 
         # Init linkers
         self.__linkers = []
         entity_linkers = []
         relation_linkers = []
 
-        # earl = EARL(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True)
-        # entity_linkers.append(earl)
-        # relation_linkers.append(earl)
-        #
-        # falcon = Falcon(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True)
-        # entity_linkers.append(falcon)
-        # relation_linkers.append(falcon)
+        if 'earl' in args.linkers:
+            earl = EARL(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True)
+            entity_linkers.append(earl)
+            relation_linkers.append(earl)
 
-        entity_linkers.append(mdp)
-        relation_linkers.append(mdp)
+        if 'falcon' in args.linkers:
+            falcon = Falcon(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True)
+            entity_linkers.append(falcon)
+            relation_linkers.append(falcon)
+
+        if 'mdp' in args.linkers:
+            entity_linkers.append(mdp)
+            relation_linkers.append(mdp)
+            mdp_connecting_relations = MDP(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True, connecting_relations=True)
+            relation_linkers.append(mdp_connecting_relations)
 
         # entity_linkers.append(LuceneLinker(index='idx_ent_ngram', use_ngram=True))
         # entity_linkers.append(LuceneLinker(index='idx_ent'))

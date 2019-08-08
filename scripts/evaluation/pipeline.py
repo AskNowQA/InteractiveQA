@@ -23,6 +23,8 @@ if __name__ == "__main__":
                         dest="model")
     parser.add_argument("--gold_chunk", help="path to gold chunked dataset", default="data/LC-QuAD/linked2843_IOB.pk",
                         dest="gold_chunk")
+    parser.add_argument("--chunkers", help="[mdp, gold, senna, nltk]", default="mdp", dest="chunkers")
+    parser.add_argument("--linkers", help="[mdp, falcon, earl]", default="mdp", dest="linkers")
     args = parser.parse_args()
 
     dataset = [{"question": "Name the municipality of Roberto Clemente Bridge ?"}]
