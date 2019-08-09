@@ -67,6 +67,9 @@ class IQAPipeline:
             mdp_connecting_relations = MDP(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True,
                                            connecting_relations=True)
             relation_linkers.append(mdp_connecting_relations)
+            mdp_free_relation_match = MDP(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True,
+                                          free_relation_match=True)
+            relation_linkers.append(mdp_free_relation_match)
 
         # entity_linkers.append(LuceneLinker(index='idx_ent_ngram', use_ngram=True))
         # entity_linkers.append(LuceneLinker(index='idx_ent'))

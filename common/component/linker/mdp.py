@@ -7,9 +7,10 @@ import os
 
 class MDP(Chunker):
     def __init__(self, endpoint=config.config["MDP"]["endpoint"], cache_path="", use_cache=True,
-                 connecting_relations=False):
+                 connecting_relations=False, free_relation_match=False):
         self.endpoint = endpoint
         self.connecting_relations = connecting_relations
+        self.free_relation_match = free_relation_match
         self.cache_path = cache_path
         self.use_cache = use_cache
         self.cache = {}
@@ -35,7 +36,8 @@ class MDP(Chunker):
 
     def __hit_endpoint(self, question, chunks):
         id = question
-        input = {'question': question, 'k': 10, 'connecting_relations': self.connecting_relations}
+        input = {'question': question, 'k': 10, 'connecting_relations': self.connecting_relations,
+                 'free_relation_match': self.free_relation_match}
 
         output = {'entities': [], 'relations': [], 'chunks': []}
         if id not in self.cache or not self.use_cache:
