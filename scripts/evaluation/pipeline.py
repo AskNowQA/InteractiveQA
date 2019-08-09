@@ -56,7 +56,10 @@ if __name__ == "__main__":
     stats['general']['-rel'] = []
     stats['general']['-no_query'] = []
     stats['general']['-extra-ent'] = []
+    stats['general']['-extra-rel'] = []
     stats['general']['+correct_ids'] = []
+    stats['general']['-no-ent'] = []
+    stats['general']['-no-rel'] = []
 
     # baseline
     stats['IQA-SO-RQ'] = Stats()
@@ -127,8 +130,8 @@ if __name__ == "__main__":
                     stats['IQA-SO-RQ'].inc(qid + "+correct")
                     stats['general']['+correct_ids'].append(qid)
                 else:
-                    if not found:
-                        outputs, done, num_pipelines = pipeline.run(qapair)
+                    # if not found:
+                    #     outputs, done, num_pipelines = pipeline.run(qapair)
                     # if question_complexities[qid] == 4:
                     print()
                     print(qapair.question.text)
@@ -165,33 +168,43 @@ if __name__ == "__main__":
         if analyze_failure:
             stats['general'].inc('-incorrect')
 
-            # if len(outputs[1]) > 0:
-            #     item = outputs[1][-1]
-            #
-            #     extra_entity = len(item['entities']) > len([uri_o for uri_o in qapair.sparql.uris if uri_o.is_entity()])
-            #     wrong_entity = [uri_o for uri_o in qapair.sparql.uris if uri_o.is_entity() and uri_o.uri not in set(
-            #         [uri['uri'] for item in outputs[1] for ents in item['entities'] for uri in ents['uris'] if
-            #          len(item['entities']) > 0])]
-            #     wrong_relation = [uri_o for uri_o in qapair.sparql.uris if uri_o.is_ontology() and uri_o.uri not in set(
-            #         [uri['uri'] for item in outputs[1] for ents in item['relations'] for uri in ents['uris'] if
-            #          len(item['relations']) > 0])]
-            #     info = [qid, qapair.question.text, len([uri for uri in qapair.sparql.uris if not uri.is_generic()]),
-            #             len([uris.uri for uris in qapair.sparql.uris if not uris.is_generic()]) > len(
-            #                 set([uris.uri for uris in qapair.sparql.uris if not uris.is_generic()])),
-            #             [item.uri for item in wrong_entity],
-            #             [item.uri for item in wrong_relation]]
-            #     if extra_entity:
-            #         stats['general']['-extra-ent'].append(info)
-            #     elif len(wrong_entity) > 0 and len(wrong_relation) > 0:
-            #         stats['general']['-ent_rel'].append(info)
-            #     elif len(wrong_entity) > 0:
-            #         stats['general']['-ent'].append(info)
-            #     elif len(wrong_relation) > 0:
-            #         stats['general']['-rel'].append(info)
-            #     else:
-            #         stats['general']['matched'].append(info)
-            # else:
-            #     stats['general']['-no_query'].append([qid, qapair.question.text])
+            if len(outputs[0]) > 0:
+                item = outputs[0][1][0]
+
+                no_entity = len(item['entities']) == 0
+                no_relation = len(item['relations']) == 0
+                extra_entity = len(item['entities']) > len([uri_o for uri_o in qapair.sparql.uris if uri_o.is_entity()])
+                extra_relation = len(item['relations']) > len(
+                    [uri_o for uri_o in qapair.sparql.uris if uri_o.is_ontology()])
+                wrong_entity = [uri_o for uri_o in qapair.sparql.uris if uri_o.is_entity() and uri_o.uri not in set(
+                    [uri['uri'] for item in outputs[0][1] for ents in item['entities'] for uri in ents['uris'] if
+                     len(item['entities']) > 0])]
+                wrong_relation = [uri_o for uri_o in qapair.sparql.uris if uri_o.is_ontology() and uri_o.uri not in set(
+                    [uri['uri'] for item in outputs[0][1] for ents in item['relations'] for uri in ents['uris'] if
+                     len(item['relations']) > 0])]
+                info = [qid, qapair.question.text, len([uri for uri in qapair.sparql.uris if not uri.is_generic()]),
+                        len([uris.uri for uris in qapair.sparql.uris if not uris.is_generic()]) > len(
+                            set([uris.uri for uris in qapair.sparql.uris if not uris.is_generic()])),
+                        [item.uri for item in wrong_entity],
+                        [item.uri for item in wrong_relation]]
+                if no_entity:
+                    stats['general']['-no-ent'].append(info)
+                elif no_relation:
+                    stats['general']['-no-rel'].append(info)
+                elif extra_entity:
+                    stats['general']['-extra-ent'].append(info)
+                elif extra_relation:
+                    stats['general']['-extra-rel'].append(info)
+                elif len(wrong_entity) > 0 and len(wrong_relation) > 0:
+                    stats['general']['-ent_rel'].append(info)
+                elif len(wrong_entity) > 0:
+                    stats['general']['-ent'].append(info)
+                elif len(wrong_relation) > 0:
+                    stats['general']['-rel'].append(info)
+                else:
+                    stats['general']['matched'].append(info)
+            else:
+                stats['general']['-no_query'].append([qid, qapair.question.text])
         else:
             stats['general'].inc('+correct')
             # stats['general']['corrects'].append(qid)
