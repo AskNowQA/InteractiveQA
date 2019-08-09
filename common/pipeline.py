@@ -28,22 +28,20 @@ class IQAPipeline:
         self.kb = kb
         self.parse_sparql = parse_sparql
 
-        # Init chunkers
-        classifier_chunker = ClassifierChunkParser([], os.path.join(args.base_path, args.model))
-        SENNA_chunker = SENNAChunker()
-        if hasattr(args, 'gold_chunk'):
-            with open(os.path.join(args.base_path, args.gold_chunk), 'rb') as data_file:
-                gold_chunk_dataset = pk.load(data_file)
-            gold_Chunker = GoldChunker({item[0]: item[1:] for item in gold_chunk_dataset})
-
         mdp = MDP(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True)
 
         self.__chunkers = []
         if 'senna' in args.chunkers:
+            SENNA_chunker = SENNAChunker()
             self.__chunkers.append(SENNA_chunker)
         if 'classifier' in args.chunkers:
+            classifier_chunker = ClassifierChunkParser([], os.path.join(args.base_path, args.model))
             self.__chunkers.append(classifier_chunker)
         if 'gold' in args.chunkers:
+            if hasattr(args, 'gold_chunk'):
+                with open(os.path.join(args.base_path, args.gold_chunk), 'rb') as data_file:
+                    gold_chunk_dataset = pk.load(data_file)
+                gold_Chunker = GoldChunker({item[0]: item[1:] for item in gold_chunk_dataset})
             self.__chunkers.append(gold_Chunker)
         if 'mdp' in args.chunkers:
             self.__chunkers.append(mdp)
@@ -66,7 +64,8 @@ class IQAPipeline:
         if 'mdp' in args.linkers:
             entity_linkers.append(mdp)
             relation_linkers.append(mdp)
-            mdp_connecting_relations = MDP(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True, connecting_relations=True)
+            mdp_connecting_relations = MDP(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True,
+                                           connecting_relations=True)
             relation_linkers.append(mdp_connecting_relations)
 
         # entity_linkers.append(LuceneLinker(index='idx_ent_ngram', use_ngram=True))
