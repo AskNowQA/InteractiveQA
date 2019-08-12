@@ -16,7 +16,8 @@ class MDP(Chunker):
         self.cache = {}
         if self.use_cache:
             Utils.makedirs(cache_path)
-            self.cache_path = os.path.join(cache_path, "mdp-{}.cache".format(connecting_relations))
+            self.cache_path = os.path.join(cache_path,
+                                           "mdp-{}-{}.cache".format(connecting_relations, free_relation_match))
             self.__load_cache()
 
     def __load_cache(self):
