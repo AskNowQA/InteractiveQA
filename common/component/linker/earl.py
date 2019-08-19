@@ -34,14 +34,12 @@ class EARL:
         id = question
         input = {'nlquery': question}
         if chunks is not None and isinstance(chunks, list) and len(chunks) > 0:
-            input['chunks'] = [
-                [[chunk, "", question.lower().index(chunk.lower()) if chunk.lower() in question.lower() else 0,
-                  len(chunk)]] for chunk in chunks]
-            id += "".join(chunks)
-            for chunk in chunks:
-                if chunk.lower() in question.lower():
-                    chunk_idx = question.lower().index(chunk.lower())
-                    question = question.replace(question[chunk_idx:chunk_idx + len(chunk)], chunk)
+            input['erpredictions'] = chunks
+            id += "".join([item['chunk'] for item in chunks])
+            # for chunk in chunks:
+            #     if chunk.lower() in question.lower():
+            #         chunk_idx = question.lower().index(chunk.lower())
+            #         question = question.replace(question[chunk_idx:chunk_idx + len(chunk)], chunk)
             input['nlquery'] = question
 
         if id not in self.cache or not self.use_cache:
@@ -49,14 +47,20 @@ class EARL:
             output = {'entities': [], 'relations': []}
             if result is None:
                 return output
-            for idx, predicated_type in enumerate(result['ertypes']):
-                link_items = [{'confidence': item[0], 'uri': item[1]} for item in result['rerankedlists'][str(idx)]]
-                tmp = {'surface': [result['chunktext'][idx]['surfacestart'],
-                                   result['chunktext'][idx]['surfacelength']],
-                       'uris': link_items}
-                if predicated_type == 'entity':
+            last_idx = 0
+            question_lower = question.lower()
+            for idx, chunk in enumerate(chunks):
+                chunk_text = chunk['chunk'].lower()
+                if chunk_text in question_lower:
+                    chunk_idx = question_lower.index(chunk_text, last_idx)
+                else:
+                    chunk_idx = 0
+                surface_info = [chunk_idx, len(chunk_text)]
+                uris = [{'confidence': item[0], 'uri': item[1]} for item in result['rerankedlists'][str(idx)]]
+                tmp = {'surface': surface_info, 'uris': uris}
+                if result['ertypes'][idx] == 'entity':
                     output['entities'].append(tmp)
-                elif predicated_type == 'relation':
+                else:
                     output['relations'].append(tmp)
 
             self.cache[id] = output
@@ -70,13 +74,13 @@ class EARL:
         return []
 
     def link_entities(self, question, chunks=None):
-        if chunks is not None:
-            chunks = [item['chunk'] if item['class'] == 'relation' else item['chunk'].title() for item in chunks]
+        # if chunks is not None:
+        #     chunks = [item['chunk'] if item['class'] == 'relation' else item['chunk'].title() for item in chunks]
         return self.__hit_endpoint(question, chunks)["entities"]
 
     def link_relations(self, question, chunks=None):
-        if chunks is not None:
-            chunks = [item['chunk'] if item['class'] == 'relation' else item['chunk'].title() for item in chunks]
+        # if chunks is not None:
+        #     chunks = [item['chunk'] if item['class'] == 'relation' else item['chunk'].title() for item in chunks]
         return self.__hit_endpoint(question, chunks)["relations"]
 
     def link_entities_relations(self, question, chunks=None):
