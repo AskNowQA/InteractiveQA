@@ -4,6 +4,7 @@ import os
 import logging.config
 import json
 import urllib
+import requests
 import config
 from multiprocessing.dummy import Pool as ThreadPool
 import random, string, re
@@ -31,17 +32,28 @@ class Utils:
                 return 'No Query'
             if query in Utils.sparql2nl_cache:
                 return Utils.sparql2nl_cache[query]
-            if 'ASK ' in query:
-                uris = [raw_uri[1:-1] for raw_uri in re.findall('(<[^>]*>|\?[^ ]*)', query) if 'http' in raw_uri]
-                return Utils.triple2nl(*uris)
+            count_query = False
+            if 'COUNT(' in query:
+                query = query.replace('COUNT(DISTINCT ?u_0)', 'DISTINCT ?u_0')
+                count_query = True
+            # if 'ASK ' in query:
+            #     uris = [raw_uri[1:-1] for raw_uri in re.findall('(<[^>]*>|\?[^ ]*)', query) if 'http' in raw_uri]
+            #     return Utils.triple2nl(*uris)
 
-            req = requests.get('https://aifb-ls3-kos.aifb.kit.edu/projects/spartiqulator/v5/verbalize.pl',
-                               params={'sparql': query})
-            raw_output = req.text
-            idx_start = raw_output.index('verbalization"><b>') + len('verbalization"><b>')
-            idx_end = raw_output.index('</b>', idx_start)
-            output = raw_output[idx_start:idx_end]
-            Utils.sparql2nl_cache[query] = output
+            # req = requests.get('https://aifb-ls3-kos.aifb.kit.edu/projects/spartiqulator/v5/verbalize.pl',
+            #                    params={'sparql': query})
+            # raw_output = req.text
+            # idx_start = raw_output.index('verbalization"><b>') + len('verbalization"><b>')
+            # idx_end = raw_output.index('</b>', idx_start)
+            # output = raw_output[idx_start:idx_end]
+            req = requests.post('http://user1:admin1@solide-qa.cs.upb.de:9200/sparql2nl', data={'query': query})
+            if req.status_code == 200:
+                output = req.text
+                if count_query:
+                    output = output.replace('retrieves', 'retrieves number of ').replace('  ',' ')
+                Utils.sparql2nl_cache[query] = output
+            else:
+                output = query
             return output
         except:
             return query
@@ -129,7 +141,8 @@ class Utils:
             else:
                 return response
         except Exception as expt:
-            # print(expt)
+            print(endpoint)
+            print(expt)
             return None
 
     @staticmethod
