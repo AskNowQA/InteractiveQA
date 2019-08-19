@@ -174,6 +174,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Create tables for IQA')
     parser.add_argument("--base_path", help="base path", default="../../", dest="base_path")
     parser.add_argument("--def_users", dest='def_users', action='store_true')
+    parser.add_argument("--populate_questions_table", dest='populate_questions_table', action='store_true')
+    parser.add_argument("--populate_assigned_question_table", dest='populate_assigned_question_table',
+                        action='store_true')
+    parser.add_argument("--populate_tasks_table", dest='populate_tasks_table', action='store_true')
+    parser.add_argument("--populate_assigned_task_table", dest='populate_assigned_task_table', action='store_true')
+
     args = parser.parse_args()
 
     engine = create_engine('sqlite:///{0}'.format(os.path.join(args.base_path, 'UI', 'database', 'IQA.db')))
@@ -196,11 +202,10 @@ if __name__ == '__main__':
         qapair.id: len([uri for uri in qapair.sparql.uris if not (uri.is_generic() or uri.is_type())]) for qapair in
         dataset.qapairs}
 
-    populate_questions_table = False
-    if populate_questions_table:
-        with open(os.path.join(args.base_path, 'output', 'wdaqua_core1.pk'), "r") as data_file:
+    if args.populate_questions_table:
+        with open(os.path.join(args.base_path, 'output', 'wdaqua_core1.pk'), "rb") as data_file:
             wdaqua_results = pk.load(data_file)
-        with open(os.path.join(args.base_path, 'output', 'stats-IQA-SO-RQ.json'), "r") as data_file:
+        with open(os.path.join(args.base_path, 'output', 'stats-IQA-SO-RQ.json'), "rb") as data_file:
             iqa_results = json.load(data_file)
 
         question_ids = os.listdir(os.path.join(args.base_path, 'output', 'pipeline'))
@@ -214,8 +219,7 @@ if __name__ == '__main__':
         print(
             'Dist. per complexity : {}'.format(np.unique([question[1] for question in questions], return_counts=True)))
 
-    populate_assigned_question_table = False
-    if populate_assigned_question_table:
+    if args.populate_assigned_question_table:
         strategies = ['IO', 'OG']
         result = engine.execute('SELECT * FROM questions ORDER BY 2')
         number_of_users = 15
@@ -227,7 +231,7 @@ if __name__ == '__main__':
             qids = []
             for c in complexities:
                 for idx in range(number_of_question_per_complexity[c]):
-                    candidate_qids = [item[0] for item in question_complexities.iteritems() if item[1] == c]
+                    candidate_qids = [item[0] for item in question_complexities.items() if item[1] == c]
                     if len(candidate_qids) > 0:
                         qids.append(candidate_qids[0])
                         del question_complexities[candidate_qids[0]]
@@ -237,8 +241,7 @@ if __name__ == '__main__':
                         'INSERT INTO assigned_questions(username, question_id) VALUES("#{0}-{1}","{2}")'.format(
                             str(user_idx), strategy, qid))
 
-    populate_tasks_table = True
-    if populate_tasks_table:
+    if args.populate_tasks_table:
         with open(os.path.join(args.base_path, 'output', 'random_50.json'), "r") as data_file:
             tasks = json.load(data_file)
         for task in tasks:
@@ -252,8 +255,7 @@ if __name__ == '__main__':
         print(
             'Dist. per complexity : {}'.format(np.unique([task[1] for task in tasks], return_counts=True)))
 
-    populate_assigned_task_table = True
-    if populate_assigned_task_table:
+    if args.populate_assigned_task_table:
         strategies = ['IO']
         result = engine.execute('SELECT * FROM tasks ORDER BY 2')
         number_of_users = 10
