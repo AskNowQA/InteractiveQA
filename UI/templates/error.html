@@ -1,0 +1,28 @@
+{% extends "demo_layout.html" %}
+
+{% block title %}
+Interactive Question Answering (SDA Research)
+{% endblock %}
+
+{% block content %}
+<div style="margin:0 auto; width: 80%;">
+    <h1>Welcome to IQA - an Interactive Question Answering system</h1>
+
+    <h2>An unexpected error had happened:
+    </h2>
+    <p style="color:red">
+        {{ data['message'] }}
+    </p>
+
+
+</div>
+
+{{ super() }}
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="http://code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
+<link href="http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css" rel="Stylesheet"/>
+
+{%- endblock scripts %}
