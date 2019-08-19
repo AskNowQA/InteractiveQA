@@ -8,6 +8,7 @@ from common.interaction.interactionManager import InteractionManager
 
 
 class Survey(FlaskView):
+    route_base = 'survey'
     interaction_data = dict()
     dataset = None
     kb = None
@@ -17,6 +18,7 @@ class Survey(FlaskView):
 
     @route('start', methods=['POST'])
     def start(self):
+
         if not flask.request.json:
             flask.abort(400)
 
@@ -24,6 +26,7 @@ class Survey(FlaskView):
         qid = None
         if 'qid' in flask.request.json:
             qid = flask.request.json['qid']
+        strategy = Survey.strategy
         if 'strategy' in flask.request.json:
             if flask.request.json['strategy'] in ['InformationGain', 'OptionGain', 'Probability']:
                 strategy = flask.request.json['strategy']
@@ -32,14 +35,14 @@ class Survey(FlaskView):
         if question_id is None:
             return flask.jsonify({'command': 'end_survey'})
 
-        with open(os.path.join(self.pipeline_path, ('{0}.pickle'.format(question_id))), 'r') as file_handler:
+        with open(os.path.join(self.pipeline_path, ('{0}.pickle'.format(question_id))), 'rb') as file_handler:
             interaction_types = [[False, True], [True, True]]
             self.interaction_data[userid] = InteractionManager(pk.load(file_handler), kb=self.kb,
                                                                sparql_parser=self.dataset.parser.parse_sparql,
                                                                interaction_type=interaction_types, strategy=strategy,
                                                                target_query=self.dataset.get_by_id(question_id)[0])
 
-        question = self.interaction_data[userid].pipeline_results[-1][0]
+        question = self.interaction_data[userid].pipeline_results[0][-1][0]
         io, query = self.interaction_data[userid].get_interaction_option()
 
         output = self.handle_IO(question, question_id, query, io)

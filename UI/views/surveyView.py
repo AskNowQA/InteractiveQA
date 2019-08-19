@@ -21,7 +21,10 @@ class SurveyView(FlaskView):
         if 'strategy' in flask.request.values:
             data['strategy'] = flask.request.values['strategy']
 
-        result = Utils.call_web_api(config['IQA']['backend'] + '/start', data)
+        result = Utils.call_web_api(config['IQA']['backend'] + '/survey/start', data)
+        if result is None:
+            return flask.render_template('error.html', data={'message': 'Backend is not accessible'})
+
         result = self.reformat(result)
 
         # Log the record
@@ -38,13 +41,13 @@ class SurveyView(FlaskView):
 
         self.log_interaction(interaction=flask.jsonify(flask.session['current_IO']).data, answer=data['answer'])
 
-        result = Utils.call_web_api(config['IQA']['backend'] + '/interact', data)
+        result = Utils.call_web_api(config['IQA']['backend'] + '/survey/interact', data)
         return flask.jsonify(self.reformat(result))
 
     def correct(self):
         self.log_interaction(data='early_correct')
         self.mark_as_answered(final_query=flask.session['current_query'])
-        return flask.redirect('survey')
+        return flask.redirect('./survey/')
 
     def skip(self):
         reason = 'skip'
@@ -53,7 +56,7 @@ class SurveyView(FlaskView):
 
         self.log_interaction(data='skip:' + reason)
         self.mark_as_answered(data='skip:' + reason)
-        return flask.redirect('survey')
+        return flask.redirect('./survey/')
 
     def reformat(self, result):
         if result is not None:
@@ -73,7 +76,7 @@ class SurveyView(FlaskView):
                         result['IO']['values'][0] = 'Number of some items'
                     elif result['IO']['values'][0] == 'boolean':
                         result['IO']['values'][0] = 'Yes or No'
-            if 'query' in result:
+            if 'query' in result and result['query'] is not None:
                 flask.session['current_query'] = result['query']
                 result['query'] = result['query'].replace('{', '{\n').replace('}', '\n}').replace(' .', ' .\n')
 

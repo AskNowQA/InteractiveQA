@@ -16,39 +16,42 @@ class InteractionOptions:
         self.sparql_parser = sparql_parser
         self.kb = kb
         self.all_queries = UniqueList()
-        for output in complete_interpretation_space:
-            for linked_item_type in ['entities', 'relations']:
-                if linked_item_type in output:
-                    for item in output[linked_item_type]:
-                        # hack: ignore the one that are not from dbpedia
-                        if 'dbpedia' in item.uris[0].raw_uri:
-                            self.add(InteractionOption(item.surface_form, item, [], 'linked'))
+        for output_set in complete_interpretation_space:
+            if 2 in output_set:
+                outputs = output_set[2]
+                for output in outputs:
+                    for linked_item_type in ['entities', 'relations']:
+                        if linked_item_type in output:
+                            for item in output[linked_item_type]:
+                                # hack: ignore the one that are not from dbpedia
+                                if 'dbpedia' in item.uris[0].raw_uri:
+                                    self.add(InteractionOption(item.surface_form, item, [], 'linked'))
 
-            if 'queries' in output:
+                    if 'queries' in output:
 
-                for query in output['queries']:
-                    query['removed'] = False
+                        for query in output['queries']:
+                            query['removed'] = False
 
-                    uris = [raw_uri for raw_uri in re.findall('(<[^>]*>|\?[^ ]*)', query['query']) if 'http' in raw_uri]
-                    # $$Hack remove invalid boolean queries
-                    if 'ask ' in query['query'].lower():
-                        if '?u' in query['query'] or len(uris) != 3:
-                            continue
-                    else:
-                        # $$Hack to decrase the score of queries where one relation/resource is used more than once.
-                        uris = [uri[uri.rindex('/'):-1] for uri in uris if 'dbpedia' in uri]
-                        uris = [uri[:-1] if uri.endswith('s') else uri for uri in uris]
-                        diff = len(uris) - len(set(uris))
-                        if diff > 1:
-                            query['complete_confidence'] = query['complete_confidence'] * 1 / 200
-                        elif diff == 1:
-                            query['complete_confidence'] = query['complete_confidence'] * 1 / 100
+                            uris = [raw_uri for raw_uri in re.findall('(<[^>]*>|\?[^ ]*)', query['query']) if 'http' in raw_uri]
+                            # $$Hack remove invalid boolean queries
+                            if 'ask ' in query['query'].lower():
+                                if '?u' in query['query'] or len(uris) != 3:
+                                    continue
+                            else:
+                                # $$Hack to decrase the score of queries where one relation/resource is used more than once.
+                                uris = [uri[uri.rindex('/'):-1] for uri in uris if 'dbpedia' in uri]
+                                uris = [uri[:-1] if uri.endswith('s') else uri for uri in uris]
+                                diff = len(uris) - len(set(uris))
+                                if diff > 1:
+                                    query['complete_confidence'] = query['complete_confidence'] * 1 / 200
+                                elif diff == 1:
+                                    query['complete_confidence'] = query['complete_confidence'] * 1 / 100
 
-                    self.all_queries.add_or_update(query, eq_func=lambda x, y: x['query'] == y['query'],
-                                                   opt_func=lambda x, y: x if x['complete_confidence'] > y[
-                                                       'complete_confidence'] else y)
-                    if c3:
-                        self.add(InteractionOption('type', query['type'], query, 'type'))
+                            self.all_queries.add_or_update(query, eq_func=lambda x, y: x['query'] == y['query'],
+                                                           opt_func=lambda x, y: x if x['complete_confidence'] > y[
+                                                               'complete_confidence'] else y)
+                            if c3:
+                                self.add(InteractionOption('type', query['type'], query, 'type'))
 
         for item in self.dic:
             for io in self.dic[item]:

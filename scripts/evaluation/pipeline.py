@@ -109,14 +109,13 @@ if __name__ == "__main__":
             with open(output_path, 'rb') as file_handler:
                 outputs = pk.load(file_handler)
 
-        candidate_queries = [item for output in outputs for item in output[2]]
         analyze_failure = False
         for interaction_type in interaction_types:
             interaction_type_str = 'IQA-AO' if all(interaction_type) else 'IQA-SO'
 
             # baseline: ranked queries
             if interaction_type_str == 'IQA-SO':
-                interaction_options = InteractionOptions(candidate_queries, kb.parse_uri, parse_sparql, kb,
+                interaction_options = InteractionOptions(outputs, kb.parse_uri, parse_sparql, kb,
                                                          *interaction_type)
                 ranked_queries = interaction_options.ranked_queries()
                 stats[interaction_type_str + '-RQ'].inc(qid, 0)
@@ -142,7 +141,7 @@ if __name__ == "__main__":
             for strategy in strategies:
                 found = False
                 stats[interaction_type_str + '-' + strategy].inc(qid, 0)
-                interaction_options = InteractionOptions(candidate_queries, kb.parse_uri, parse_sparql, kb,
+                interaction_options = InteractionOptions(outputs, kb.parse_uri, parse_sparql, kb,
                                                          *interaction_type)
                 while interaction_options.has_interaction():
                     if oracle.validate_query(qapair, interaction_options.query_with_max_probability()):

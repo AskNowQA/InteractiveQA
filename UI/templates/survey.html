@@ -28,7 +28,7 @@ Interactive Question Answering (SDA Research)
             </div>
         </div>
         <hr/>
-        <a href="{{ url_for('correct') }}">If this interpretation of the question is correct, please click here</a>
+        <a href="{{ url_for('SurveyView:correct') }}">If this interpretation of the question is correct, please click here</a>
         <hr/>
         <span>Skip the question because: </span>
         <select id="skip_reason">
@@ -71,7 +71,7 @@ Interactive Question Answering (SDA Research)
         }
         if (data['command'] == 'next_question') {
             setTimeout(function () {
-                window.location.replace("survey");
+                window.location.replace("");
             }, 2000);
             $message.html('<h1>Well done! Let\'s go for the next question</h1>');
             $message.show();
@@ -184,7 +184,7 @@ Interactive Question Answering (SDA Research)
             var reason = $skip_reason.val();
             if (reason == 'other')
                 reason = $skip_reason_other.val()
-            window.location.href = "{{ url_for('skip') }}?reason=" + reason;
+            window.location.href = "{{ url_for('SurveyView:skip') }}?reason=" + reason;
         });
         first_interaction_data = {{ data|tojson }};
         handle_IO(first_interaction_data, 'io-1');
