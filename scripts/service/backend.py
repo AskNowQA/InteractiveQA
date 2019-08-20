@@ -26,15 +26,16 @@ if __name__ == '__main__':
     logger = logging.getLogger(__name__)
     Utils.setup_logging()
     parser = argparse.ArgumentParser(description='UI Backend')
-    parser.add_argument("--base_path", help="base path", default="../../", dest="base_path")
-    parser.add_argument("--model", help="path to model", default="models/ClassifierChunkParser.tagger.model",
-                        dest="model")
-    parser.add_argument("--port", help="port", default=5002, type=int, dest="port")
+    parser.add_argument('--base_path', help='base path', default='../../', dest='base_path')
+    parser.add_argument('--model', help='path to model', default='models/ClassifierChunkParser.tagger.model',
+                        dest='model')
+    parser.add_argument('--port', help='port', default=5002, type=int, dest='port')
+    parser.add_argument('--pipeline', help='pipeline path', default='pipeline', dest='pipeline')
     args = parser.parse_args()
     logger.info(args)
 
-    pipeline_path = os.path.join(args.base_path, 'output', 'pipeline')
-    kb = DBpedia(cache_path=os.path.join(args.base_path, "caches/"), use_cache=True)
+    pipeline_path = os.path.join(args.base_path, 'output', args.pipeline)
+    kb = DBpedia(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True)
     dataset = LC_Qaud_Linked(os.path.join(args.base_path, 'data', 'LC-QuAD', 'linked.json'))
     interaction_types = [[False, True], [True, True]]
     strategy = 'InformationGain'

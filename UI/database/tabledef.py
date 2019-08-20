@@ -179,6 +179,8 @@ if __name__ == '__main__':
                         action='store_true')
     parser.add_argument("--populate_tasks_table", dest='populate_tasks_table', action='store_true')
     parser.add_argument("--populate_assigned_task_table", dest='populate_assigned_task_table', action='store_true')
+    parser.add_argument('--pipeline', help='pipeline dir', default='pipeline', dest='pipeline')
+    parser.add_argument('--iqa_stats', help='stats file name', default='stats-IQA-SO-RQ.json', dest='iqa_stats')
 
     args = parser.parse_args()
 
@@ -205,10 +207,10 @@ if __name__ == '__main__':
     if args.populate_questions_table:
         with open(os.path.join(args.base_path, 'output', 'wdaqua_core1.pk'), "rb") as data_file:
             wdaqua_results = pk.load(data_file)
-        with open(os.path.join(args.base_path, 'output', 'stats-IQA-SO-RQ.json'), "rb") as data_file:
+        with open(os.path.join(args.base_path, 'output', args.iqa_stats), "rb") as data_file:
             iqa_results = json.load(data_file)
 
-        question_ids = os.listdir(os.path.join(args.base_path, 'output', 'pipeline'))
+        question_ids = os.listdir(os.path.join(args.base_path, 'output', args.pipeline))
         for file_name in question_ids:
             question_id = file_name[:-7]
             if question_id in wdaqua_results and ((question_id + '+correct') in iqa_results):
