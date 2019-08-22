@@ -172,7 +172,7 @@ if __name__ == '__main__':
     json_data = dict()
     for item in os.listdir(output_path):
         file_name = os.path.join(output_path, item)
-        if item.startswith('stats') and file_name.endswith(".json") and 'general' not in item:
+        if item.startswith('stats') and file_name.endswith(".json") and 'general' not in item and 'tmp' not in item:
             with open(file_name, "r") as data_file:
                 json_data[''.join([c for c in item[10:-5] if not c.islower()])] = json.load(data_file)
 
