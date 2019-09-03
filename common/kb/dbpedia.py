@@ -89,7 +89,7 @@ FILTER (lang(?label) = 'en')  }}'''.format(uri.encode("ascii", "ignore"))
             FILTER regex(?a,'wikidata.org','i') }} LIMIT 1'''.format(uri.encode("ascii", "ignore"), owl_str)
             _, results = self.query(query)
 
-            if len(results['results']['bindings']) == 0:
+            if results is None or len(results['results']['bindings']) == 0:
                 self.wikidata_cache[uri] = ''
             else:
                 wikidata_id = results['results']['bindings'][0]['a']['value']
