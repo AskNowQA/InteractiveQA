@@ -31,7 +31,7 @@ class Stats(dict):
     def save(self, output_file):
         Utils.makedirs(os.path.dirname(output_file))
         with open(output_file, "w") as data_file:
-            json.dump(self, data_file, sort_keys=True, indent=4, separators=(',', ': '))
+            json.dump(self, data_file, indent=4, separators=(',', ': '))#sort_keys=True,
 
     def __str__(self):
         keys = self.keys()
