@@ -78,10 +78,6 @@ if __name__ == "__main__":
         qid = qapair.id
         # if question_complexities[qapair.id] != 2:
         #     continue
-        # if qid not in  ['72c7e0fedd6143eb940bc3debcdec811',
-        #     'f5389602a5104bc0b3691a6dc0b6aed4'
-        #     ]:
-        #     continue
         stats['general'].inc("total")
         # if stats['general']["total"] >= 100:
         #     break
@@ -173,35 +169,49 @@ if __name__ == "__main__":
 
                     no_entity = len(item['entities']) == 0
                     no_relation = len(item['relations']) == 0
-                    extra_entity = len(item['entities']) > len([uri_o for uri_o in qapair.sparql.uris if uri_o.is_entity()])
+                    extra_entity = len(item['entities']) > len(
+                        [uri_o for uri_o in qapair.sparql.uris if uri_o.is_entity()])
                     extra_relation = len(item['relations']) > len(
                         [uri_o for uri_o in qapair.sparql.uris if uri_o.is_ontology()])
                     wrong_entity = [uri_o for uri_o in qapair.sparql.uris if uri_o.is_entity() and uri_o.uri not in set(
                         [uri['uri'] for item in outputs[0][1] for ents in item['entities'] for uri in ents['uris'] if
                          len(item['entities']) > 0])]
-                    wrong_relation = [uri_o for uri_o in qapair.sparql.uris if uri_o.is_ontology() and uri_o.uri not in set(
-                        [uri['uri'] for item in outputs[0][1] for ents in item['relations'] for uri in ents['uris'] if
-                         len(item['relations']) > 0])]
+                    wrong_relation = [uri_o for uri_o in qapair.sparql.uris if
+                                      uri_o.is_ontology() and uri_o.uri not in set(
+                                          [uri['uri'] for item in outputs[0][1] for ents in item['relations'] for uri in
+                                           ents['uris'] if
+                                           len(item['relations']) > 0])]
                     info = [qid, qapair.question.text, len([uri for uri in qapair.sparql.uris if not uri.is_generic()]),
                             len([uris.uri for uris in qapair.sparql.uris if not uris.is_generic()]) > len(
                                 set([uris.uri for uris in qapair.sparql.uris if not uris.is_generic()])),
                             [item.uri for item in wrong_entity],
                             [item.uri for item in wrong_relation]]
+                    matched = True
+                    ent_rel = False
+                    if not (no_entity or no_relation) and len(wrong_entity) > 0 and len(wrong_relation) > 0:
+                        stats['general']['-ent_rel'].append(info)
+                        matched = False
+                        ent_rel = True
                     if no_entity:
                         stats['general']['-no-ent'].append(info)
-                    elif no_relation:
-                        stats['general']['-no-rel'].append(info)
-                    elif extra_entity:
-                        stats['general']['-extra-ent'].append(info)
-                    elif extra_relation:
-                        stats['general']['-extra-rel'].append(info)
-                    elif len(wrong_entity) > 0 and len(wrong_relation) > 0:
-                        stats['general']['-ent_rel'].append(info)
-                    elif len(wrong_entity) > 0:
+                        matched = False
+                    elif not ent_rel and len(wrong_entity) > 0:
                         stats['general']['-ent'].append(info)
-                    elif len(wrong_relation) > 0:
+                        matched = False
+                    if no_relation:
+                        stats['general']['-no-rel'].append(info)
+                        matched = False
+                    elif not ent_rel and len(wrong_relation) > 0:
                         stats['general']['-rel'].append(info)
-                    else:
+                        matched = False
+                    if extra_entity:
+                        stats['general']['-extra-ent'].append(info)
+                        matched = False
+                    if extra_relation:
+                        stats['general']['-extra-rel'].append(info)
+                        matched = False
+
+                    if matched:
                         stats['general']['matched'].append(info)
                 except:
                     pass
