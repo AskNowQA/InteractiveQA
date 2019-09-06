@@ -6,9 +6,11 @@ import os
 
 
 class MDP(Chunker):
-    def __init__(self, endpoint=config.config["MDP"]["endpoint"], cache_path="", use_cache=True,
-                 connecting_relations=False, free_relation_match=False):
+    def __init__(self, endpoint=config.config["MDP"]["endpoint"], cache_path="", use_cache=True, k=10,
+                 connecting_relations=False, free_relation_match=False, connecting_relation=False):
         self.endpoint = endpoint
+        self.k = k
+        self.connecting_relation = connecting_relation
         self.connecting_relations = connecting_relations
         self.free_relation_match = free_relation_match
         self.cache_path = cache_path
@@ -17,7 +19,8 @@ class MDP(Chunker):
         if self.use_cache:
             Utils.makedirs(cache_path)
             self.cache_path = os.path.join(cache_path,
-                                           "mdp-{}-{}.cache".format(connecting_relations, free_relation_match))
+                                           "mdp-{}-{}-{}.cache".format(connecting_relations, free_relation_match,
+                                                                       connecting_relation))
             self.__load_cache()
 
     def __load_cache(self):
@@ -37,9 +40,8 @@ class MDP(Chunker):
 
     def __hit_endpoint(self, question, chunks):
         id = question
-        input = {'question': question, 'k': 10, 'connecting_relations': self.connecting_relations,
-                 'free_relation_match': self.free_relation_match}
-
+        input = {'question': question, 'k': self.k, 'connecting_relations': self.connecting_relations,
+                 'free_relation_match': self.free_relation_match, 'connecting_relation': self.connecting_relation}
         output = {'entities': [], 'relations': [], 'chunks': []}
         if id not in self.cache or not self.use_cache:
             result = Utils.call_web_api(self.endpoint, input)
@@ -68,5 +70,5 @@ class MDP(Chunker):
 
 if __name__ == '__main__':
     print('MDP')
-    mdp = MDP('http://localhost:5006/link', '', False)
+    mdp = MDP('http://127.0.0.1:5006/link', '', False)
     print(mdp.link_entities_relations('Who is the father of Barak Obama?'))
