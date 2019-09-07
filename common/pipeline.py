@@ -127,6 +127,8 @@ class IQAPipeline:
             if type_uri is None:
                 if len(relations) != len([uri_o for uri_o in self.qapair.sparql.uris if uri_o.is_ontology()]):
                     return False
+            if len(relations) > len([uri_o for uri_o in self.qapair.sparql.uris if uri_o.is_ontology()]):
+                return False
 
             wrong_rel = len(
                 [uri_o for uri_o in target_rels if uri_o.uri not in [uri['uri'] for item in relations for uri in
