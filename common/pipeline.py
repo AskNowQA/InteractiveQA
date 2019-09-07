@@ -115,6 +115,7 @@ class IQAPipeline:
             #         [uri_o for uri_o in self.qapair.sparql.uris if
             #          uri_o.is_ontology() and uri_o.uri not in [uri['uri'] for item in relations for uri in
             #                                                    item['uris']]]) > 0
+            type_uri = None
             if '#type' in self.qapair.sparql.raw_query:
                 type_uri = \
                     re.findall('(<[^>]*>|\?[^ ]*)',
@@ -123,6 +124,10 @@ class IQAPipeline:
                                uri_o.is_ontology() and uri_o.raw_uri != type_uri]
             else:
                 target_rels = [uri_o for uri_o in self.qapair.sparql.uris if uri_o.is_ontology()]
+            if type_uri is None:
+                if len(relations) != len([uri_o for uri_o in self.qapair.sparql.uris if uri_o.is_ontology()]):
+                    return False
+
             wrong_rel = len(
                 [uri_o for uri_o in target_rels if uri_o.uri not in [uri['uri'] for item in relations for uri in
                                                                      item['uris']]]) > 0

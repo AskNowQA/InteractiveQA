@@ -15,7 +15,7 @@ class SQG:
                  'timeout': self.timeout,
                  'use_cache': config.config['SQG']['use_sqg_cache'],
                  'force_list': True}
-        result_list = Utils.call_web_api(self.endpoint, input)
+        result_list = None
         result_bool = None
         result_count = None
 
@@ -23,6 +23,8 @@ class SQG:
             input['force_list'] = False
             input['force_bool'] = True
             result_bool = Utils.call_web_api(self.endpoint, input)
+        else:
+            result_list = Utils.call_web_api(self.endpoint, input)
 
         if result_list is not None and count_query:
             input['force_list'] = False
@@ -40,9 +42,10 @@ class SQG:
 
         return result
 
+
 if __name__ == '__main__':
     print('SQG')
-    sqg = SQG('http://sda-srv01:5010/qg/api/v1.0/query', 120)
+    sqg = SQG('http://127.0.0.1:5010/qg/api/v1.0/query', 120)
     ents = [{'surface': [3, 15], 'uris': [{'confidence': 1.0, 'uri': 'http://dbpedia.org/resource/Bill_Finger'}]}]
     rels = [{'surface': [30, 5], 'uris': [{'confidence': 1.0, 'uri': 'http://dbpedia.org/ontology/creator'}]}]
     print(sqg.build_query('Who is the father of Barak Obama?', ents, rels, False, False))
