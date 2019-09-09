@@ -58,7 +58,7 @@ class SurveyView(FlaskView):
     def correct(self):
         self.log_interaction(data='early_correct')
         self.mark_as_answered(final_query=flask.session['current_query'])
-        return flask.redirect('./survey/')
+        return flask.redirect(flask.url_for('SurveyView:index'))
 
     def skip(self):
         reason = 'skip'
@@ -67,7 +67,7 @@ class SurveyView(FlaskView):
 
         self.log_interaction(data='skip:' + reason)
         self.mark_as_answered(data='skip:' + reason)
-        return flask.redirect('./survey/')
+        return flask.redirect(flask.url_for('SurveyView:index'))
 
     def reformat(self, result):
         if result is not None:
