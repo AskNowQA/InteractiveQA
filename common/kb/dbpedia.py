@@ -33,10 +33,14 @@ class DBpedia:
         try:
             query_string = urllib.parse.urlencode(payload)
             url = self.endpoint + '?' + query_string
-            r = requests.get(url, timeout=60)
-
-        except:
+            r = requests.get(url, timeout=60, proxies={})
+        except Exception as expt:
+            print(q)
+            print(expt)
             return 0, None
+        if r.status_code != 200:
+            print(q)
+            print(r.status_code)
 
         return r.status_code, r.json() if r.status_code == 200 else None
 
@@ -45,7 +49,7 @@ class DBpedia:
             query = '''SELECT * WHERE {{<{}> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?t. 
             ?t <http://www.w3.org/2000/01/rdf-schema#subClassOf>* ?t2. 
             FILTER ( strstarts(str(?t), "http://dbpedia.org/ontology/"))}}'''.format(
-                uri.encode("ascii", "ignore"))
+                uri.encode("ascii", "ignore").decode())
             _, results = self.query(query)
             if results is None:
                 return []
