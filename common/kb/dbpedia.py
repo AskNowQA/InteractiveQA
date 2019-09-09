@@ -63,7 +63,7 @@ class DBpedia:
             query = '''SELECT DISTINCT ?label, SUBSTR(?abstract,1,200) where {{ 
 <{0}> <http://www.w3.org/2000/01/rdf-schema#label> ?label.
 OPTIONAL {{ <{0}> <http://dbpedia.org/ontology/abstract> ?abstract FILTER (lang(?abstract) = 'en')}}
-FILTER (lang(?label) = 'en')  }}'''.format(uri.encode("ascii", "ignore"))
+FILTER (lang(?label) = 'en')  }}'''.format(uri.encode("ascii", "ignore").decode())
             _, results = self.query(query)
 
             label = uri[uri.rindex('/') + 1:]
@@ -90,7 +90,7 @@ FILTER (lang(?label) = 'en')  }}'''.format(uri.encode("ascii", "ignore"))
             else:
                 owl_str = 'sameAs'
             query = '''SELECT DISTINCT * WHERE {{ <{0}> <http://www.w3.org/2002/07/owl#{1}> ?a 
-            FILTER regex(?a,'wikidata.org','i') }} LIMIT 1'''.format(uri.encode("ascii", "ignore"), owl_str)
+            FILTER regex(?a,'wikidata.org','i') }} LIMIT 1'''.format(uri.encode("ascii", "ignore").decode(), owl_str)
             _, results = self.query(query)
 
             if results is None or len(results['results']['bindings']) == 0:
@@ -118,7 +118,7 @@ FILTER (lang(?label) = 'en')  }}'''.format(uri.encode("ascii", "ignore"))
                 FILTER strstarts(str(?a), "http://dbpedia.org/") 
                 FILTER strstarts(str(?b), "http://dbpedia.org/") 
                 }} LIMIT 2'''.format(
-                    uri.encode("ascii", "ignore"))
+                    uri.encode("ascii", "ignore").decode())
                 _, results = self.query(query)
 
                 if len(results['results']['bindings']) == 0:
