@@ -232,9 +232,9 @@ Interactive Question Answering (SDA Research)
             var reason = $skip_reason.val();
             if (reason == 'other')
                 reason = $skip_reason_other.val()
-            feedback_dialog();
-
-            window.location.href = "{{ url_for('SurveyView:skip') }}?reason=" + reason;
+            feedback_dialog(callback=function () {
+                window.location.href = "{{ url_for('SurveyView:skip') }}?reason=" + reason;
+            });
         });
         first_interaction_data = {{ data|tojson }};
         handle_IO(first_interaction_data, 'io-1');
