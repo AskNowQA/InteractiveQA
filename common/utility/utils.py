@@ -34,7 +34,7 @@ class Utils:
                 return Utils.sparql2nl_cache[query]
             count_query = False
             if 'COUNT(' in query:
-                query = query.replace('COUNT(DISTINCT ?u_0)', 'DISTINCT ?u_0')
+                query = query.replace('COUNT(DISTINCT ?u_0)', 'DISTINCT ?u_0').replace('COUNT(DISTINCT ?u_1)', 'DISTINCT ?u_1')
                 count_query = True
             # if 'ASK ' in query:
             #     uris = [raw_uri[1:-1] for raw_uri in re.findall('(<[^>]*>|\?[^ ]*)', query) if 'http' in raw_uri]
