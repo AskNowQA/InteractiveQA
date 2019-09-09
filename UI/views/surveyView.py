@@ -1,5 +1,6 @@
 import datetime
 
+import ujson as json
 import flask
 from flask_login import login_required, current_user
 from flask_classful import FlaskView, route
@@ -43,6 +44,16 @@ class SurveyView(FlaskView):
 
         result = Utils.call_web_api(config['IQA']['backend'] + '/survey/interact', data)
         return flask.jsonify(self.reformat(result))
+
+    @route('feedback', methods=['POST'])
+    def feedback(self):
+        if not flask.request.values:
+            flask.abort(400)
+        self.log_interaction(interaction='feedback',
+                             data=json.dumps({'r1': flask.request.values['r1'],
+                                              'r2': flask.request.values['r2'],
+                                              'comment': flask.request.values['comment']}))
+        return flask.make_response(flask.jsonify({}), 200)
 
     def correct(self):
         self.log_interaction(data='early_correct')

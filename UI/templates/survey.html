@@ -8,6 +8,15 @@ Interactive Question Answering (SDA Research)
 <div id="message"
      style="position: absolute;width: 100%;height: 100%;background-color: #fff;opacity: 0.9;display: none;z-index: 100;text-align: center;">
 </div>
+
+<div id="feedback" style="display: none;">
+    How to you rate the ease of use?
+    <div id="rate1"></div><input type="hidden" id="r1"/>
+    How to you rate the ability to answer?
+    <div id="rate2"></div><input type="hidden" id="r2"/>
+    Comment:<br /> <input type="text" style="width: 100%;" id="comment">
+</div>
+
 <div id="question" style="margin-left: 10px">
     <h2>Question: {{ data['question'] }}</h2>
     Question. ID: {{ data['qid'] }}
@@ -28,7 +37,7 @@ Interactive Question Answering (SDA Research)
             </div>
         </div>
         <hr/>
-        <a href="{{ url_for('SurveyView:correct') }}">If this interpretation of the question is correct, please click here</a>
+        <a style="cursor: pointer;" onclick="correct_click()">If this interpretation of the question is correct, please click here</a>
         <hr/>
         <span>Skip the question because: </span>
         <select id="skip_reason">
@@ -50,33 +59,68 @@ Interactive Question Answering (SDA Research)
 {{ super() }}
 {% endblock %}
 
+{% block styles %}
+{{super()}}
+<link rel="stylesheet" href="{{url_for('.static', filename='main.css')}}">
+<link href="http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css" rel="Stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/rateYo/2.3.2/jquery.rateyo.min.css">
+{% endblock %}
+
+
 {% block scripts %}
 {{ super() }}
 <script src="http://code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
-<link href="http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css" rel="Stylesheet"/>
+<script src="http://code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/rateYo/2.3.2/jquery.rateyo.min.js"></script>
 
 <script>
 
     click_handler = function () {
     };
 
+    function feedback_dialog(call_back) {
+        $( "#feedback" ).dialog({
+              resizable: false,
+              height: "auto",
+              width: 400,
+              modal: true,
+              buttons: {
+                "Next Question": function() {
+                    $dialog = $(this);
+                    $.post("feedback", {'r1': $('#r1').val(), 'r2':$('#r1').val(), 'comment':$('#comment').val()},
+                        function (data, status) { $dialog.dialog( "close" ); call_back(); });
+                }
+              }
+        });
+    }
+    
+    function correct_click() {
+        feedback_dialog(function () {
+            window.location.href = "{{ url_for('SurveyView:correct') }}";
+        });
+    }
+
     function handle_IO(data, new_id) {
         $message = $('#message');
         $message.hide();
         if (data['command'] == 'end_survey') {
-            $message.html('<h1>Thanks for your participation!<br/> We really apperciate your help.</h1>');
-            $message.show();
+            feedback_dialog(function () {
+                $message.html('<h1>Thanks for your participation!<br/> We appreciate your help.</h1>');
+                $message.show();
 
-            return false;
+                return false;
+            });
         }
         if (data['command'] == 'next_question') {
-            setTimeout(function () {
-                window.location.replace("");
-            }, 2000);
-            $message.html('<h1>Well done! Let\'s go for the next question</h1>');
-            $message.show();
+            feedback_dialog(function () {
+                setTimeout(function () {
+                    window.location.replace("");
+                }, 2000);
+                $message.html('<h1>Well done! Let\'s go for the next question</h1>');
+                $message.show();
 
-            return false;
+                return false;
+            });
         }
 
         $('#sparql2nl').html('<h4>' + data['sparql2nl'] + '</h4>');
@@ -164,6 +208,10 @@ Interactive Question Answering (SDA Research)
     $('#io-1-submit').click(click_handler);
 
     $(function () {
+        $('#rate1').rateYo({rating: 0, fullStar: true, onSet: function (rating, rateYoInstance) {
+                $(this).next().val(rating); }});
+        $('#rate2').rateYo({rating: 0, fullStar: true, onSet: function (rating, rateYoInstance) {
+                $(this).next().val(rating); }});
         var $skip_reason_other = $('#skip_reason_other'),
             $skip_reason = $('#skip_reason');
         $skip_reason_other.hide();
@@ -184,6 +232,8 @@ Interactive Question Answering (SDA Research)
             var reason = $skip_reason.val();
             if (reason == 'other')
                 reason = $skip_reason_other.val()
+            feedback_dialog();
+
             window.location.href = "{{ url_for('SurveyView:skip') }}?reason=" + reason;
         });
         first_interaction_data = {{ data|tojson }};
