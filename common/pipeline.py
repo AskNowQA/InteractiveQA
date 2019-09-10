@@ -64,13 +64,13 @@ class IQAPipeline:
         if 'mdp' in args.linkers:
             entity_linkers.append(mdp)
             relation_linkers.append(mdp)
-            mdp_connecting_relation = MDP(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=False,
+            mdp_connecting_relation = MDP(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True,
                                           connecting_relation=True, k=20)
             relation_linkers.append(mdp_connecting_relation)
-            mdp_connecting_relations = MDP(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=False,
+            mdp_connecting_relations = MDP(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True,
                                            connecting_relations=True)
             relation_linkers.append(mdp_connecting_relations)
-            mdp_free_relation_match = MDP(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=False,
+            mdp_free_relation_match = MDP(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True,
                                           free_relation_match=True)
             relation_linkers.append(mdp_free_relation_match)
 
@@ -110,25 +110,17 @@ class IQAPipeline:
                     [uri_o for uri_o in self.qapair.sparql.uris if
                      uri_o.is_entity() and uri_o.uri not in [uri['uri'] for item in entities for uri in
                                                              item['uris']]]) > 0
-            # if len(relations) == len([uri_o for uri_o in self.qapair.sparql.uris if uri_o.is_ontology()]):
-            #     wrong_rel = len(
-            #         [uri_o for uri_o in self.qapair.sparql.uris if
-            #          uri_o.is_ontology() and uri_o.uri not in [uri['uri'] for item in relations for uri in
-            #                                                    item['uris']]]) > 0
-            type_uri = None
-            if '#type' in self.qapair.sparql.raw_query:
+            target_rels = [uri_o for uri_o in self.qapair.sparql.uris if uri_o.is_ontology()]
+            if '#type' in self.qapair.sparql.raw_query and len(relations) == len(target_rels) - 1 and len(
+                    relations) == 2:
                 type_uri = \
                     re.findall('(<[^>]*>|\?[^ ]*)',
                                self.qapair.sparql.raw_query[self.qapair.sparql.raw_query.index('#type'):])[0]
                 target_rels = [uri_o for uri_o in self.qapair.sparql.uris if
                                uri_o.is_ontology() and uri_o.raw_uri != type_uri]
             else:
-                target_rels = [uri_o for uri_o in self.qapair.sparql.uris if uri_o.is_ontology()]
-            if type_uri is None:
-                if len(relations) != len([uri_o for uri_o in self.qapair.sparql.uris if uri_o.is_ontology()]):
+                if len(relations) != len(target_rels):
                     return False
-            if len(relations) > len([uri_o for uri_o in self.qapair.sparql.uris if uri_o.is_ontology()]):
-                return False
 
             wrong_rel = len(
                 [uri_o for uri_o in target_rels if uri_o.uri not in [uri['uri'] for item in relations for uri in
@@ -141,7 +133,7 @@ class IQAPipeline:
                                   'boolean' in self.qapair.sparql.query_features(),
                                   'count' in self.qapair.sparql.query_features()) for qb in
                    __query_builders if self.__check_linkers(prev_output['entities'], prev_output['relations'])]
-        # outputs = [{'queries': [{
+        # outputs1 = [{'queries': [{
         #     'query': self.qapair.sparql.raw_query,
         #     'confidence': 1.0,
         #     'type_confidence': 1.0,
@@ -206,12 +198,12 @@ class IQAPipeline:
         outputs.extend(combinations)
 
         # remove one of the relations
-        # for item in outputs:
-        #     if len(item['relations']) > 1:
-        #         for idx in range(len(item['relations'])):
-        #             new_item = copy.deepcopy(item)
-        #             new_item['relations'].pop(idx)
-        #             outputs.append(new_item)
+        for item in outputs:
+            if len(item['relations']) > 1:
+                for idx in range(len(item['relations'])):
+                    new_item = copy.deepcopy(item)
+                    new_item['relations'].pop(idx)
+                    outputs.append(new_item)
 
         # to_be_deleted = []
         # for idx1 in range(len(outputs)):
