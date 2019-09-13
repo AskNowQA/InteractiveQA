@@ -171,12 +171,13 @@ class IQAPipeline:
                                     max_confidence = linked_uri['confidence']
                                     max_idx = len(candidates) - 1
 
-                    uri.confidence = candidates[max_idx][0]['confidence']
-                    linked_item = LinkedItem(str(candidates[max_idx][1]['surface']), [uri], UniqueList([query]))
-                    added_item = output[linked_item_type].add_if_not_exists(linked_item)
-                    if added_item != linked_item:
-                        added_item.related_queries.add_if_not_exists(query)
-                    linked_items_confidence *= uri.confidence
+                    if len(candidates)>0:
+                        uri.confidence = candidates[max_idx][0]['confidence']
+                        linked_item = LinkedItem(str(candidates[max_idx][1]['surface']), [uri], UniqueList([query]))
+                        added_item = output[linked_item_type].add_if_not_exists(linked_item)
+                        if added_item != linked_item:
+                            added_item.related_queries.add_if_not_exists(query)
+                        linked_items_confidence *= uri.confidence
 
                 query['confidence'] = 0.2
                 query['complete_confidence'] = linked_items_confidence * query['confidence'] * query['type_confidence']
