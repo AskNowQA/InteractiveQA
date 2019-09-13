@@ -154,20 +154,31 @@ class IQAPipeline:
                         continue
                     raw_uri = uri.raw_uri.strip('<>')
                     found = False
-                    for entity_relation in itertools.chain(prev_output['entities'], prev_output['relations']):
+                    if '/resource' in raw_uri:
+                        items = prev_output['entities']
+                        linked_item_type = 'entities'
+                    else:
+                        items = prev_output['relations']
+                        linked_item_type = 'relations'
+
+                    candidates = []
+                    max_confidence, max_idx, = 0, 0
+                    for entity_relation in items:
                         for linked_uri in entity_relation["uris"]:
                             if linked_uri['uri'] == raw_uri:
-                                linked_item_type = 'entities' if '/resource/' in raw_uri else 'relations'
-                                uri.confidence = linked_uri['confidence']
-                                linked_item = LinkedItem(str(entity_relation['surface']), [uri], UniqueList([query]))
-                                added_item = output[linked_item_type].add_if_not_exists(linked_item)
-                                if added_item != linked_item:
-                                    added_item.related_queries.add_if_not_exists(query)
-                                linked_items_confidence *= uri.confidence
-                                found = True
-                                break
-                        if found:
-                            break
+                                candidates.append([linked_uri, entity_relation])
+                                if max_confidence < linked_uri['confidence']:
+                                    max_confidence = linked_uri['confidence']
+                                    max_idx = len(candidates) - 1
+
+                    uri.confidence = candidates[max_idx][0]['confidence']
+                    linked_item = LinkedItem(str(candidates[max_idx][1]['surface']), [uri], UniqueList([query]))
+                    added_item = output[linked_item_type].add_if_not_exists(linked_item)
+                    if added_item != linked_item:
+                        added_item.related_queries.add_if_not_exists(query)
+                    linked_items_confidence *= uri.confidence
+
+                query['confidence'] = 0.2
                 query['complete_confidence'] = linked_items_confidence * query['confidence'] * query['type_confidence']
         return outputs
 
