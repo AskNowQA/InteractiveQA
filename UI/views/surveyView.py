@@ -72,7 +72,7 @@ class SurveyView(FlaskView):
     def reformat(self, result):
         if result is not None:
             if 'stats' in result:
-                result['stats'] = {'progress': (100.0 * result['stats']['answered'] / result['stats']['total'])}
+                result['stats'] = {'progress': "{0:.2f}".format(100.0 * result['stats']['answered'] / result['stats']['total'])}
             else:
                 result['stats'] = {'progress': 0}
 
