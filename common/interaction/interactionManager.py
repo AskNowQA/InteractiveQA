@@ -1,4 +1,5 @@
 from common.interaction.interactionOptions import InteractionOptions
+from common.utility.utils import Utils
 
 
 class InteractionManager:
@@ -48,18 +49,14 @@ class InteractionManager:
                 # we look into the benchmark to see which of is used to construct the target query
                 uri = last_option.value.uris[0].uri
                 similar_ios = [io for io in self.interaction_options.ios_of_same_group(last_option) if
-                               io.type == 'linked' and uri[uri.rindex('/'):] == io.value.uris[0].uri[
-                                                                                io.value.uris[0].uri.rindex('/'):]]
+                               io.type == 'linked' and Utils.equal_label(uri, io.value.uris[0].uri)]
                 if self.target_query is not None and uri not in self.target_query.sparql.query:
                     if len(similar_ios) > 0:
                         for io in similar_ios:
                             if io.value.uris[0].uri in self.target_query.sparql.query:
                                 last_option = io
                                 similar_ios = [io for io in self.interaction_options.ios_of_same_group(last_option)
-                                               if io.type == 'linked' and uri[uri.rindex('/'):] == io.value.uris[0].uri[
-                                                                                                   io.value.uris[
-                                                                                                       0].uri.rindex(
-                                                                                                       '/'):]]
+                                               if io.type == 'linked' and Utils.equal_label(uri, io.value.uris[0].uri)]
                                 break
                 # remove the IOs with same label, if they their URI isn't used by other IO's
                 for io in similar_ios:

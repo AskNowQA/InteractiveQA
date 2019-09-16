@@ -34,7 +34,8 @@ class Utils:
                 return Utils.sparql2nl_cache[query]
             count_query = False
             if 'COUNT(' in query:
-                query = query.replace('COUNT(DISTINCT ?u_0)', 'DISTINCT ?u_0').replace('COUNT(DISTINCT ?u_1)', 'DISTINCT ?u_1')
+                query = query.replace('COUNT(DISTINCT ?u_0)', 'DISTINCT ?u_0').replace('COUNT(DISTINCT ?u_1)',
+                                                                                       'DISTINCT ?u_1')
                 count_query = True
             # if 'ASK ' in query:
             #     uris = [raw_uri[1:-1] for raw_uri in re.findall('(<[^>]*>|\?[^ ]*)', query) if 'http' in raw_uri]
@@ -50,7 +51,7 @@ class Utils:
             if req.status_code == 200:
                 output = req.text
                 if count_query:
-                    output = output.replace('retrieves', 'retrieves number of ').replace('  ',' ')
+                    output = output.replace('retrieves', 'retrieves number of ').replace('  ', ' ')
                 Utils.sparql2nl_cache[query] = output
             else:
                 output = query
@@ -63,23 +64,24 @@ class Utils:
         cache_id = uri1 + uri2 + uri3
         if cache_id not in Utils.triple2nl_cache:
             done = False
-            try:
-                data = {'val1': uri1.encode("ascii", "ignore"),
-                        'val2': uri2.encode("ascii", "ignore"),
-                        'val3': uri3.encode("ascii", "ignore")}
-                result = Utils.call_web_api(
-                    config.config['semweb2nl']['endpoint'] + 'triple2nl?',
-                    raw_input=data,
-                    use_json=False, use_url_encode=True, parse_response_json=False)
-                if result is not None:
-                    Utils.triple2nl_cache[cache_id] = result
-                    done = True
-            except:
-                pass
+
+            # try:
+            #     data = {'val1': uri1.encode("ascii", "ignore"),
+            #             'val2': uri2.encode("ascii", "ignore"),
+            #             'val3': uri3.encode("ascii", "ignore")}
+            #     result = Utils.call_web_api(
+            #         config.config['semweb2nl']['endpoint'] + 'triple2nl?',
+            #         raw_input=data,
+            #         use_json=False, use_url_encode=True, parse_response_json=False)
+            #     if result is not None:
+            #         Utils.triple2nl_cache[cache_id] = result
+            #         done = True
+            # except:
+            #     pass
 
             def __extract_label(uri):
                 if '/' in uri:
-                    return uri[uri.rindex('/') + 1:]
+                    return uri[uri.rindex('/') + 1:].replace('_', ' ')
                 return uri
 
             if not done:
@@ -246,3 +248,9 @@ class Utils:
                 break
 
         return start, end, row[end]
+
+    @staticmethod
+    def equal_label(u1, u2):
+        l1 = u1[u1.rindex('/'):].lower()
+        l2 = u2[u2.rindex('/'):].lower()
+        return l1 == l2 or l1 + 's' == l2 or l1 == l2 + 's'
