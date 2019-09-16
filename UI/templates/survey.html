@@ -104,12 +104,10 @@ Interactive Question Answering (SDA Research)
         $message = $('#message');
         $message.hide();
         if (data['command'] == 'end_survey') {
-            feedback_dialog(function () {
-                $message.html('<h1>Thanks for your participation!<br/> We appreciate your help.</h1>');
-                $message.show();
+            $message.html('<h1>Thanks for your participation!<br/> We appreciate your help.</h1>');
+            $message.show();
 
-                return false;
-            });
+            return false;
         }
         if (data['command'] == 'next_question') {
             feedback_dialog(function () {
