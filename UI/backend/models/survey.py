@@ -61,6 +61,8 @@ class Survey(FlaskView):
             answer = flask.request.json['answer'] == 'True'
         if self.interaction_data[userid].interact(answer):
             io, query = self.interaction_data[userid].get_interaction_option()
+            if io is None and query is None:
+                return flask.jsonify({'command': 'next_question'})
             question = self.interaction_data[userid].pipeline_results[0][-1][0]
 
             return flask.jsonify(self.handle_IO(question, None, query, io))
