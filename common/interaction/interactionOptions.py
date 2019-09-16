@@ -15,7 +15,8 @@ class InteractionOptions:
         self.used_group_id = set()
         self.sparql_parser = sparql_parser
         self.kb = kb
-        self.all_queries = UniqueList()
+        self.all_queries = {}
+
         for output_set in complete_interpretation_space:
             self.question = output_set[-1][0]
             if 2 in output_set:
@@ -49,9 +50,16 @@ class InteractionOptions:
                                 elif diff == 1:
                                     query['complete_confidence'] = query['complete_confidence'] * 1 / 100
 
-                            self.all_queries.add_or_update(query, eq_func=lambda x, y: x['query'] == y['query'],
-                                                           opt_func=lambda x, y: x if x['complete_confidence'] > y[
-                                                               'complete_confidence'] else y)
+                            if query['query'] in self.all_queries:
+                                old_query = self.all_queries[query['query']]
+                                if old_query['complete_confidence'] < query['complete_confidence']:
+                                    self.all_queries[query['query']] = query
+                            else:
+                                self.all_queries[query['query']] = query
+                            # self.all_queries.add_or_update(query, key_func=lambda x: x['query'],
+                            #                                eq_func=lambda x, y: x['query'] == y['query'],
+                            #                                opt_func=lambda x, y: x if x['complete_confidence'] > y[
+                            #                                    'complete_confidence'] else y)
                             if c3:
                                 self.add(InteractionOption('type', query['type'], query, 'type'))
 
@@ -69,7 +77,7 @@ class InteractionOptions:
                                                        io.related_queries,
                                                        'linked_type'))
         if c4:
-            for query in self.all_queries:
+            for query in list(self.all_queries.values()):
                 self.add(InteractionOption('query', SPARQL(query['query'], self.sparql_parser), query, 'query'))
 
         self.remove_items_contained_in_others()
@@ -77,7 +85,7 @@ class InteractionOptions:
         # self.remove_single_options()
 
     def related_queries(self, uri):
-        for query in self.all_queries:
+        for query in list(self.all_queries.values()):
             if uri.raw_uri in query['query']:
                 yield query
 
@@ -177,7 +185,7 @@ class InteractionOptions:
 
     def all_active_queries(self, io=None):
         if io is None:
-            queries = self.all_queries
+            queries = list(self.all_queries.values())
         else:
             queries = io.related_queries
         return [query for query in queries if not query['removed']]
