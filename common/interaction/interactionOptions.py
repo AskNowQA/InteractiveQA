@@ -17,6 +17,7 @@ class InteractionOptions:
         self.kb = kb
         self.all_queries = UniqueList()
         for output_set in complete_interpretation_space:
+            self.question = output_set[-1][0]
             if 2 in output_set:
                 outputs = output_set[2]
                 for output in outputs:
@@ -32,7 +33,8 @@ class InteractionOptions:
                         for query in output['queries']:
                             query['removed'] = False
 
-                            uris = [raw_uri for raw_uri in re.findall('(<[^>]*>|\?[^ ]*)', query['query']) if 'http' in raw_uri]
+                            uris = [raw_uri for raw_uri in re.findall('(<[^>]*>|\?[^ ]*)', query['query']) if
+                                    'http' in raw_uri]
                             # $$Hack remove invalid boolean queries
                             if 'ask ' in query['query'].lower():
                                 if '?u' in query['query'] or len(uris) != 3:
