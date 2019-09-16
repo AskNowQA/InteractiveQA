@@ -224,8 +224,8 @@ if __name__ == '__main__':
     if args.populate_assigned_question_table:
         strategies = ['IO', 'OG']
         result = engine.execute('SELECT * FROM questions ORDER BY 2')
-        number_of_users = 15
-        number_of_question_per_complexity = {2: 10, 3: 10, 4: 9, 5: 1}
+        number_of_users = 10
+        number_of_question_per_complexity = {2: 7, 3: 7, 4: 7, 5: 7}
         question_complexities = {item[0]: item[1] for item in result}
         complexities = set(question_complexities.values())
 
