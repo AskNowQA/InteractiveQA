@@ -1,6 +1,6 @@
 class Oracle:
-    def __init__(self):
-        pass
+    def __init__(self, kb):
+        self.kb = kb
 
     def validate_query(self, qapair, query):
         query_match = qapair.sparql.equals(query, True, True)
@@ -8,7 +8,21 @@ class Oracle:
             return True
         else:
             # TODO check output
-            return query_match > 0.6
+            if query_match > 0.6:
+                results_1 = self.kb.query(qapair.sparql.raw_query)
+                results_2 = self.kb.query(query.raw_query)
+                head_var_1 = results_1[1]['head']['vars'][0]
+                head_var_2 = results_2[1]['head']['vars'][0]
+                if 'COUNT' in qapair.sparql.raw_query and 'COUNT' in query.raw_query:
+                    return results_1[1]['results']['bindings'][0][head_var_1]['value'] == \
+                           results_2[1]['results']['bindings'][0][head_var_2]['value']
+                else:
+                    results_1 = [item[head_var_1]['value'] for item in results_1[1]['results']['bindings']]
+                    results_2 = [item[head_var_2]['value'] for item in results_2[1]['results']['bindings']]
+                    max_len = max(len(results_1), len(results_2))
+                    intersec_len = len(set(results_2).intersection(set(results_1)))
+                    return intersec_len / max_len > 0.9
+            return False
 
     def answer(self, qapair, io):
         if io.type == 'query':

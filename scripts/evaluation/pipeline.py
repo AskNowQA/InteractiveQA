@@ -36,7 +36,7 @@ if __name__ == "__main__":
     kb = DBpedia(cache_path=os.path.join(args.base_path, "caches/"), use_cache=True)
     parse_sparql = dataset.parser.parse_sparql
     pipeline = IQAPipeline(args, kb, parse_sparql)
-    oracle = Oracle()
+    oracle = Oracle(kb)
     linker_evaluator = LinkerEvaluator(GoldLinker())
 
     pipeline_path = os.path.join(args.base_path, 'output', 'pipeline')
@@ -72,15 +72,12 @@ if __name__ == "__main__":
         qapair in dataset.qapairs if qapair.id in wdaqua_results}
 
     qid = ''
+
     for qapair in tqdm(dataset.qapairs):
         if qapair.id not in wdaqua_results:
             continue
         qid = qapair.id
-        # if question_complexities[qapair.id] != 2:
-        #     continue
         stats['general'].inc("total")
-        # if stats['general']["total"] >= 100:
-        #     break
 
         output_path = os.path.join(pipeline_path, ('{0}.pickle'.format(qapair.id)))
         if not os.path.exists(output_path):
