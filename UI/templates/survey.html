@@ -87,7 +87,7 @@ Interactive Question Answering (SDA Research)
               buttons: {
                 "Next Question": function() {
                     $dialog = $(this);
-                    $.post("feedback", {'r1': $('#r1').val(), 'r2':$('#r1').val(), 'comment':$('#comment').val()},
+                    $.post("feedback", {'r1': $('#r1').val(), 'r2':$('#r2').val(), 'comment':$('#comment').val()},
                         function (data, status) { $dialog.dialog( "close" ); call_back(); });
                 }
               }
