@@ -11,6 +11,8 @@ class Oracle:
             if query_match > 0.6:
                 results_1 = self.kb.query(qapair.sparql.raw_query)
                 results_2 = self.kb.query(query.raw_query)
+                if results_1 is None or results_2 is None or results_1[1] is None or results_2[1] is None:
+                    return False
                 head_var_1 = results_1[1]['head']['vars'][0]
                 head_var_2 = results_2[1]['head']['vars'][0]
                 if 'COUNT' in qapair.sparql.raw_query and 'COUNT' in query.raw_query:

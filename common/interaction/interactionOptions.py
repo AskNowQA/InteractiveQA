@@ -176,7 +176,8 @@ class InteractionOptions:
             #             self.dic[best_matching_id] = UniqueList()
 
             result = self.dic[best_matching_id].add_if_not_exists(interactionOption)
-            if result != interactionOption:
+            if (result != interactionOption) or (
+                    result.type == interactionOption.type and result.value == interactionOption.value):
                 if isinstance(interactionOption, InteractionOption):
                     result.addQuery(interactionOption.related_queries)
                     if isinstance(result.value, dict) and isinstance(interactionOption.value, dict):
