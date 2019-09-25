@@ -28,7 +28,7 @@ class Oracle:
 
     def answer(self, qapair, io):
         if io.type == 'query':
-            return qapair.sparql == io.value
+            return self.validate_query(qapair, io.value)
         elif io.type == 'type':
             if io.value == 'boolean':
                 return "ask " in qapair.sparql.query.lower()
