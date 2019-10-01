@@ -31,6 +31,8 @@ if __name__ == '__main__':
                         dest='model')
     parser.add_argument('--port', help='port', default=5002, type=int, dest='port')
     parser.add_argument('--pipeline', help='pipeline path', default='pipeline', dest='pipeline')
+    parser.add_argument("--chunkers", help="[mdp, gold, senna, nltk]", default="mdp", dest="chunkers")
+    parser.add_argument("--linkers", help="[mdp, falcon, earl]", default="mdp", dest="linkers")
     args = parser.parse_args()
     logger.info(args)
 

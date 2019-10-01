@@ -10,13 +10,16 @@ from config import config
 
 
 class FreeQuestionSurveyView(FlaskView):
-    decorators = [login_required]
+    decorators = []
     kb = None
 
     @route('index', methods=['GET', 'POST'])
     def index(self):
         flask.session['current_query'] = None
-        data = {'userid': current_user.username}
+        if current_user.is_anonymous:
+            data = {'userid': 'anonymous'}
+        else:
+            data = {'userid': current_user.username}
         form = SubmitQuestionForm()
         if form.validate_on_submit():
             if 'strategy' in flask.request.values:
@@ -41,7 +44,11 @@ class FreeQuestionSurveyView(FlaskView):
 
     @route('interact', methods=['POST'])
     def interact(self):
-        data = {'userid': current_user.username, 'answer': flask.request.values['answer']}
+        if current_user.is_anonymous:
+            username = 'anonymous'
+        else:
+            username = current_user.username
+        data = {'userid': username, 'answer': flask.request.values['answer']}
 
         self.log_interaction(interaction=flask.jsonify(flask.session['current_IO']).data, answer=data['answer'])
 
@@ -71,7 +78,12 @@ class FreeQuestionSurveyView(FlaskView):
 
     def mark_as_answered(self, data=None, final_query=None):
         now = datetime.datetime.utcnow()
-        record = AnsweredTask(current_user.username,
+        if current_user.is_anonymous:
+            username = 'anonymous'
+        else:
+            username = current_user.username
+
+        record = AnsweredTask(username,
                               flask.session['question_id'],
                               '',
                               now,
@@ -83,7 +95,12 @@ class FreeQuestionSurveyView(FlaskView):
         pass
 
     def log_interaction(self, interaction='', answer='', data=''):
-        log_record = TaskInteractionLog(current_user.username,
+        if current_user.is_anonymous:
+            username = 'anonymous'
+        else:
+            username = current_user.username
+
+        log_record = TaskInteractionLog(username,
                                         flask.session['question_id'],
                                         flask.session['session_id'],
                                         interaction,
@@ -131,7 +148,7 @@ class FreeQuestionSurveyView(FlaskView):
                             result['IO']['surface'] = 'Is the expected answer(s) ...?'
                             result['IO']['values'][0] = {'label': result['IO']['values'][0], 'abstract': ''}
                         else:
-                            result['IO']['surface'] = 'Does "{0}" refers to ...?'.format(result['IO']['surface'])
+                            result['IO']['surface'] = 'Does "{0}" refer to ...?'.format(result['IO']['surface'])
                             for idx in range(len(result['IO']['values'])):
                                 val = result['IO']['values'][idx]
                                 if 'dbpedia.org' in val:

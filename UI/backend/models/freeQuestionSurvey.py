@@ -2,7 +2,6 @@ import os
 import time
 
 import flask
-from flask_login import login_required, current_user
 from flask_classful import FlaskView, route
 
 from common.container.qapair import QApair
@@ -32,7 +31,8 @@ class FreeQuestionSurvey(FlaskView):
 
         userid = flask.request.json['userid']
         question, query, io = '', None, None
-        question_id, task, total, answered = FreeQuestionSurvey.book_keeper.new_task(userid)
+        # question_id, task, total, answered = FreeQuestionSurvey.book_keeper.new_task(userid)
+        question_id, task, total, answered = '', '', 1, False
         output = self.handle_IO(question, question_id, query, io)
         output['task'] = task
         output['stats'] = {'total': total, 'answered': answered}
@@ -60,7 +60,7 @@ class FreeQuestionSurvey(FlaskView):
                 while len(outputs.queue) == 0 and len(done.queue) < num_pipelines:
                     time.sleep(1)
 
-            pipeline_output = [item for output in outputs.queue for item in output[2]]
+            pipeline_output = list(outputs.queue)
             self.interaction_data[userid] = InteractionManager(pipeline_output, kb=self.kb,
                                                                sparql_parser=self.parser.parse_sparql,
                                                                interaction_type=self.interaction_types,
@@ -100,7 +100,7 @@ class FreeQuestionSurvey(FlaskView):
 
         if self.interaction_data[userid].interact(answer, current_io):
             io, query = self.interaction_data[userid].get_interaction_option()
-            question = self.interaction_data[userid].pipeline_results[-1]['question']
+            question = self.interaction_data[userid].pipeline_results[0][-1]['question']
 
             return flask.jsonify(self.handle_IO(question, None, query, io))
         else:

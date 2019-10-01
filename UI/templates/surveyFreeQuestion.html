@@ -10,13 +10,14 @@ Interactive Question Answering (SDA Research)
 </div>
 <div id="question"
      style="margin-left: 10px; {% if data['content_visibility'] == 'visible' %} opacity: 0.4;pointer-events: none; {% endif %}">
-    <h3>Task: {{data['task']}} </h3>
+    <br />
+    <!--<h3>Task: {{data['task']}} </h3>-->
     <form method="POST" action="">
         {{ form.hidden_tag() }}
         <table style="width: 100%">
             <tr>
                 <td style="width: 70%">{{ wtf.form_field(form.question) }}
-                    {{ wtf.form_field(form.task) }}
+                    <!--{{ wtf.form_field(form.task) }}-->
                 </td>
                 <td style="padding-left: 10px;"><input type="submit" value="Submit"/></td>
             </tr>
@@ -56,11 +57,11 @@ Interactive Question Answering (SDA Research)
             <button id="skip_button">Skip</button>
         </div>
     </div>
-    <div style="position: absolute; bottom: 40px;margin: 0 auto;text-align: center;width: 100%;">
-        <div id="progressbar">
-            <div id="progress-label" style="position: absolute; left:48%;">Loading...</div>
-        </div>
-    </div>
+    <!--<div style="position: absolute; bottom: 40px;margin: 0 auto;text-align: center;width: 100%;">-->
+        <!--<div id="progressbar">-->
+            <!--<div id="progress-label" style="position: absolute; left:48%;">Loading...</div>-->
+        <!--</div>-->
+    <!--</div>-->
 </div>
 {{ super() }}
 {% endblock %}
@@ -221,18 +222,18 @@ Interactive Question Answering (SDA Research)
         first_interaction_data = {{ data | tojson }}
         ;
         handle_IO(first_interaction_data, 'io-1');
-        var progressbar = $("#progressbar"), progressLabel = $("#progress-label");
+        // var progressbar = $("#progressbar"), progressLabel = $("#progress-label");
 
-        progressbar.progressbar({
-            value: false,
-            change: function () {
-                progressLabel.text(progressbar.progressbar("value") + "%");
-            },
-            complete: function () {
-                progressLabel.text("Complete!");
-            }
-        });
-        progressbar.progressbar("value", {{data['stats']['progress'] }} );
+        // progressbar.progressbar({
+        //     value: false,
+        //     change: function () {
+        //         progressLabel.text(progressbar.progressbar("value") + "%");
+        //     },
+        //     complete: function () {
+        //         progressLabel.text("Complete!");
+        //     }
+        // });
+        // progressbar.progressbar("value", {{data['stats']['progress'] }} );
     });
 </script>
 {%- endblock scripts %}
