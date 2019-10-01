@@ -9,9 +9,18 @@ from common.container.sparql import SPARQL
 from common.parser.lc_quad_linked import LC_Qaud_Linked
 from common.evaluation.oracle import Oracle
 from common.utility.stats import Stats
+from common.kb.dbpedia import DBpedia
 
-colors = {'NIB-IQA': 'green', 'IQA-IG': 'blue', 'IQA-OG': 'orange', 'SIB': 'red', 'NIB-WDAqua': 'yellow',
-          'NIB-IQA-Top1': 'blue'}
+colors = {'NIB-IQA': 'white', 'IQA-IG': 'white', 'IQA-OG': 'white', 'SIB': 'white', 'NIB-WDAqua': 'white',
+          'NIB-IQA-Top1': 'white'}
+
+hatches = {'NIB-IQA': '', 'IQA-IG': '///', 'IQA-OG': '...', 'SIB': 'oo', 'NIB-WDAqua': '...',
+           'NIB-IQA-Top1': ''}
+
+linestyle = {'NIB-IQA': '-.', 'IQA-IG': ':', 'IQA-OG': '--', 'SIB': ':', 'NIB-WDAqua': '-',
+             'NIB-IQA-Top1': '-'}
+marker = {'NIB-IQA': 'v', 'IQA-IG': 'x', 'IQA-OG': 'o', 'SIB': '*', 'NIB-WDAqua': '+',
+          'NIB-IQA-Top1': 'x'}
 font = {'size': 14}
 matplotlib.rc('font', **font)
 
@@ -34,9 +43,11 @@ def validate_query(dataset, qid, query):
 def error_analysis(engine, dataset):
     answered_questions = list(
         engine.execute(
-            'SELECT * FROM answered_questions WHERE username NOT IN ("Mohnish", "MouTn", "debayan", "nicolas", "shagha", "hamid", "afshin","thoms","sergej")'))
-
+            'SELECT * FROM answered_questions'))
+    # WHERE username NOT IN ("Mohnish", "MouTn", "debayan", "nicolas", "shagha", "hamid", "afshin","thoms","sergej"
     count = 0
+    correct_count = 0
+    skip_count = 0
     for answered_question in answered_questions:
         qapair = dataset.get_by_id(answered_question[2])
         if len(qapair) > 0:
@@ -44,18 +55,21 @@ def error_analysis(engine, dataset):
             query = answered_question[7]
 
             if query is None or 'skip:' in query:
+                skip_count += 1
                 continue
             else:
                 user_query = SPARQL(query, parse_sparql)
                 result = oracle.validate_query(qapair, user_query)
-                if not result:
+                if result:
+                    correct_count += 1
+                else:
                     count += 1
                     print(qapair.id)
                     print(query.encode("ascii", "ignore"))
                     print(qapair.sparql.query.encode("ascii", "ignore"))
                     print("")
                     print("")
-    print(len(answered_questions)), count
+    print(len(answered_questions), correct_count, skip_count, count)
     # 423 147
     # structure 55 0.37
     # type 39 0.26
@@ -85,11 +99,13 @@ def user_vs_benchmark(engine, dataset, username):
     LEFT JOIN questions on questions.id=interaction_log.question_id
     INNER JOIN assigned_questions ON assigned_questions.question_id = interaction_log.question_id 
         AND assigned_questions.username = interaction_log.username
-    WHERE interaction_log.username NOT IN ("Mohnish", "MouTn", "debayan", "nicolas", "shagha", "hamid", "afshin","thoms","sergej") 
-      AND interaction_log.id IN (
+    WHERE 
+      interaction_log.username NOT IN ("hamid123", "mohnishdresden", "sebastian", "ahcene") AND 
+      interaction_log.id IN (
         SELECT 
             MAX(interaction_log.id) as last_id
         FROM interaction_log
+        WHERE interaction != "feedback"
         GROUP BY
             interaction_log.question_id,
             interaction_log.session_id)"""
@@ -111,7 +127,7 @@ def user_vs_benchmark(engine, dataset, username):
             u_skip_question = 1
         elif 'skip:IO_not_understandable' in item['data']:
             u_skip_option = 1
-        elif 'Is it what the question means?' in item['interaction'] and item[
+        elif 'Is it what the question means?' in str(item['interaction']) and item[
             'answer'] == 'True':
             u_correct = 1
         elif item['data'] == '' and item['answer'] == '':
@@ -136,59 +152,109 @@ def user_vs_benchmark(engine, dataset, username):
         fig = plt.figure()
         ax = fig.add_subplot(111)
         x_range = np.array(range(2, 6))
-        ax.bar(x_range - .1, tmp['u_correct_avg'], width=0.2, label='Conf-U')
-        for i, v in enumerate(tmp['u_correct_avg']):
+        y_value = tmp['u_correct_avg']
+        y_value_avg = "{:.1f}".format(sum(y_value) / len(y_value))
+        ax.bar(x_range - .1, y_value, width=0.2, label='Conf-U [Avg: {}]'.format(y_value_avg)
+               , edgecolor='black', hatch='...', color='white')
+        for i, v in enumerate(y_value):
             ax.text(i + 1.8, v + .05, "{0:.0f}".format(v), color='black')
-        ax.bar(x_range + 0.1, tmp['b_correct_avg'], width=0.2, label='Conf-B')
-        for i, v in enumerate(tmp['b_correct_avg']):
+        y_value = tmp['b_correct_avg']
+        y_value_avg = "{:.1f}".format(sum(y_value) / len(y_value))
+        ax.bar(x_range + 0.1, y_value, width=0.2, label='Conf-B [Avg: {}]'.format(y_value_avg)
+               , edgecolor='black', hatch='///', color='white')
+        for i, v in enumerate(y_value):
             ax.text(i + 2, v + .05, "{0:.0f}".format(v), color='black')
-        ax.legend(loc='upper right')
+        ax.legend(loc='lower right', ncol=2, bbox_to_anchor=(1, 1.02), borderaxespad=0.)
         plt.yticks(np.arange(0, 101, 10))
         plt.xticks(x_range)
+        fig.tight_layout()
         plt.savefig('user_vs_benchmark-{}'.format(strategy))
 
 
-def ig_vs_og(engine):
+def ig_vs_og(engine, strategy):
+    query = """
+        SELECT 
+            questions.complexity,
+            assigned_questions.strategy,
+            questions.id,
+            COUNT(interaction_log.id) AS num_inter
+        FROM questions
+            INNER JOIN assigned_questions ON assigned_questions.question_id = questions.id
+            LEFT JOIN answered_questions ON answered_questions.question_id = assigned_questions.question_id 
+                AND answered_questions.username = assigned_questions.username
+            LEFT JOIN interaction_log ON interaction_log.question_id = assigned_questions.question_id 
+                AND interaction_log.username = assigned_questions.username
+        WHERE 
+            interaction_log.username NOT IN ("hamid123", "mohnishdresden", "sebastian", "ahcene") AND 
+            assigned_questions.strategy IS NOT NULL
+            AND interaction_log.interaction != "feedback"
+        GROUP BY 
+            assigned_questions.strategy, questions.complexity, questions.id"""
+    detailed_results = np.array(list(engine.execute(query)), dtype=object)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    x_range = np.array(range(2, 6))
+    data = [(list(detailed_results[((detailed_results[:, 1] == strategy) & (detailed_results[:, 0] == x))][:, 3]))
+            for x in x_range]
+    bp = ax.boxplot(data, positions=x_range, showfliers=True)
+    plt.xticks(x_range, x_range)
+    plt.yticks(np.arange(1, 20, 2))
+    # ax.legend([bp['boxes'][0]], [strategy], loc='lower right', ncol=2, bbox_to_anchor=(1, 1.02), borderaxespad=0.)
+    fig.tight_layout()
+    plt.savefig('{}.png'.format(strategy))
+    print(strategy)
+    print(data)
+
+
+def feedback(engine, strategy='IG'):
+    query = """
+            SELECT 
+                questions.complexity, 
+                assigned_questions.strategy,
+                questions.id,
+                SUM(CAST(substr(interaction_log.data, 8,1) AS INTEGER)),
+                SUM(CAST(substr(interaction_log.data, 17,1) AS INTEGER))
+        FROM interaction_log
+                INNER JOIN questions on questions.id == interaction_log.question_id
+                INNER JOIN assigned_questions ON assigned_questions.question_id = interaction_log.question_id
+                AND interaction_log.username = assigned_questions.username
+            where interaction_log.interaction == 'feedback' 
+                and interaction_log.data != '{"r1":"","r2":"","comment":""}'
+            GROUP BY 
+                questions.complexity, assigned_questions.strategy, questions.id"""
+    detailed_results = np.array(list(engine.execute(query)), dtype=object)
+
     query = """
     SELECT 
-        questions.complexity,
-        assigned_questions.strategy,
-        COUNT(DISTINCT assigned_questions.id) AS question_counts,
-        COUNT(DISTINCT answered_questions.id) AS answered_question_counts,
-        COUNT(interaction_log.id) AS num_inter
-    FROM questions
-        INNER JOIN assigned_questions ON assigned_questions.question_id = questions.id
-        LEFT JOIN answered_questions ON answered_questions.question_id = assigned_questions.question_id 
-            AND answered_questions.username = assigned_questions.username
-        LEFT JOIN interaction_log ON interaction_log.question_id = assigned_questions.question_id 
-            AND interaction_log.username = assigned_questions.username
-    WHERE 
-        assigned_questions.strategy IS NOT NULL
-        AND interaction_log.username NOT IN ("elena", "elena2","Mohnish","Dubey", "hamid1")
+		questions.complexity, 
+		assigned_questions.strategy,
+		SUM(CAST(substr(interaction_log.data, 8,1) AS INTEGER))*1.0/COUNT(interaction_log.id),
+		SUM(CAST(substr(interaction_log.data, 17,1) AS INTEGER))*1.0/COUNT(interaction_log.id)
+    FROM interaction_log
+        INNER JOIN questions on questions.id == interaction_log.question_id
+        INNER JOIN assigned_questions ON assigned_questions.question_id = interaction_log.question_id
+        AND interaction_log.username = assigned_questions.username
+    where interaction_log.interaction == 'feedback' 
+        and interaction_log.data != '{"r1":"","r2":"","comment":""}'
     GROUP BY 
-        assigned_questions.strategy, questions.complexity"""
+        questions.complexity, assigned_questions.strategy"""
 
     results = np.array(list(engine.execute(query)), dtype=object)
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    y_value = 1.0 * results[:4][:, 4] / results[:4][:, 3]
-    x_range = np.array(results[:4][:, 0], dtype=int)
-    ax.bar(x_range - 0.1, y_value, color=colors['IQA-IG'], label='IQA-IG',
-           width=0.2)
-    for i, v in enumerate(y_value):
-        ax.text(i + 1.8, v + .05, "{0:.1f}".format(v), color='black')
+    x_range = np.array(range(2, 6))
 
-    y_value = 1.0 * results[4:][:, 4] / results[4:][:, 3]
-    ax.bar(x_range + 0.1, 1.0 * results[4:][:, 4] / results[4:][:, 3], color=colors['IQA-OG'], label='IQA-OG',
-           width=0.2)
-    for i, v in enumerate(y_value):
-        ax.text(i + 2, v + .05, "{0:.1f}".format(v), color='black')
+    data = [(list(detailed_results[((detailed_results[:, 1] == strategy) & (detailed_results[:, 0] == x))][:, 3]))
+            for x in x_range]
+    bp = ax.boxplot(data, positions=x_range, showfliers=True)
 
     plt.xticks(x_range, x_range)
-    ax.legend(loc='upper center', ncol=2, bbox_to_anchor=(0.742, 1.06))
+    plt.yticks(np.arange(1, 6, 1))
+    # ax.legend(loc='lower right', ncol=2, bbox_to_anchor=(1, 1.02), borderaxespad=0.)
     fig.tight_layout()
-    plt.savefig('ig_vs_og.png')
+    plt.savefig('feedback-{}.png'.format(strategy))
 
     print(results)
 
@@ -205,7 +271,8 @@ if __name__ == "__main__":
     parse_sparql = dataset.parser.parse_sparql
     engine = sqlalchemy.create_engine('sqlite:///{0}'.format(os.path.join(args.base_path, args.database)))
 
-    oracle = Oracle()
+    kb = DBpedia(cache_path=os.path.join(args.base_path, "caches/"), use_cache=True)
+    oracle = Oracle(kb)
     stats = Stats()
 
     # question_query = list(engine.execute(
@@ -224,5 +291,8 @@ if __name__ == "__main__":
     #         print 'error'
 
     # error_analysis(engine, dataset)
-    user_vs_benchmark(engine, dataset, args.username)
-    # ig_vs_og(engine)
+    # user_vs_benchmark(engine, dataset, args.username)
+    # ig_vs_og(engine, 'IG')
+    # ig_vs_og(engine, 'OG')
+    feedback(engine, 'IG')
+    feedback(engine, 'OG')
