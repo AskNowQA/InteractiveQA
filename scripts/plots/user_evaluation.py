@@ -43,7 +43,7 @@ def validate_query(dataset, qid, query):
 def error_analysis(engine, dataset):
     answered_questions = list(
         engine.execute(
-            'SELECT * FROM answered_questions'))
+            'SELECT * FROM answered_questions WHERE username NOT IN ("tttt", "hamid123", "mohnishdresden")'))
     # WHERE username NOT IN ("Mohnish", "MouTn", "debayan", "nicolas", "shagha", "hamid", "afshin","thoms","sergej"
     count = 0
     correct_count = 0
@@ -81,26 +81,12 @@ def error_analysis(engine, dataset):
 
 def user_vs_benchmark(engine, dataset, username):
     query = """
-    SELECT 
-        interaction_log.username,
-        interaction_log.question_id,
-        COUNT(DISTINCT interaction_log.session_id) AS session_count,
-        MAX(interaction_log.id) AS max_id
-    FROM interaction_log
-    GROUP BY
-        interaction_log.username,
-        interaction_log.question_id
-    HAVING
-        COUNT(DISTINCT interaction_log.session_id) > 1"""
-    interactions_multiple_session = pd.read_sql(query, engine)
-
-    query = """
     SELECT interaction_log.*, questions.complexity, assigned_questions.strategy  FROM interaction_log
     LEFT JOIN questions on questions.id=interaction_log.question_id
     INNER JOIN assigned_questions ON assigned_questions.question_id = interaction_log.question_id 
         AND assigned_questions.username = interaction_log.username
     WHERE 
-      interaction_log.username NOT IN ("hamid123", "mohnishdresden", "sebastian", "ahcene") AND 
+      interaction_log.username NOT IN ('tttt', 'hamid123', 'mohnishdresden') AND 
       interaction_log.id IN (
         SELECT 
             MAX(interaction_log.id) as last_id
@@ -170,6 +156,33 @@ def user_vs_benchmark(engine, dataset, username):
         fig.tight_layout()
         plt.savefig('user_vs_benchmark-{}'.format(strategy))
 
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    x_range = np.array(range(2, 6)) - 0.1
+    for strategy in ['IG', 'OG']:
+        print(strategy)
+        tmp = df.loc[df['strategy'] == strategy][
+            ['complexity', 'u_correct', 'u_skip_question', 'u_skip_option', 'b_correct']].groupby(['complexity']).agg(
+            ['count', 'sum'])
+        tmp['u_correct_avg'] = tmp.u_correct['sum'] / tmp.u_correct['count'] * 100.0
+        tmp['b_correct_avg'] = tmp.b_correct['sum'] / tmp.b_correct['count'] * 100.0
+        tmp['u_skip_question_avg'] = tmp.u_skip_question['sum'] / tmp.u_skip_question['count'] * 100.0
+        tmp['u_skip_option_avg'] = tmp.u_skip_option['sum'] / tmp.u_skip_option['count'] * 100.0
+
+        y_value = tmp['b_correct_avg']/100
+        y_value_avg = "{:.2f}".format(sum(y_value) / len(y_value))
+        ax.bar(x_range, y_value, width=0.2, label='F1-{} [Avg: {}]'.format(strategy, y_value_avg)
+               , edgecolor='black', hatch=hatches['IQA-' + strategy], color='white')
+        for i, v in enumerate(y_value):
+            ax.text(x_range[i] - 0.2 + (0.1 if strategy == 'OG' else 0), v + .01, "{0:0.2f}".format(v), color='black')
+        x_range += 0.2
+    x_range = np.array(range(2, 6))
+    ax.legend(loc='lower right', ncol=2, bbox_to_anchor=(1, 1.02), borderaxespad=0.)
+    plt.yticks(np.arange(0, 1.1, 0.1))
+    plt.xticks(x_range)
+    fig.tight_layout()
+    plt.savefig('f1-IGOG')
+
 
 def ig_vs_og(engine, strategy):
     query = """
@@ -185,11 +198,12 @@ def ig_vs_og(engine, strategy):
             LEFT JOIN interaction_log ON interaction_log.question_id = assigned_questions.question_id 
                 AND interaction_log.username = assigned_questions.username
         WHERE 
-            interaction_log.username NOT IN ("hamid123", "mohnishdresden", "sebastian", "ahcene") AND 
+            interaction_log.username NOT IN ('tttt', 'hamid123', 'mohnishdresden') AND 
             assigned_questions.strategy IS NOT NULL
             AND interaction_log.interaction != "feedback"
         GROUP BY 
             assigned_questions.strategy, questions.complexity, questions.id"""
+    #interaction_log.username NOT IN ("hamid123", "mohnishdresden", "sebastian", "ahcene") AND
     detailed_results = np.array(list(engine.execute(query)), dtype=object)
 
     fig = plt.figure()
@@ -203,7 +217,7 @@ def ig_vs_og(engine, strategy):
     # ax.legend([bp['boxes'][0]], [strategy], loc='lower right', ncol=2, bbox_to_anchor=(1, 1.02), borderaxespad=0.)
     fig.tight_layout()
     plt.savefig('{}.png'.format(strategy))
-    print(strategy)
+    print(strategy, np.mean([item for row in data for item in row]))
     print(data)
 
 
@@ -219,7 +233,9 @@ def feedback(engine, strategy='IG'):
                 INNER JOIN questions on questions.id == interaction_log.question_id
                 INNER JOIN assigned_questions ON assigned_questions.question_id = interaction_log.question_id
                 AND interaction_log.username = assigned_questions.username
-            where interaction_log.interaction == 'feedback' 
+            where
+                interaction_log.username NOT IN ('tttt', 'hamid123', 'mohnishdresden') AND 
+                interaction_log.interaction == 'feedback' 
                 and interaction_log.data != '{"r1":"","r2":"","comment":""}'
             GROUP BY 
                 questions.complexity, assigned_questions.strategy, questions.id"""
@@ -235,7 +251,9 @@ def feedback(engine, strategy='IG'):
         INNER JOIN questions on questions.id == interaction_log.question_id
         INNER JOIN assigned_questions ON assigned_questions.question_id = interaction_log.question_id
         AND interaction_log.username = assigned_questions.username
-    where interaction_log.interaction == 'feedback' 
+    where
+        interaction_log.username NOT IN ('tttt', 'hamid123', 'mohnishdresden') AND 
+        interaction_log.interaction == 'feedback' 
         and interaction_log.data != '{"r1":"","r2":"","comment":""}'
     GROUP BY 
         questions.complexity, assigned_questions.strategy"""
@@ -256,6 +274,7 @@ def feedback(engine, strategy='IG'):
     fig.tight_layout()
     plt.savefig('feedback-{}.png'.format(strategy))
 
+    print(np.mean([x for row in data for x in row]))
     print(results)
 
 
@@ -292,7 +311,7 @@ if __name__ == "__main__":
 
     # error_analysis(engine, dataset)
     # user_vs_benchmark(engine, dataset, args.username)
-    # ig_vs_og(engine, 'IG')
-    # ig_vs_og(engine, 'OG')
-    feedback(engine, 'IG')
-    feedback(engine, 'OG')
+    ig_vs_og(engine, 'IG')
+    ig_vs_og(engine, 'OG')
+    # feedback(engine, 'IG')
+    # feedback(engine, 'OG')
