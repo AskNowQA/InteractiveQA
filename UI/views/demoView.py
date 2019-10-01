@@ -135,7 +135,7 @@ class DemoView(FlaskView):
                             result['IO']['surface'] = 'Is the expected answer(s) ...?'
                             result['IO']['values'][0] = {'label': result['IO']['values'][0], 'abstract': ''}
                         else:
-                            result['IO']['surface'] = 'Does "{0}" refers to ...?'.format(result['IO']['surface'])
+                            result['IO']['surface'] = 'Does "{0}" refer to ...?'.format(result['IO']['surface'])
                             for idx in range(len(result['IO']['values'])):
                                 val = result['IO']['values'][idx]
                                 if 'dbpedia.org' in val:

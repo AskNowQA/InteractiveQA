@@ -107,9 +107,9 @@ class SurveyView(FlaskView):
                             result['IO']['values'][0] = {'label': result['IO']['values'][0], 'abstract': ''}
                         else:
                             if len(result['IO']['surface']) == 0:
-                                result['IO']['surface'] = 'Does any part of the question refers to ...?'
+                                result['IO']['surface'] = 'Does any part of the question refer to ...?'
                             else:
-                                result['IO']['surface'] = 'Does "{0}" refers to ...?'.format(result['IO']['surface'])
+                                result['IO']['surface'] = 'Does "{0}" refer to ...?'.format(result['IO']['surface'])
                             for idx in range(len(result['IO']['values'])):
                                 val = result['IO']['values'][idx]
                                 if 'dbpedia.org' in val:
