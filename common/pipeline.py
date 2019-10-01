@@ -64,15 +64,15 @@ class IQAPipeline:
         if 'mdp' in args.linkers:
             entity_linkers.append(mdp)
             relation_linkers.append(mdp)
-            mdp_connecting_relation = MDP(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True,
-                                          connecting_relation=True, k=20)
-            relation_linkers.append(mdp_connecting_relation)
-            mdp_connecting_relations = MDP(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True,
-                                           connecting_relations=True)
-            relation_linkers.append(mdp_connecting_relations)
-            mdp_free_relation_match = MDP(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True,
-                                          free_relation_match=True)
-            relation_linkers.append(mdp_free_relation_match)
+            # mdp_connecting_relation = MDP(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True,
+            #                               connecting_relation=True, k=20)
+            # relation_linkers.append(mdp_connecting_relation)
+            # mdp_connecting_relations = MDP(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True,
+            #                                connecting_relations=True)
+            # relation_linkers.append(mdp_connecting_relations)
+            # mdp_free_relation_match = MDP(cache_path=os.path.join(args.base_path, 'caches/'), use_cache=True,
+            #                               free_relation_match=True)
+            # relation_linkers.append(mdp_free_relation_match)
 
         # entity_linkers.append(LuceneLinker(index='idx_ent_ngram', use_ngram=True))
         # entity_linkers.append(LuceneLinker(index='idx_ent'))
@@ -132,8 +132,12 @@ class IQAPipeline:
         outputs = [qb.build_query(prev_output['question'], prev_output['entities'], prev_output['relations'],
                                   'boolean' in self.qapair.sparql.query_features(),
                                   'count' in self.qapair.sparql.query_features()) for qb in
-                   __query_builders if self.__check_linkers(prev_output['entities'], prev_output['relations'])]
-        # outputs1 = [{'queries': [{
+                   __query_builders]
+        # outputs = [qb.build_query(prev_output['question'], prev_output['entities'], prev_output['relations'],
+        #                           'boolean' in self.qapair.sparql.query_features(),
+        #                           'count' in self.qapair.sparql.query_features()) for qb in
+        #            __query_builders if self.__check_linkers(prev_output['entities'], prev_output['relations'])]
+        # outputs = [{'queries': [{
         #     'query': self.qapair.sparql.raw_query,
         #     'confidence': 1.0,
         #     'type_confidence': 1.0,
