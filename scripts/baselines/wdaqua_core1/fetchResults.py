@@ -73,7 +73,7 @@ if __name__ == '__main__':
 
     qa_results = None
     if os.path.exists(os.path.join(args.base_path, 'output/wdaqua_core1.pk')):
-        with open(os.path.join(args.base_path, 'output/wdaqua_core1.pk'), "r") as data_file:
+        with open(os.path.join(args.base_path, 'output/wdaqua_core1.pk'), "rb") as data_file:
             qa_results = pk.load(data_file)
 
     if fetch_results:
@@ -111,9 +111,10 @@ if __name__ == '__main__':
     validate_results = True
     if validate_results:
         if os.path.exists(os.path.join(args.base_path, 'output/gold_answer.pk')):
-            with open(os.path.join(args.base_path, 'output/gold_answer.pk'), "r") as data_file:
+            with open(os.path.join(args.base_path, 'output/gold_answer.pk'), "rb") as data_file:
                 ds_results = pk.load(data_file)
 
+            final_stats = Stats()
             stats_results = Stats()
             for i in range(1, 10):
                 stats_id = '#{}-'.format(i)
@@ -123,7 +124,7 @@ if __name__ == '__main__':
             for qapair in tqdm(dataset.qapairs):
                 query_complexity = len([uri for uri in qapair.sparql.uris if not (uri.is_generic() or uri.is_type())])
                 stats_id = '#{}-'.format(query_complexity)
-                if qapair.id in stats['correct_quries']:
+                if qapair.id in qa_results:#qapair.id in stats['correct_quries']:
                     # try:
                     query_equal = qapair.sparql == SPARQL(
                         qa_results[qapair.id]['questions'][0]['question']['language'][0]['SPARQL'],
@@ -166,6 +167,7 @@ if __name__ == '__main__':
                         if q1 == q2:
                             p = r = f1 = 1
                             stats_results.inc('+correct')
+                            final_stats[qapair.id] = '+correct'
                         elif isinstance(q1, set) and isinstance(q2, set):
                             tp = float(len(q2.intersection(q1)))
                             p = tp / len(q1)
@@ -176,8 +178,10 @@ if __name__ == '__main__':
                                 f1 = 2 * ((p * r) / (p + r))
                             if tp > 0:
                                 stats_results.inc('+partial')
+                                final_stats[qapair.id] = '+partial'
                             else:
                                 stats_results.inc('-incorrect')
+                                final_stats[qapair.id] = '-incorrect'
                         else:
                             if query_equal:
                                 print("qqq")
@@ -194,7 +198,7 @@ if __name__ == '__main__':
                     # except Exception as expt:
                     #     print(expt)
 
-            final_stats = Stats()
+
             for i in range(1, 10):
                 stats_id = '#{}-'.format(i)
                 if stats_results[stats_id + 'total'] > 0:
