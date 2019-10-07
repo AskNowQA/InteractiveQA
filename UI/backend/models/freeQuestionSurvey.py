@@ -100,7 +100,7 @@ class FreeQuestionSurvey(FlaskView):
 
         if self.interaction_data[userid].interact(answer, current_io):
             io, query = self.interaction_data[userid].get_interaction_option()
-            question = self.interaction_data[userid].pipeline_results[0][-1]['question']
+            question = self.interaction_data[userid].pipeline_results[0][-1][0]
 
             return flask.jsonify(self.handle_IO(question, None, query, io))
         else:
