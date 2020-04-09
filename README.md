@@ -18,4 +18,4 @@ While IQA interactive schema is generally able be implemented using an arbitrary
 
 
 ## Data
-Please find all required data at: https://drive.google.com/open?id=1iKSu6Cby2KhWdnIukF36uWTeGfyGiEVF
+Please find all required data at: tiny.cc/IQAData
