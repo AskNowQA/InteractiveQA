@@ -19,3 +19,6 @@ While IQA interactive schema is generally able be implemented using an arbitrary
 
 ## Data
 Please find all required data at: tiny.cc/IQAData
+
+## License
+This program is subject to the terms of the General Public License (GPL), Version 3.0. 
