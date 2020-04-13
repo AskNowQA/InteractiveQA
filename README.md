@@ -21,19 +21,19 @@ While IQA interactive schema is generally able be implemented using an arbitrary
 Please find all required data at: http://tiny.cc/IQAData
 ```
 data
-└LC-QuAD
-│   │   linked.json
-│   │   linked_IOB.pk
-│   └───EARL
-│       │   output_nltk.json
-│       │   output_gold.json
-│       │   output_gold_EARL_ER_PRED
+└LC-QuAD (Benchmarkin dataset)
+│   │   linked.json (Original)
+│   │   linked_IOB.pk (IOB format to train the parser)
+│   └───EARL (cached the output of EARL using various parser)
+│       │   output_nltk.json (nltk based parser)
+│       │   output_gold.json (gold annotations)
+│       │   output_gold_EARL_ER_PRED.json (default)
 └output
 │   │  wd_perf.json
-│   │  stats-general.json
-│   │  gold_answer.pk
-│   └───pipeline
-│       │   fbc52b963d5141a6b89216bae276bf21.pickle
+│   │  stats-general.json (detailed results for oracle evaluation)
+│   │  gold_answer.pk (Gold answers for LC-QuAD dataset)
+│   └───pipeline (Full interpretation space for all LC-QuAD questions)
+│       │   fbc52b963d5141a6b89216bae276bf21.pickle ({questionid}.pickle)
 │       │   ...
 ```
 
