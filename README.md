@@ -18,7 +18,7 @@ While IQA interactive schema is generally able be implemented using an arbitrary
 
 
 ## Data
-Please find all required data at: http://tiny.cc/IQAData
+Please find all required data at: http://tiny.cc/IQA-Data
 ```
 data
 └LC-QuAD (Benchmarkin dataset)
