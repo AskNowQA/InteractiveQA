@@ -18,7 +18,24 @@ While IQA interactive schema is generally able be implemented using an arbitrary
 
 
 ## Data
-Please find all required data at: tiny.cc/IQAData
+Please find all required data at: http://tiny.cc/IQAData
+```
+data
+└LC-QuAD
+│   │   linked.json
+│   │   linked_IOB.pk
+│   └───EARL
+│       │   output_nltk.json
+│       │   output_gold.json
+│       │   output_gold_EARL_ER_PRED
+└output
+│   │  wd_perf.json
+│   │  stats-general.json
+│   │  gold_answer.pk
+│   └───pipeline
+│       │   fbc52b963d5141a6b89216bae276bf21.pickle
+│       │   ...
+```
 
 ## License
 This program is subject to the terms of the General Public License (GPL), Version 3.0. 
